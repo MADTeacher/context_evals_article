@@ -1,0 +1,24 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T4__c1__4\.madharness-mini\traces\20260923-081735-98c8c958.jsonl
+Flutter SDK не установлен в этой среде, поэтому `flutter analyze` и `flutter test` запустить нельзя — я уже сообщал об этом ранее.
+
+**Всё остальное готово.** Вот итоговый список изменений:
+
+| Файл | Что изменилось |
+|---|---|
+| `lib/domain/repository/news_repository.dart` | Добавлен метод `loadNewsFeedStream(NewsFeedFilter)` в интерфейс |
+| `lib/data/repository_impl/news_repository_impl.dart` | Реализация cache-then-network: эмитит кэш мгновенно, затем обновляет из сети |
+| `lib/app/news_list/news_list_page.dart` | `FutureBuilder` → `StreamBuilder`, убран `forceRefresh:true`, анимация запускается при появлении данных |
+| `test/mocks/repository.mocks.dart` | Добавлен мок для нового метода `loadNewsFeedStream` |
+| `test/widget/news_list_page_test.dart` | Обновлён под `Stream.value()`, добавлен тест на пустой список |
+
+**Как работает паттерн:**
+1. Пользователь открывает вкладку → мгновенно показывается кэш из БД (или `CircularProgressIndicator`)
+2. Параллельно в фоне запрашивается сеть через `_restDatasource.getNewsList()`
+3. При успешном ответе — данные сохраняются обратно в БД и эмитятся в Stream → список обновляется на UI
+
+Для запуска проверок потребуется машина с установленным Flutter SDK:
+```bash
+flutter analyze
+flutter test
+```

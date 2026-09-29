@@ -1,0 +1,41 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T1__c2__4\.madharness-mini\traces\20260923-171857-1c5550e1.jsonl
+Все проверки пройдены: `flutter.bat analyze` — «No issues found!», `flutter.bat test` — 33 теста, все зелёные.
+
+## Что изменилось
+
+### Файлы
+
+1. **`assets/l10n/locale_en.arb`** / **`assets/l10n/locale_ru.arb`**
+   - Добавлены ключи `showMore`: «Show more» / «Показать ещё».
+
+2. **`lib/app/currency_list/currency_list_page.dart`** — основной файл экрана:
+
+   **Новые поля состояния:**
+   - `_searchQuery` — текущий текст поиска (храним в state, чтобы фильтровать и при подгрузке).
+   - `_currentPage` — номер последней загруженной страницы.
+   - `_hasMorePages` — флаг «есть ещё страницы» из `CurrencyPage.hasMore`.
+   - `_isLoadingMore` — индикатор загрузки для блокировки повторных нажатий.
+
+   **Изменения `initData`:**
+   - Запрос теперь содержит явные параметры: `page: 0, pageSize: 20`.
+   - Сохраняется флаг `hasMore`, список и фильтр становятся `unmodifiable`.
+
+   **Метод `_loadMore()`:**
+   - Проверяет `_hasMorePages` и `_isLoadingMore` (защита от двойных кликов).
+   - Запрашивает следующую страницу через `fetchRates(CurrencyPageRequest(base: 'USD', page: _currentPage + 1, pageSize: 20))`.
+   - Дописывает элементы новой страницы к `_allCurrencies` и обновляет фильтр поиска.
+   - Сохраняет расширенный список в кэш через `saveCurrencyList`.
+   - Сбрасывает индикатор загрузки.
+
+   **Изменения `_filterCurrencies`:**
+   - Обновляет `_searchQuery` через `setState`, чтобы фильтр применялся и при подгрузке новых страниц.
+
+   **Метод `_buildLoadMoreButton()`:**
+   - Если идёт загрузка — показывает `CircularProgressIndicator`.
+   - Если страниц больше нет — возвращает пустой виджет (`SizedBox.shrink`).
+   - Иначе показывает кнопку «Показать ещё» через `TextButton` с локализованным текстом.
+
+   **ListView.builder:**
+   - `itemCount` увеличен на 1, если есть ещё страницы или идёт загрузка — под эту ячейку рисуется кнопка/спиннер.
+   - Когда `index >= data.length` — вызывается `_buildLoadMoreButton()`.

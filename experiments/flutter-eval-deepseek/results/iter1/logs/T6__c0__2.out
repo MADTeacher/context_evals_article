@@ -1,0 +1,22 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c0__2\.madharness-mini\traces\20260924-000850-601d41b5.jsonl
+Готово.
+
+**Что изменено**
+
+- `lib/app/profile/profile_page.dart`:
+  - Добавлен `import 'dart:async';`.
+  - `_themeModeNotifier` больше не инициализируется лениво через `late final`; начальное значение читается синхронно в `initState()` через `_settingsRepository.readThemeMode()` (по проектной конвенции из `docs/migration-v2.md` — только после `initAsyncData()`, что выполняется на Splash).
+  - В `_initThemeMode()` добавлена подписка на `_settingsRepository.themeModeStream`, которая обновляет `_themeModeNotifier` при изменении режима.
+  - Подписка отменяется в `dispose()` (`_themeModeSubscription?.cancel()`).
+
+- `test/widget/home_container_test.dart`: добавлен стаб `themeModeStream` для `MockSettingsRepository` (иначе мок падал с `MissingStubError` при переходе на `ProfilePage`).
+
+- `changelog/10053.bugfix.rst`: добавлена запись по конвенции проекта.
+
+**Проверка**
+
+- `flutter analyze` — `No issues found!`
+- `flutter test` — `All tests passed!` (33 теста, падений нет).
+
+Примечание: я не добавлял новый тест на автообновление режима, так как в задаче требовались только analyze/test без замечаний; при желании могу добавить виджет-тест, проверяющий перерисовку при эмите в `themeModeStream`.

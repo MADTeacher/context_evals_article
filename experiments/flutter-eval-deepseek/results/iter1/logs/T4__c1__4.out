@@ -1,0 +1,26 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T4__c1__4\.madharness-mini\traces\20260924-000527-2e3c4076.jsonl
+Both checks are green. Here's what I did.
+
+## Что изменено
+
+**`lib/app/news_list/news_list_state.dart`** (новый файл) — состояние экрана по паттерну cache-then-network. При `load()` запрос в сеть стартует сразу (с подпиской на ошибку через `catchError`), затем показывается кэш, а когда приходит ответ сети — список перезаписывается. Пустой список не затирает уже показанные данные (чтобы неудачный ответ не «обнулял» экран), а ошибка сети оставляет кэш.
+
+**`lib/app/news_list/news_list_page.dart`** — вместо `FutureBuilder` с одним `forceRefresh: true` теперь `ValueListenableBuilder` над `_state.news`:
+- `loadCachedNews` → `loadNewsFeed(NewsFeedFilter.all)` (только БД, без сети),
+- `loadFreshNews` → `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))`.
+
+Анимация `ScaleTransition` запускается один раз — при первом непустом наборе данных (кэш), а не при каждом обновлении. Состояние освобождается в `dispose`.
+
+**`test/widget/news_list_page_test.dart`** — тест переписан и дополнен:
+- «should display cached news first and then fresh news»: сеть удерживается `Completer`'ом, проверяется, что до ответа сети на экране кэш и нет свежих новостей, затем после ответа — свежие и нет кэша; отдельно проверяется порядок отрисовки через список увиденных заголовков (`['Из кэша', 'Заголовок 1']`);
+- «should keep cached news when network request fails»: при ошибке сети кэш остаётся и исключение не всплывает в тест.
+
+**`changelog/10053.feature.rst`** — запись об изменении, как требуют правила проекта.
+
+## Проверка
+
+- `flutter analyze` — `No issues found!`
+- `flutter test` — `All tests passed!` (34 теста)
+
+Отмечу одну деталь: в проекте есть отдельная проблема — `lib/main.dart:93` использует `@Deprecated`-геттер `themeMode` вместо `readThemeMode()`, хотя `docs/migration-v2.md` требует обратного. `flutter analyze` этого не ловит (deprecated-использование внутри своего же пакета не подсвечивается как ошибка). Я это не трогал, так как задача была про экран новостей; скажите, если нужно починить отдельно.

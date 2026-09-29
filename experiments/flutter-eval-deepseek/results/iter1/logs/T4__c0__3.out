@@ -1,0 +1,30 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T4__c0__3\.madharness-mini\traces\20260923-235425-b33c7ad3.jsonl
+Готово. Экран новостей переведён на cache-then-network.
+
+## Что изменено
+
+**Domain**
+- `lib/domain/model/news_filter.dart` — добавлены `NewsFeedSource { cache, network }` и снимок `NewsFeed { items, source }`.
+- `lib/domain/repository/news_repository.dart` — новый контракт `Stream<NewsFeed> watchNewsFeed(NewsFeedFilter filter)`. `loadNewsFeed` оставлен (помечен `@Deprecated` как v2-API, тесты на него сохранены).
+
+**Data**
+- `lib/data/repository_impl/news_repository_impl.dart` — реализация `watchNewsFeed` через `async*`:
+  1. читает кэш из `DbDatasource` и сразу отдаёт `NewsFeed(source: cache)`, если кэш не пуст;
+  2. параллельно идёт в `RestDatasource`, сохраняет ответ в БД и отдаёт `NewsFeed(source: network)`;
+  3. при ошибке сети с непустым кэшем поток завершается без ошибки (на экране остаются данные кэша); при пустом кэше ошибка пробрасывается.
+
+**Presentation**
+- `lib/app/news_list/news_list_page.dart` — `FutureBuilder` заменён на подписку `StreamSubscription<NewsFeed>`: первый эмит сразу рисует кэш, второй обновляет список. Подписка отменяется в `dispose`, `setState` защищён `mounted`. Анимация `ScaleTransition` запускается при приходе данных из сети (а также по `onError`, если показан кэш).
+
+**Тесты**
+- `test/widget/news_list_page_test.dart` — стаб переведён на `watchNewsFeed`; добавлен тест «сначала кэш, потом сеть» (через `StreamController`).
+- `test/widget/home_container_test.dart` — стаб `watchNewsFeed`.
+- `test/unit/repository_test.dart` — 4 новых теста: порядок cache→network, пропуск эмита при пустом кэше, сохранение кэша при падении сети, проброс ошибки при пустом кэше; в `setUp` группы `NewsRepository` добавлен `reset` моков, иначе стабы протекали между тестами.
+- `test/mocks/repository.mocks.dart` — добавлен сгенерированный метод `watchNewsFeed` (в стиле mockito-выхода; кли `build_runner` в этом окружении недоступен).
+
+## Проверка
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `+38: All tests passed!` (было 33, добавлено 5)
+
+Примечание: `integration_test/app_test.dart` не запускался (нужен device/эмулятор); он использует реальные датасорсы, и логика теста (`NewsCard` находится после `pumpAndSettle`) с новым потоком остаётся совместимой.

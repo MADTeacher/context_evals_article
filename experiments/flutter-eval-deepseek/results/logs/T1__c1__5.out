@@ -1,0 +1,27 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T1__c1__5\.madharness-mini\traces\20260924-091657-651c6ce2.jsonl
+Готово. Подгрузка реализована и проверена.
+
+## Что изменено
+
+**`lib/app/currency_list/currency_list_page.dart`** — основная логика:
+- Добавлено состояние пагинации: `_nextPage`, `_hasMore`, `_isLoadingMore`, `_query`.
+- `_initData()` запоминает `page.page + 1` и `page.hasMore` из первой страницы.
+- `_loadNextPage()` запрашивает `CurrencyRepository.fetchRates(CurrencyPageRequest(page: _nextPage))`, дописывает `page.items` к уже загруженному списку, обновляет `_hasMore`/`_nextPage` и переприменяет фильтр. Защита от повторного нажатия (`_isLoadingMore`) и от `setState` после dispose (`mounted`).
+- Поиск сохранён: `_filterCurrencies` теперь только запоминает запрос, а общая `_applyFilter()` фильтрует **накопленный** список — поэтому фильтр корректно применяется и к подгруженным элементам.
+- Под списком — кнопка «Показать ещё» (`OutlinedButton`), видна только при `hasMore == true`, на время загрузки показывает `CircularProgressIndicator` и блокируется.
+
+**Локализация** — новый ключ `showMore` («Показать ещё» / «Show more») в `assets/l10n/locale_ru.arb`, `assets/l10n/locale_en.arb` и в сгенерированных `lib/app/gen/l10n/app_localizations{,_ru,_en}.dart` (сгенерированы вручную в принятом стиле; при желании перегенерируются через `flutter gen-l10n`).
+
+**`lib/domain/model/currency_page.dart`** — у `CurrencyPageRequest` добавлены `==`/`hashCode` (по `base`, `page`, `pageSize`), чтобы запросы корректно сравнивались в тестах и моках.
+
+**`test/widget/currency_list_page_test.dart`** — 3 новых теста: кнопка скрыта при `hasMore == false`; нажатие запрашивает `page: 1` и дописывает карточки (проверено `verify(fetchRates(CurrencyPageRequest(page: 1)))`); активный фильтр поиска продолжает работать после подгрузки.
+
+**`CHANGELOG.md`** — запись о пользовательском изменении (по правилу из AGENTS.md).
+
+## Проверки
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (36 тестов, было 33)
+
+Замечание: при первом прогоне теста я использовал `scrollUntilVisible`, который падал из-за совпадения нескольких виджетов — заменил на прямую проверку видимости кнопки (она вне скролла, в `Column` под списком), после чего всё зелёное.

@@ -1,0 +1,16 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T6__c2__4\.madharness-mini\traces\20260924-224513-7a16ad6c.jsonl
+**`flutter.bat test` — все 33 теста зелёные.**
+
+## Что изменилось
+
+### `lib/app/profile/profile_page.dart`
+1. Добавлен импорт `dart:async`.
+2. `_themeModeNotifier` теперь инициализируется в `initState()` (после получения репозитория через getter), а не как field initializer — это гарантирует, что `_settingsRepository` уже доступен.
+3. **Подписка на изменения**: добавлен метод `_listenToThemeStream()`, который подписывается на `themeModeStream` и обновляет `_themeModeNotifier.value` при каждом изменении темы в настройках.
+4. **Отмена подписки** в `dispose()` — `_themeModeSubscription?.cancel()`.
+5. В обработчике `onTap` вместо прямого изменения нотифайера теперь вызывается `context.read<SettingsRepository>().setThemeMode(newMode)` — это унифицирует путь сохранения и гарантирует, что поток `themeModeStream` получит событие (правило I.4 / settings.md п.3).
+6. Добавлена проверка `!context.mounted` после `await` для устранения lint-предупреждения.
+
+### `test/widget/home_container_test.dart`
+Добавлен стуб: `when(mockSettingsRepository.themeModeStream).thenAnswer((_) => Stream.value(AppThemeMode.system))`, чтобы мок отвечал на новый вызов в `_listenToThemeStream`.

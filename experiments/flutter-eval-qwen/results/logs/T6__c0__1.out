@@ -1,0 +1,30 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T6__c0__1\.madharness-mini\traces\20260924-231336-12cfa14f.jsonl
+Готово! Оба чекера прошли без замечаний. Вот что изменилось:
+
+## Изменения
+
+### `lib/app/profile/profile_page.dart`
+
+**Было:** `_themeModeNotifier` инициализировался один раз при создании state — начальное значение читалось, но UI не реагировал на изменения темы из других экранов.
+
+**Стало:**
+- Добавлен `import 'dart:async'` для `StreamSubscription<AppThemeMode>`
+- `_themeModeNotifier` теперь инициализируется в `initState()` синхронно через `readThemeMode()` — чтение происходит при монтировании экрана
+- Подписка на `_settingsRepository.themeModeStream.listen(...)` — при любом изменении режима темы из любого места приложения `ValueListenableBuilder` автоматически перестроит ListTile
+- В `dispose()` добавлен `_subscription.cancel()` для корректной очистки
+
+### `test/widget/home_container_test.dart`
+
+Добавлен stub для мока:
+```dart
+when(mockSettingsRepository.themeModeStream).thenAnswer((_) => Stream.value(AppThemeMode.system));
+```
+Без этого мок выбрасывал `MissingStubError`, так как в `initState()` мы обращаемся к `themeModeStream`.
+
+## Результаты проверок
+
+| Команда | Результат |
+|---------|-----------|
+| `flutter analyze` | ✅ No issues found |
+| `flutter test` | ✅ 33 passed, 0 failed |

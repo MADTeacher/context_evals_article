@@ -1,0 +1,60 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T2__c1__5\.madharness-mini\traces\20260923-060051-1066bb5e.jsonl
+Flutter SDK недоступен в окружении (`flutter` не найден), поэтому `flutter analyze` и `flutter test` запустить не получается — это нужно сделать на вашей машине. Ниже — полный отчёт о внесённых изменениях.
+
+---
+
+## Что изменилось
+
+### 1. Локализация новой строки
+**Файлы:**
+- `assets/l10n/locale_ru.arb` — добавлен `"showMoreLabel": "Ещё"`
+- `assets/l10n/locale_en.arb` — добавлен `"showMoreLabel": "Show more"`
+
+Сгенерированные Dart-классы обновлены вручную (так как `flutter gen-l10n` недоступен в CI):
+- `lib/app/gen/l10n/app_localizations.dart` — абстрактный метод `String get showMoreLabel;`
+- `lib/app/gen/l10n/app_localizations_en.dart` — реализация возвращает `'Show more'`
+- `lib/app/gen/l10n/app_localizations_ru.dart` — реализация возвращает `'Ещё'`
+
+> **Важно:** если у вас настроена автоматическая генерация l10n (`flutter gen-l10n` или `intl_utils`), после этих правок в `.arb`-файлах перегенерируйте локализации, чтобы не было рассинхрона между ARB и Dart.
+
+### 2. Переписан экран валют — пагинация + «Ещё»
+**Файл:** `lib/app/currency_list/currency_list_page.dart`
+
+Полная переработка `_CurrencyListPageState`:
+
+| Было | Стало |
+|---|---|
+| Единый Future на старте, данные хранились в `ValueNotifier<List<CurrencyModel>>` из первой страницы | Пагинация: `_allCurrencies` накапливает все загруженные элементы; `_currentPage`, `_hasMore`, `_isLoadingMore` отслеживают состояние |
+| Кнопки «Показать ещё» не было | **Кнопка «Ещё»** появляется внизу списка, если `hasMore == true`; при нажатии загружается следующая страница с `base: 'USD'`. Пока идёт загрузка — показывается `CircularProgressIndicator` |
+| Экран не обновлялся при возврате | Добавлен `WidgetsBindingObserver` → `didChangeAppLifecycleState(resumed)` вызывает `_loadInitialPage()` — при возврате на экран (потеря/возврат фокуса) список загружается заново свежим запросом с параметром **base: 'USD'** |
+| Поиск сбрасывался в отдельный метод без отслеживания состояния | Поисковый запрос хранится в `_searchQuery`; фильтрация применяется и к изначальной загрузке, и после «Ещё» через общий `_applyFilter()` |
+
+### 3. Модель `CurrencyPage`
+Не менялась — она уже содержит нужное поле:
+```dart
+class CurrencyPage {
+  const CurrencyPage({required this.items, required this.page, required this.hasMore});
+  final List<CurrencyModel> items;
+  final int page;
+  final bool hasMore;   // ← используется для скрытия/показа кнопки
+}
+```
+
+### 4. Реализация репозитория `CurrencyRepositoryImpl`
+Не менялась — она корректно возвращает `hasMore: end < all.length`, что определяет, есть ли ещё страницы.
+
+---
+
+## Что нужно сделать на вашей машине
+
+```bash
+# Перегенерировать локализации (если у вас настроена автоматика)
+flutter gen-l10n --localizations-dir=lib/app/gen/l10n -o lib/app/gen/l10n
+
+# Запустить анализатор
+flutter analyze
+
+# Прогнать тесты (они должны пройти, т.к. mock возвращает hasMore: false — кнопка не появится)
+flutter test
+```

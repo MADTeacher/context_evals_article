@@ -1,0 +1,27 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T8__c2__3\.madharness-mini\traces\20260924-102911-68de76c3.jsonl
+Готово. Экран «Дашборд» добавлен и доступен кнопкой на HomePage.
+
+## Что сделано
+
+**Новый экран** — `lib/app/dashboard/dashboard_page.dart`:
+- при открытии параллельно (`Future.wait`) запрашиваются свежий курс и свежая лента:
+  - `fetchRates(const CurrencyPageRequest(base: 'USD'))` — base `'USD'`, default `'EUR'` не используется (I.1);
+  - `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — сеть + запись в кэш (I.2);
+- пока грузится — `CircularProgressIndicator`; после — секции «Курс Валют» и «Новости» из существующих `CurrencyCard`/`NewsCard`;
+- результат курса сохраняется через `saveCurrencyList` (конвенция currency.md).
+
+**Точка входа** — `lib/app/home.dart`: `FloatingActionButton` (`Icons.dashboard`) с `tooltip: loc.openDashboard`, открывает `DashboardPage` через `Navigator.push`. Экспорт добавлен в `lib/app/app.dart`.
+
+**L10n** — новые ключи `dashboard` / `openDashboard` в `assets/l10n/locale_ru.arb`, `locale_en.arb` и в сгенерированных `lib/app/gen/l10n/app_localizations{,_ru,_en}.dart`.
+
+**Changelog (I.5)** — `changelog/10053.feature.rst`.
+
+**Тест** — `test/widget/dashboard_page_test.dart`: индикатор прогресса во время загрузки (через `Completer`) и данные после; проверка, что запрос курса идёт с `base: 'USD'`, новости — с `forceRefresh: true`, и что курс сохраняется в кэш.
+
+## Проверки
+
+- `flutter analyze` — **No issues found!**
+- `flutter test` — **All tests passed!** (35 тестов)
+
+Примечание: shared-моки в новом тесте сбрасываются в `setUp` (`reset`), иначе `verify` учитывает вызовы из предыдущих тестов — первая версия теста падала именно на этом.

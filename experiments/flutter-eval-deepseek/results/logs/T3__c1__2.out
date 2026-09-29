@@ -1,0 +1,15 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T3__c1__2\.madharness-mini\traces\20260924-094642-9c936c61.jsonl
+Готово.
+
+**Что изменилось**
+- `lib/app/news_list/news_list_page.dart`: в `AppBar` добавлена `IconButton` «Обновить» (`Icons.refresh`, tooltip из локализации). Обработчик `_refreshNews()` вызывает `setState(_initData)`, а `_initData()` уже запрашивает `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — то есть перезагрузка идёт из сети (REST) с последующим сохранением в БД, минуя кэш (`NewsRepositoryImpl.loadNewsFeed` при `forceRefresh` не обращается к `DbDatasource.getNewsList()`).
+- Локализация: ключ `refresh` добавлен в `assets/l10n/locale_ru.arb` («Обновить») и `locale_en.arb` («Refresh»), код перегенерирован через `flutter gen-l10n` (`lib/app/gen/l10n/*`).
+- `test/widget/news_list_page_test.dart`: новый тест — по тапу на иконку `Icons.refresh` репозиторий вызывается повторно (2 вызова) и оба фильтра имеют `forceRefresh == true`.
+- `changelog/10053.feature.rst`: запись об изменении (по правилу проекта).
+
+**Проверки**
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (34 теста; сначала новый тест падал из-за общего мока между тестами — исправлено использованием отдельного `MockNewsRepository` внутри теста).
+
+Примечание: при первом запуске `flutter gen-l10n` вывел в stderr предупреждение о устаревшей опции `synthetic-package` в `l10n.yaml` — это существующая настройка проекта, я её не трогал.

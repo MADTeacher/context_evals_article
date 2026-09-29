@@ -1,0 +1,25 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T4__c1__2\.madharness-mini\traces\20260924-000200-c7224b03.jsonl
+Both checks pass clean. Here's the summary.
+
+## Что сделано
+
+Экран новостей переведён на паттерн **cache-then-network** в соответствии с `docs/migration-v2.md` §2.
+
+**`lib/app/news_list/news_list_page.dart`** — переписан `_NewsListPageState`:
+- Убран `FutureBuilder` с единственным `forceRefresh: true` (сеть всегда, без мгновенного показа кэша).
+- Теперь в `_initData()`: сначала `loadNewsFeed(NewsFeedFilter.all)` → мгновенно рендерится кэш из БД; затем в фоне `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` → результат заменяет список.
+- Список хранится в `List<NewsModel> _newsList` (state), обновляется через `setState`; добавлены проверки `mounted` перед обновлением UI.
+- Анимация `ScaleTransition` запускается при первом появлении данных (при кэше), повторно не перезапускается.
+
+Логика репозитория (`NewsRepositoryImpl.loadNewsFeed`) уже корректно разделяла кэш/сеть, поэтому менять её не потребовалось.
+
+**Тесты** — `test/widget/news_list_page_test.dart`:
+- Добавлен тест `should show cached news first and then update with network response`: проверяет, что сначала виден кэш, а после ответа сети (через `Completer`, чтобы детерминированно поймать промежуточное состояние) список заменяется на сетевой, и оба вызова `loadNewsFeed` совершены.
+- В `setUp` добавлен `reset(mockNewsRepository)`, чтобы записи вызовов не протекали между тестами (иначе `verify(...).called(1)` падал при полном прогоне).
+
+**`changelog/10053.feature.rst`** — запись об изменении (по требованию AGENTS.md).
+
+## Проверки
+- `flutter analyze` → **No issues found!**
+- `flutter test` → **All tests passed!** (34 теста).

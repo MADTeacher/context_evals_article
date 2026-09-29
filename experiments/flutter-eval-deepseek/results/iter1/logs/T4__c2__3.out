@@ -1,0 +1,16 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T4__c2__3\.madharness-mini\traces\20260924-003038-8ec0995e.jsonl
+**Что изменено:** `lib/app/news_list/news_list_page.dart` переведён на cache-then-network.
+
+- `_initData()` заменён на `_initCacheThenNetwork()`: сначала мгновенно грузится кэш из БД через `loadNewsFeed(NewsFeedFilter.all)` (без сети), и этот же future отдан в `FutureBuilder` — список появляется сразу.
+- Параллельно вызывается `_refreshInBackground()`: `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — сеть + запись в кэш репозиторием; по приходу ответа `setState` подменяет future на `Future.value(fresh)`, список обновляется. Есть guard `if (!mounted) return;`.
+- Анимация `_scaleController.forward()` по-прежнему запускается на первом (кэш) результате.
+- Добавлен `changelog/10053.bugfix.rst` (по правилу I.5).
+
+Замечание: в проекте нет готового виджета pull-to-refresh или кнопки «Обновить» на экране новостей, поэтому отдельное пользовательское действие обновления не добавлял (если нужно — сделаю, оно должно быть `forceRefresh: true`).
+
+**Проверки:**
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (33 теста, включая `test/widget/news_list_page_test.dart`)
+
+Первая попытка analyze упала на `const NewsFeedFilter.all` (статический const-член нельзя использовать с `const` как конструктор) — исправлено на `NewsFeedFilter.all`.

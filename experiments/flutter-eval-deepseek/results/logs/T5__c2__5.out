@@ -1,0 +1,20 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T5__c2__5\.madharness-mini\traces\20260924-101024-16a683fe.jsonl
+**Что сделано**
+
+- `test/unit/repository_test.dart` — в группу `SettingsRepository` добавлены 3 теста:
+  - `readThemeMode returns current value after initAsyncData` — после `await initAsyncData()` метод возвращает значение из preference-датасорса и обращается к нему ровно один раз.
+  - `readThemeMode returns value updated after initAsyncData` — после `setThemeMode(dark)` чтение отдаёт новое значение (актуальность, а не снимок на момент init).
+  - `readThemeMode is safe to call only after initAsyncData` — `initAsyncData()` завершается успешно, и только после этого `readThemeMode()` вызывается без исключений (`returnsNormally`) и даёт ожидаемое значение.
+- `changelog/10053.bugfix.rst` — фрагмент changelog по правилу I.5.
+
+Использованы только v2-API (`readThemeMode()`, `initAsyncData()`); `@Deprecated`-геттер `.themeMode` в новых тестах не применяется (старый тест на геттер оставлен как есть, чтобы не расширять дифф).
+
+**Важное замечание по реализации**
+
+Реализация `SettingsRepositoryImpl.readThemeMode()` (`lib/data/repository_impl/settings_repository_impl.dart:38`) просто делегирует в `_datasource.themeMode` и **не содержит guard'а** на вызов до `initAsyncData()`. То есть контракт «только после init» сейчас обеспечивается порядком вызовов (splash → `initAsyncData`), а не кодом. Поэтому тест на безопасность проверяет фактическое поведение (успешный `initAsyncData` + корректное чтение после него), а не падение до инициализации. Если нужен жёсткий guard (например, `StateError` при чтении до init) — это правка `lib/**`, скажите, и я её внесу.
+
+**Проверка**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (36 тестов, включая 3 новых; существующие тесты не сломаны).

@@ -1,0 +1,148 @@
+T1,c2,1,0,0,0,0,147,0,1424911,7129,1432040,0,migration-v2,"Готово. Подгрузка реализована и проверена.
+
+**Что изменено**
+
+- `lib/app/currenc"
+T1,c2,2,0,0,0,0,46,0,211011,4118,215129,0,migration-v2,"Both checks pass. Summary of the change:
+
+**`lib/app/currency_list/currency_list"
+T1,c2,3,0,0,0,0,109,0,1027373,6465,1033838,0,migration-v2,"**Готово: подгрузка следующей страницы курса валют реализована.**
+
+Изменения:
+- "
+T1,c2,4,0,0,0,0,70,0,574717,5200,579917,0,migration-v2,"Готово: на экране курса валют появилась подгрузка следующей страницы.
+
+**Что изм"
+T1,c2,5,0,0,0,0,70,0,640467,4938,645405,0,migration-v2,"Both checks pass. Summary:
+
+**Что изменено**
+
+- `lib/app/currency_list/currency_"
+T2,c2,1,0,0,0,0,99,0,1356045,7824,1363869,0,migration-v2,"Готово.
+
+## Что изменено
+
+**`lib/app/currency_list/currency_list_page.dart`**
+- "
+T2,c2,2,0,1,0,0,582,0,10437346,14036,10451382,0,migration-v2,"Agent stopped: max_turns exceeded."
+T2,c2,3,0,1,0,0,481,0,14424647,22525,14447172,0,migration-v2,"Agent stopped: max_turns exceeded."
+T2,c2,4,0,1,0,0,1367,0,11424979,10680,11435659,0,migration-v2,"Agent stopped: max_turns exceeded."
+T2,c2,5,0,0,0,0,165,0,3395323,10323,3405646,0,migration-v2,"Done. Both features are implemented, verified, and documented.
+
+## Что изменено
+"
+T3,c2,1,0,0,0,0,66,0,320623,3565,324188,0,migration-v2,"Готово: в AppBar экрана новостей добавлена кнопка «Обновить».
+
+**Изменения**
+- `"
+T3,c2,2,0,0,0,0,139,0,3640761,6645,3647406,0,flutter-testing;migration-v2,"Готово. Кнопка «Обновить» добавлена в AppBar экрана новостей.
+
+**Что изменено**
+"
+T3,c2,3,0,0,0,0,80,0,626209,3849,630058,0,migration-v2,"Готово.
+
+**Что изменено**
+
+- `lib/app/news_list/news_list_page.dart` — в `AppBar"
+T3,c2,4,0,0,0,0,47,0,323958,3066,327024,0,migration-v2,"**Готово.** Кнопка «Обновить» добавлена на экран новостей.
+
+Изменения:
+- `lib/ap"
+T3,c2,5,0,0,0,0,54,0,396074,2940,399014,0,migration-v2,"**Что сделано**
+
+Кнопка «Обновить» в AppBar экрана новостей, перезагружающая лен"
+T4,c2,1,0,0,0,0,42,0,164574,2331,166905,0,migration-v2,"Готово. Экран новостей переведён на cache-then-network.
+
+**Что изменено — `lib/a"
+T4,c2,2,0,0,0,0,114,0,762377,5171,767548,0,migration-v2,"Готово. Экран новостей переведён на cache-then-network.
+
+**Изменения**
+
+- `lib/a"
+T4,c2,3,0,0,0,0,50,0,184048,1997,186045,0,migration-v2,"**Что изменено:** `lib/app/news_list/news_list_page.dart` переведён на cache-the"
+T4,c2,4,0,0,0,0,53,0,246407,3314,249721,0,migration-v2,"Готово — экран новостей переведён на cache-then-network.
+
+**Что изменено**
+
+- `l"
+T4,c2,5,0,0,0,0,253,0,2879381,15864,2895245,0,migration-v2,"Готово. Экран новостей переведён на cache-then-network.
+
+## Что изменено
+
+**`lib"
+T5,c2,1,0,0,0,0,314,0,10921826,13878,10935704,0,flutter-testing;migration-v2,"I need to be transparent about one important finding regarding the 'safe only af"
+T5,c2,2,0,0,0,0,60,0,333489,2235,335724,0,flutter-testing;migration-v2,"**Что сделано**
+
+В `test/unit/repository_test.dart` (группа `SettingsRepository`"
+T5,c2,3,0,0,0,0,96,0,743598,4140,747738,0,flutter-testing;migration-v2,"**Готово. `flutter analyze` — «No issues found!», `flutter test` — 37/37 зелёных"
+T5,c2,4,0,0,0,0,98,0,993268,4423,997691,0,migration-v2,"**Что сделано**
+
+Добавил 4 теста в `test/unit/repository_test.dart` (группа `Set"
+T5,c2,5,0,0,0,0,84,0,654802,5076,659878,0,migration-v2,"Готово.
+
+## Что сделано
+
+**`test/unit/repository_test.dart`** — в группу `Settin"
+T6,c2,1,0,0,0,0,63,0,404152,4010,408162,0,migration-v2,"Готово.
+
+## Что изменено
+
+**`lib/app/profile/profile_page.dart`**
+- Режим темы т"
+T6,c2,2,0,0,0,0,46,0,226411,1908,228319,0,migration-v2,"Done.
+
+**What changed**
+
+- `lib/app/profile/profile_page.dart`
+  - Added `import"
+T6,c2,3,0,0,0,0,70,0,550475,3929,554404,0,migration-v2,"The changes are complete and verified. Here's a summary:
+
+## Что изменилось
+
+**`"
+T6,c2,4,0,0,0,0,45,0,254188,1862,256050,0,migration-v2,"Готово.
+
+**Что изменено**
+
+- `lib/app/profile/profile_page.dart`:
+  - начальное "
+T6,c2,5,0,0,0,0,66,0,446946,2843,449789,0,migration-v2,"**Что изменено**
+
+- `lib/app/profile/profile_page.dart`:
+  - добавлен импорт `da"
+T7,c2,1,0,0,0,0,91,0,701469,5457,706926,0,migration-v2,"Done. Here's a summary.
+
+## Что сделано
+
+**Кнопка «Обновить всё» на HomePage** ("
+T7,c2,2,0,0,0,0,286,0,5776278,19480,5795758,0,migration-v2,"Everything is in place. Final summary:
+
+## Что изменено
+
+**Кнопка «Обновить всё»"
+T7,c2,3,0,1,0,0,428,0,9884006,20906,9904912,0,flutter-testing;migration-v2,"Agent stopped: max_turns exceeded."
+T7,c2,4,0,0,0,0,223,0,1557805,7242,1565047,0,migration-v2,"Готово. Кнопка «Обновить всё» добавлена на `HomePage`, оба запроса идут в сеть.
+"
+T7,c2,5,0,0,0,0,122,0,545625,4971,550596,0,migration-v2,"Everything looks good. The implementation is complete and verified.
+
+## Что сдел"
+T8,c2,1,0,0,0,0,202,0,1144433,7045,1151478,0,migration-v2,"Готово. Экран «Дашборд» добавлен и подключён к HomePage.
+
+**Что сделано**
+
+- `li"
+T8,c2,2,0,0,0,0,169,0,753305,5816,759121,0,migration-v2,"Done. Both checks are green.
+
+## Что сделано
+
+**Новый экран «Дашборд»** — `lib/a"
+T8,c2,3,0,0,0,0,149,0,946883,6906,953789,0,migration-v2,"Everything is in place. Task complete.
+
+## Что сделано
+
+Добавлен экран «Дашборд»"
+T8,c2,4,0,0,0,0,129,0,690877,6338,697215,0,migration-v2,"Done. Summary of the change:
+
+**Added**
+- `lib/app/dashboard/dashboard_page.dart"
+T8,c2,5,0,0,0,0,173,0,1064044,6126,1070170,0,migration-v2,"**Готово.** Добавлен экран «Дашборд», доступный кнопкой (FloatingActionButton) н"

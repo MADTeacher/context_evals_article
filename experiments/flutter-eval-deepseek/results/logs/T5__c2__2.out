@@ -1,0 +1,19 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T5__c2__2\.madharness-mini\traces\20260924-100444-40899bd7.jsonl
+Готово.
+
+**Что добавлено** — `test/unit/repository_test.dart`, в группе `SettingsRepository` появилась подгруппа `readThemeMode`:
+- `should return actual theme mode value after initAsyncData` — после `initAsyncData()` метод возвращает значение из preference-датасорса (`dark`), вызван ровно один раз.
+- `should return theme mode updated after initialization` — после повторного изменения источника `readThemeMode()` возвращает новое актуальное значение (`light` → `system`).
+- `should read theme mode only after initAsyncData completed` — порядок вызовов фиксируется журналом: сначала `initAsyncData` (через `getToken`), только затем `readThemeMode`; результат — `dark`.
+
+В `setUp` группы добавлены дефолтные заглушки `getToken() → null` и `themeMode → AppThemeMode.system` (mock создаётся через `throwOnMissingStub`, поэтому без них новые тесты падали бы на missing stub). Существующие тесты группы, включая `should return current theme mode value` (deprecated-геттер), оставлены без изменений — их собственные stubs переопределяют дефолт.
+
+**Changelog** — добавлен фрагмент `changelog/10053.bugfix.rst` (правило I.5).
+
+**Проверки:**
+- `flutter analyze` → `No issues found!`
+- `flutter test test/unit/repository_test.dart` → 18 тестов, все зелёные
+- `flutter test` → 36 тестов, все зелёные (существующие тесты не сломались)
+
+Замечание: контракт v2 говорит, что `readThemeMode()` безопасен только после `initAsyncData()`, но текущая реализация `SettingsRepositoryImpl` не бросает исключение при вызове до инициализации (это конвенция, а не runtime-guard). Поэтому «безопасность вызова только после `initAsyncData()`» проверена как порядок вызовов в тесте, а не как ожидаемое исключение. Если хотите жёсткий guard (например, `StateError`/`assert` до инициализации) — это правка `lib/`, скажите, и я сделаю её вместе с тестом на бросок.

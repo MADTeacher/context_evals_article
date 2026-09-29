@@ -1,0 +1,19 @@
+{
+ "model": "deepseek-flash",
+ "base_url": "https://api.deepseek.com",
+ "api_key": "__API_KEY__",
+ "temperature": 0.8,
+ "max_turns": 150,
+ "context_max_tokens": 256000,
+ "context_keep_recent_turns": 3,
+ "http_timeout": 300,
+ "extra_body": {"thinking": {"type": "disabled"}},
+ "workspace_root": ".",
+ "protected_paths": [
+  ".git",
+  ".env",
+  "secrets",
+  "~/.ssh"
+ ],
+ "allow_shell": true
+}

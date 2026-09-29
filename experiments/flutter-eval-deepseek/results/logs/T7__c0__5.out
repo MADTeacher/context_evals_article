@@ -1,0 +1,27 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T7__c0__5\.madharness-mini\traces\20260924-110627-a17d8b6f.jsonl
+Готово. Кнопка «Обновить всё» добавлена на HomePage.
+
+## Что сделано
+
+**`lib/app/home.dart`**
+- `FloatingActionButton.extended` с локализованным текстом `loc.refreshAll` и иконкой `Icons.refresh`; на время обновления кнопка блокируется и показывает `CircularProgressIndicator`.
+- `_refreshAll()` вызывает `Future.wait([...])` — оба запроса идут одновременно, каждый из сети.
+- Добавлены `GlobalKey<CurrencyListPageState>` / `GlobalKey<NewsListPageState>`; перед обновлением выбирается вкладка «Курс Валют», чтобы обе страницы были смонтированы (в приложении `Scaffold.body` показывает только активную вкладку).
+
+**`lib/app/currency_list/currency_list_page.dart`**, **`lib/app/news_list/news_list_page.dart`**
+- Приватные `_XxxState` переименованы в публичные `CurrencyListPageState` / `NewsListPageState` (нужны как типы для ключей).
+- Публичный `refresh()`: запускает новый сетевой запрос, подменяет future в `setState` и ждёт его завершения.
+- Важная деталь: `_filteredCurrenciesNotifier` инициализируется один раз (флаг `_isListened`), а не пересоздаётся в `_loadCurrencies()` — иначе повторный запрос оставлял бы `ValueListenableBuilder` со старым notifier и обновлённый список не отображался бы.
+
+**Локализация**: ключ `refreshAll` («Обновить всё» / «Refresh all») в `assets/l10n/locale_ru.arb`, `locale_en.arb` и в сгенерированных `lib/app/gen/l10n/app_localizations*.dart` (генератор в окружении недоступен, файлы правлены вручную в стиле генератора).
+
+**Тест** `test/widget/home_container_test.dart`: новый кейс «should refresh currencies and news from network when refresh all is tapped» — после `clearInteractions` тап по кнопке даёт ровно по одному вызову `fetchRates` и `loadNewsFeed`.
+
+**Changelog**: `changelog/10053.feature.rst`.
+
+## Проверка
+- `flutter analyze` — No issues found.
+- `flutter test` — 34 теста, All tests passed.
+
+Замечание: `flutter test` в этом окружении не подхватывает `integration_test/app_test.dart` (он требует устройства), поэтому он не прогонялся.

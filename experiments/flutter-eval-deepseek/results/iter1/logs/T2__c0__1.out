@@ -1,0 +1,24 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T2__c0__1\.madharness-mini\traces\20260923-233307-6b8f8fe9.jsonl
+Готово.
+
+## Что сделано
+
+**`lib/app/currency_list/currency_list_page.dart`** (переписан экран):
+- Состояние теперь хранит `CurrencyPage` целиком: `_request` (текущая страница), `_hasMore` (из `CurrencyPage.hasMore`), `_allCurrencies`, `_filteredCurrenciesNotifier`.
+- Кнопка «Показать ещё» добавлена под списком и рисуется только при `_hasMore == true`, т.е. скрывается, когда следующей страницы нет (`hasMore == false` — признак конца страниц по `docs/migration-v2.md`).
+- Нажатие грузит следующую страницу (`page + 1`) и **добавляет** элементы: страница 0 заменяет список, последующие — дополняют, после чего `_hasMore` перечитывается из ответа.
+- Экран подписан на `WidgetsBindingObserver`; при `AppLifecycleState.resumed` (возврат фокуса приложением) выполняется `_refresh()` — свежий запрос **первой страницы с `base: 'USD'`** (`_baseCurrency`), сбрасывающий пагинацию и перезапускающий анимацию. Observer снимается в `dispose`.
+- Запросы строятся только через `fetchRates` (без @Deprecated `getCurrencyList`), `saveCurrencyList` сохранён.
+
+**Локализация:** добавлен ключ `showMore` в `assets/l10n/locale_ru.arb` («Показать ещё») и `locale_en.arb` («Show more») плюс соответствующие геттеры в сгенерированных `lib/app/gen/l10n/app_localizations{,_ru,_en}.dart` (генератор в этом окружении не запускался, файлы обновлены вручную в том же формате).
+
+**Тесты `test/widget/currency_list_page_test.dart`:** добавлены 3 кейса — кнопка скрыта при `hasMore: false`; кнопка показана при `hasMore: true`, по тапу догружается следующая страница и кнопка исчезает; при `resumed` идёт `verify(fetchRates(CurrencyPageRequest(base: 'USD')))`. Существующие тесты переведены на общий `buildPage()`.
+
+**`changelog/10053.bugfix.rst`** — фрагмент changelog по конвенции проекта.
+
+## Проверка
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (36 тестов)
+
+Замечание: «фокус экрана» реализован как жизненный цикл приложения (приложение вернулось на передний план и вкладка курса валют активна — `HomePage` пересоздаёт страницу при переключении вкладок, так что возврат на вкладку уже даёт свежий запрос). Если под «потерей фокуса» имелся в виду уход с вкладки (например, через `RouteAware`/`Focus`), скажите — переключу на этот механизм.

@@ -1,0 +1,16 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T4__c2__4\.madharness-mini\traces\20260923-181629-b4e58eaf.jsonl
+Готово. Все проверки пройдены: `flutter.bat analyze` → **No issues found!**, `flutter.bat test` → **All 33 tests passed**.
+
+## Что изменилось
+
+**Файл:** `lib/app/news_list/news_list_page.dart`
+
+Было — один вызов с `forceRefresh: true`, пользователь ждал ответа сети, показывался пустой виджет.
+
+Стало — паттерн **cache-then-network**:
+
+1. **Кэш мгновенно** (`NewsFeedFilter.all`, forceRefresh=false) → список отображается сразу из БД + запускается анимация появления
+2. **Фоновая загрузка** (`forceRefresh: true`) → сеть загружает свежие данные и пишет в кэш, по приходу `setState` обновляет список
+
+В момент загрузки кэша показывается `CircularProgressIndicator`, после — плавно появляется список через `ScaleTransition`.

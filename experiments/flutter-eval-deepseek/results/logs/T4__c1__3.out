@@ -1,0 +1,22 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T4__c1__3\.madharness-mini\traces\20260924-095544-89e28ec5.jsonl
+Готово. Экран новостей переведён на cache-then-network.
+
+**Что изменено**
+
+- `lib/app/news_list/news_list_page.dart` — вместо `FutureBuilder` по одному future теперь два независимых запуска в `initState`:
+  - `_showCachedFeed()` — сразу читает кэш (`loadNewsFeed`) и мгновенно рисует список (анимация `ScaleTransition` стартует на первом показе);
+  - `_refreshFeed()` — параллельно идёт в сеть (`refreshNewsFeed`), по ответу делает `setState` и список обновляется; при ошибке сети кэш остаётся на экране (ошибка не проглатывается молча — есть комментарий и `catch`).
+  - Добавлены защиты: `mounted` после каждого `await` и отказ кэша перетереть уже пришедшую сеть (`_newsList != null`).
+- `lib/domain/repository/news_repository.dart` — добавлен `Future<List<NewsModel>> refreshNewsFeed(NewsFeedFilter filter)`; `loadNewsFeed` теперь документированно кэшевый. Существующий `loadNewsFeed` не ломал: его контракт (чтение кэша) сохранён.
+- `lib/data/repository_impl/news_repository_impl.dart` — `loadNewsFeed` = только БД, `refreshNewsFeed` = REST + `saveNewsList` (запись в кэш). Раньше логика была перепутана: при открытии вкладки всегда шёл форс-рефреш сети, а кэш не показывался вообще.
+- `test/mocks/repository.mocks.dart` — добавлен мок нового метода вручную (mockito-генерация не запускалась, чтобы не переписывать весь файл).
+- Тесты: `test/unit/repository_test.dart` — `loadNewsFeed` читает кэш и не трогает сеть; `refreshNewsFeed` читает сеть и кэширует. `test/widget/news_list_page_test.dart` — три сценария: мгновенный показ кэша до ответа сети (через `Completer`), замена кэша ответом сети, сохранение кэша при падении сети.
+- `changelog/10053.feature.rst` — запись об изменении (по правилу из AGENTS.md).
+
+**Проверка**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (35 тестов)
+
+Замечание: `NewsFeedFilter.forceRefresh` больше нигде не используется — параметр оставлен как есть, чтобы не ломать публичный контракт модели; при желании его можно удалить отдельным изменением.

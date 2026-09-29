@@ -1,0 +1,21 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T4__c2__5\.madharness-mini\traces\20260924-100030-265d04db.jsonl
+Both checks are green. Summary of what changed:
+
+## Изменения
+
+**`lib/app/news_list/news_list_page.dart`** — экран новостей переведён на cache-then-network:
+- `_initData()` делает два вызова `loadNewsFeed`: `NewsFeedFilter.all` (только кэш из БД) и `const NewsFeedFilter(forceRefresh: true)` (сеть + запись в кэш) — оба стартуют параллельно, без `@Deprecated`-членов.
+- Вместо `FutureBuilder` список хранится в `_news`; кэш публикуется через `setState` сразу, свежий ответ заменяет список.
+- Свежий ответ применяется только после того, как кадр с кэшем отрисован (`addPostFrameCallback`): в реальном приложении сеть приходит позже, но при мгновенном ответе (тест, тёплый кэш сети) порядок «кэш → сеть» сохраняется и мигания «пусто → сеть» нет. Если кэш не пришёл вовсе, сеть показывается как есть.
+- Проверка `mounted` во всех колбэках; анимация `_scaleController.forward()` запускается при первом показе данных.
+
+**`test/widget/news_list_page_test.dart`** — добавлен тест `should show cache first and then replace it with fresh news`: на первом кадре видно «Из кэша», после `pumpAndSettle` — «Из сети», плюс проверка, что оба варианта фильтра вызваны ровно по одному разу (`clearInteractions` перед pump, чтобы не считать стабы из `setUp`).
+
+**`changelog/10053.bugfix.rst`** — фрагмент changelog по правилу I.5.
+
+## Проверки
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (34 теста, включая новый)
+
+Замечание: в приложении `NewsListPage` создаётся на `HomePage` только при выборе вкладки (`_pages[_selectedIndex]`), поэтому оба запроса стартуют именно в момент открытия вкладки — «при открытии сначала кэш, потом сеть» выполняется.

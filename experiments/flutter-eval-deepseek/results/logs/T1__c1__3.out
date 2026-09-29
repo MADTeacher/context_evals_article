@@ -1,0 +1,19 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T1__c1__3\.madharness-mini\traces\20260924-091431-21f89a46.jsonl
+Готово.
+
+**Что изменено**
+
+- `lib/app/currency_list/currency_list_page.dart` — постраничная подгрузка:
+  - состояние `_allCurrencies` (все загруженные элементы), `_lastLoadedPage`, `_hasMore`, `_isLoadingMore`, `_query`;
+  - `_loadNextPage()` запрашивает `fetchRates(CurrencyPageRequest(page: _lastLoadedPage + 1, pageSize: 20))` и **дописывает** `page.items` к текущему списку, обновляя `hasMore`; повторный тап во время загрузки блокируется, ошибки запроса не роняют экран;
+  - в `ListView.builder` добавлен последний элемент — кнопка «Показать ещё» (индикатор прогресса, пока идёт запрос), она отображается только при `hasMore`;
+  - фильтрация вынесена в `_applyFilter()` и всегда применяется к полному `_allCurrencies`, поэтому поиск работает и после подгрузки (текущий запрос хранится в `_query`).
+- `assets/l10n/locale_ru.arb` / `locale_en.arb` + сгенерированные `lib/app/gen/l10n/*` — новый ключ `showMore` («Показать ещё» / «Show more»).
+- `test/widget/currency_list_page_test.dart` — 3 новых теста: наличие кнопки при `hasMore`, дописывание следующей страницы (проверяется и `page == 1` в запросе), сохранение поиска после подгрузки.
+- `CHANGELOG.md` — запись о пользовательском изменении (требование AGENTS.md).
+
+**Проверки**
+
+- `flutter analyze` — `No issues found!`
+- `flutter test` — `All tests passed!` (36 тестов, включая 3 новых).

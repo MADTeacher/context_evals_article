@@ -1,0 +1,38 @@
+Exception in thread Thread-2 (_readerthread):
+Traceback (most recent call last):
+  File "C:\Users\MADTeacher\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\MADTeacher\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MADTeacher\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\subprocess.py", line 1614, in _readerthread
+    buffer.append(fh.read())
+                  ~~~~~~~^^
+  File "<frozen codecs>", line 325, in decode
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xcd in position 6: invalid continuation byte
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T6__c1__3\.madharness-mini\traces\20260923-102418-dfbe6326.jsonl
+Готово! Вот что было сделано:
+
+## Изменённые файлы
+
+### 1. `lib/app/profile/profile_page.dart`
+
+- Добавлен импорт `dart:async` для работы с потоками;
+- Добавлено поле `late final StreamSubscription<AppThemeMode> _themeModeSubscription`;
+- В `initState()` подписка на поток изменений темы: `_settingsRepository.themeModeStream.listen((mode) => _themeModeNotifier.value = mode)` — при каждом изменении режима в настройках `ValueNotifier` обновляется, и `ValueListenableBuilder` автоматически перестраивает виджет;
+- В `dispose()` вызывается `_themeModeSubscription.cancel()` для корректной отписки;
+- Начальное значение по-прежнему читается синхронно через `readThemeMode()` при создании `ValueNotifier`.
+
+### 2. `test/widget/home_container_test.dart`
+
+- Добавлен импорт `dart:async`;
+- В `setUp()` добавлен stub для мок-репозитория: `when(mockSettingsRepository.themeModeStream).thenAnswer((_) => Stream.empty())`, чтобы мок возвращал пустой поток вместо выброса MissingStubError.
+
+## Результаты проверки
+
+| Команда | Результат |
+|---|---|
+| `flutter analyze` | ✅ No issues found! |
+| `flutter test` | ✅ All 33 tests passed! |

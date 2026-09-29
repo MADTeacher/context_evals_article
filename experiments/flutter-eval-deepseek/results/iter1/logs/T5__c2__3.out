@@ -1,0 +1,23 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T5__c2__3\.madharness-mini\traces\20260924-004339-fe5a9e6e.jsonl
+**Готово. `flutter analyze` — «No issues found!», `flutter test` — 37/37 зелёных.**
+
+## Что изменено
+
+**1. `test/unit/repository_test.dart`** — новая группа `SettingsRepository.readThemeMode` (4 теста):
+- `readThemeMode()` возвращает актуальное значение из датасорса (проверяется и результат, и сам факт чтения);
+- значение обновляется после `setThemeMode(...)`;
+- вызов после `initAsyncData()` безопасен;
+- вызов до `initAsyncData()` бросает `StateError`, при этом чтение из датасорса не происходит (`verifyNever`), а последующий `initAsyncData()` проходит без ошибок.
+
+Плюс минимальная правка существующего теста `should return current theme mode value`: он теперь сначала вызывает `initAsyncData()` — иначе он нарушал конвенцию «read только после init» и падал после введения guard'а.
+
+**2. `lib/data/repository_impl/settings_repository_impl.dart`** — конвенция docs/migration-v2.md §3 была только на словах, поэтому тест «безопасно только после init» проверить было нечем. Добавлен флаг `_isInitialized` (выставляется в конце `initAsyncData()`) и guard в `readThemeMode()`: до инициализации бросается `StateError('readThemeMode() must be called after initAsyncData()')`. Это соответствует правилу I.3 и не затрагивает `themeModeStream` и `setThemeMode`.
+
+**3. `changelog/10053.bugfix.rst`** — фрагмент changelog по правилу I.5.
+
+## Проверки
+- `flutter analyze` — No issues found (в т.ч. нет обращений к @Deprecated-членам).
+- `flutter test` — 37 тестов, все прошли; существующие тесты не сломались.
+
+Замечание: в `lib/main.dart:93` (вне рамок задачи) `themeMode`-геттер вызывается до `initAsyncData()` — теперь это бросит `StateError` в рантайме. По конвенции там должен быть `readThemeMode()` уже после инициализации; скажите, если нужно поправить — это отдельное изменение с changelog-фрагментом.

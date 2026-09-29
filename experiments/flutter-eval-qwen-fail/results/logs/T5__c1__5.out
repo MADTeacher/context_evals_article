@@ -1,0 +1,18 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T5__c1__5\.madharness-mini\traces\20260923-100236-0e3e640b.jsonl
+Все 35 тестов прошли успешно. Вот итог:
+
+## Что изменилось
+
+**`test/unit/repository_test.dart`**:
+
+1. **Обновлён существующий тест** `should return current theme mode value` — теперь вызывает `settingsRepository.readThemeMode()` вместо deprecated-геттера `.themeMode`. Это убрало бы warning от `flutter analyze`.
+
+2. **Добавлен тест** `readThemeMode returns the actual value from datasource` — проходит по всем трём значениям `AppThemeMode` (light, dark, system), вызывает `initAsyncData()` и проверяет, что `readThemeMode()` возвращает актуальное значение из datasource для каждого режима.
+
+3. **Добавлен тест** `readThemeMode is safe to call after initAsyncData` — демонстрирует контракт: после вызова `initAsyncData()` метод `readThemeMode()` безопасен и возвращает непустое значение.
+
+## Проверка
+
+- ✅ `flutter analyze` — no issues found
+- ✅ `flutter test` — все 35 тестов прошли (включая 2 новых)

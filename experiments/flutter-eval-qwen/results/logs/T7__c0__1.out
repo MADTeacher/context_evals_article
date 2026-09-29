@@ -1,0 +1,27 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T7__c0__1\.madharness-mini\traces\20260924-235740-59d56040.jsonl
+Оба чекa прошли успешно: **`flutter analyze` — no issues**, **`flutter test` — 33/33 passed**.
+
+## Что изменилось
+
+### Добавлено
+- **Кнопка «Обновить всё»** в правом верхнем углу HomePage (AppBar) — иконка `Icons.refresh`, тултип локализован
+- **Changelog**: `changelog/10053.feature.rst`
+
+### Механизм обновления
+HomePage хранит счётчик `_refreshCounter`. По нажатию кнопки он инкрементируется через `setState()`, что меняет `ValueKey` у CurrencyListPage и NewsListPage. При смене ключа Flutter пересоздаёт оба виджета, вызывая `initState` → `_initData()` — каждый из них делает fetch из сети (Currencies: `fetchRates`, News: `loadNewsFeed(forceRefresh: true)`).
+
+### Рефакторинг Scaffold/AppBar
+У CurrencyListPage, NewsListPage и ProfilePage убраны внутренние `Scaffold`/`AppBar` — теперь единственный AppBar наверху HomePage динамически показывает заголовок текущей вкладки (Курс Валют / Новости / Профиль). Это позволило избежать двойных верхних панелей.
+
+### Файлы
+| Файл | Что |
+|------|-----|
+| `lib/app/home.dart` | AppBar с кнопкой refreshAll, ValueKey-переключение страниц, динамический title |
+| `lib/app/currency_list/currency_list_page.dart` | Убран Scaffold + AppBar |
+| `lib/app/news_list/news_list_page.dart` | Убран Scaffold + AppBar |
+| `lib/app/profile/profile_page.dart` | Убран Scaffold + AppBar |
+| `assets/l10n/locale_ru.arb` / `locale_en.arb` | Добавлен ключ `refreshAll` |
+| `lib/app/gen/l10n/app_localizations*.dart` | Сгенерирован getter `refreshAll` |
+| `test/widget/currency_list_page_test.dart` | Обёртка в Scaffold для корректного Material-контекста |
+| `changelog/10053.feature.rst` | Новый changelog-файл |

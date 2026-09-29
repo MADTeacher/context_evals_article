@@ -1,0 +1,57 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T7__c2__5\.madharness-mini\traces\20260923-134806-c4161c0a.jsonl
+Код полностью реализован и проверен вручную. К сожалению, в текущей среде нет доступного Flutter SDK для запуска `flutter analyze` и `flutter test`. Ниже — полный отчёт по изменениям.
+
+---
+
+## Что изменено
+
+### 1. Создан `RefreshController` (lib/app/common/refresh_controller.dart)
+ValueNotifier<bool>, который:
+- При `refresh()` устанавливает `value = true`, ждёт 100 мс, затем `value = false`
+- Подписчики реагируют на изменение `value == true` перезагрузкой данных
+
+### 2. HomePage получил AppBar с кнопкой «Обновить всё» (lib/app/home.dart)
+- Добавлен `appBar: AppBar(title: ..., actions: [IconButton(Icons.sync)])`  
+- По нажатию вызывает `_onRefreshAll()` → `refreshController.refresh()`
+
+### 3. CurrencyListPage подписан на RefreshController (lib/app/currency_list/currency_list_page.dart)
+- Подписка через `context.read<RefreshController>().addListener(_onRefreshTrigger)`
+- При триггерe: `setState(() => _initData(forceNetwork: true))` → перезагрузка из сети
+
+### 4. NewsListPage подписан на RefreshController (lib/app/news_list/news_list_page.dart)  
+- Аналогичная подписка
+- При триггерe: `_initData(forceNetwork: true)` → `loadNewsFeed(NewsFeedFilter(forceRefresh: true))`
+
+### 5. main.dart предоставляет RefreshController через Provider
+- Добавлен `Provider<RefreshController>(create: (_) => RefreshController())` перед HomePage
+
+### 6. Локализации добавлены в оба языка
+- EN: `"refreshAll": "Refresh All"`  
+- RU: `"refreshAll": "Обновить всё"`
+- Обновлены все 3 файла генерированных локализаций (abstact, en, ru)
+
+### 7. Changelog создан (changelog/10053.feature.rst)
+
+### 8. Тест home_container_test.dart обновлён
+Добавлен `RefreshController` в список провайдеров тестового виджета, иначе `context.read<RefreshController>()` упал бы с ошибкой.
+
+---
+
+## Проверка контракта v2 (I.1–I.4) соблюдена:
+- **I.1**: CurrencyRepository вызывается через `fetchRates(CurrencyPageRequest(base: 'USD'))` — ✓
+- **I.2**: NewsFeedFilter(forceRefresh: true) для обновления из сети — ✓  
+- **I.3**: Не затрагивается (не настройки темы)
+- **I.4**: Нигде не используются @Deprecated члены — ✓
+
+## Потенциальные замечания (требуют ручной проверки при доступе к Flutter SDK):
+
+1. **CurrencyListPage**: `context.read<RefreshController>()` вызывается в `_subscribeToRefresh()` который может сработать до того, как Provider обернёт дерево. В текущей реализации это должно быть безопасно, так как CurrencyListPage создаётся внутри HomePage, а RefreshController предоставляется на уровне main.dart (выше HomePage).
+
+2. **NewsListPage**: `_initData(forceNetwork: true)` всегда вызывает `loadNewsFeed(NewsFeedFilter(forceRefresh: true))` — корректно по контракту v2.
+
+3. Для полной верификации необходимо запустить:
+   ```
+   flutter analyze --no-fatal-infos --no-fatal-warnings
+   flutter test
+   ```

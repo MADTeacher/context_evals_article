@@ -1,0 +1,19 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T4__c2__1\.madharness-mini\traces\20260924-002743-079794b4.jsonl
+Готово. Экран новостей переведён на cache-then-network.
+
+**Что изменено — `lib/app/news_list/news_list_page.dart`**
+- Убран `FutureBuilder` над `_newsListFuture`; состояние списка теперь `List<NewsModel> _newsList`.
+- `_initData()` делает два вызова (по `references/news.md` п. 2):
+  - `loadNewsFeed(NewsFeedFilter.all)` — только кэш (БД), мгновенный показ;
+  - `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — сеть + запись в кэш, в фоне.
+- Колбэки `_onCacheLoaded` / `_onNetworkLoaded` с guard `mounted`, обновляют список через `setState` (анимация `ScaleTransition` запускается один раз, при первом непустом результате).
+- Удалён `FutureBuilder`-ветка с `SizedBox.shrink()`: теперь пустой список рендерится как пустой `ListView`, без «пропадания» экрана.
+
+**Changelog:** добавлен `changelog/10053.feature.rst` (I.5).
+
+**Проверки:**
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (33 теста, включая `test/widget/news_list_page_test.dart`).
+
+Замечание по проверяемости: существующий тест мокает `loadNewsFeed(any)` одинаковым ответом, поэтому он не различает кэш/сеть. Если хотите, могу добавить тест на порядок вызовов (кэш-фильтр без `forceRefresh` сначала, затем `forceRefresh: true`) и на то, что список обновляется данными сети после показа кэша.

@@ -1,0 +1,33 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T7__c1__3\.madharness-mini\traces\20260923-111716-119dfb9e.jsonl
+## Что сделано
+
+### Новая кнопка «Обновить всё» на HomePage
+
+По нажатию FAB-кнопки одновременно обновляются **и курс валют, и лента новостей** — оба запроса выполняются из сети (`forceRefresh: true`).
+
+### Механизм обновления (ChangeNotifier)
+
+Создан `RefreshController` (ChangeNotifier), который предоставляет через Provider в `main.dart`. Оба экрана подписаны на него:
+
+- **`lib/app/currency_list/currency_list_page.dart`** — добавлен публичный метод `refresh()`, экран подписан на `RefreshController` в `initState`/отписан в `dispose`. Также добавлен pull-to-refresh через `RefreshIndicator`.
+- **`lib/app/news_list/news_list_page.dart`** — аналогично: метод `refresh()`, подписка, `RefreshIndicator`.
+- **`lib/app/home.dart`** — FAB с иконкой `Icons.refresh`, по нажатию вызывает `requestRefresh()` контроллера. Оба экрана получают уведомление и обновляются параллельно.
+
+### Изменённые файлы
+
+| Файл | Что изменилось |
+|---|---|
+| `lib/app/refresh_controller.dart` | **Новый** — ChangeNotifier для координации обновления |
+| `lib/app/home.dart` | FAB «Обновить всё» |
+| `lib/app/currency_list/currency_list_page.dart` | Метод `refresh()`, подписка на контроллер, RefreshIndicator |
+| `lib/app/news_list/news_list_page.dart` | Метод `refresh()`, подписка на контроллер, RefreshIndicator |
+| `lib/main.dart` | Добавлен ChangeNotifierProvider для RefreshController |
+| `lib/app/app.dart` | Экспорт refresh_controller |
+| `test/widget/widget.dart` | RefreshController по умолчанию в buildWidget |
+| `changelog/10053.feature.rst` | **Новый** — запись об изменении |
+
+### Результаты проверок
+
+- ✅ **`flutter analyze`** — 0 issues (No issues found!)
+- ✅ **`flutter test`** — все 33 теста прошли успешно

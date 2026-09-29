@@ -1,0 +1,41 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T2__c2__5\.madharness-mini\traces\20260924-210726-db60e22d.jsonl
+## Что изменено
+
+### `lib/app/currency_list/currency_list_page.dart` — полная переработка экрана валюты
+
+**1. Пагинация с кнопкой «Показать ещё»**
+- Используется конвенция v2: запрос `CurrencyPageRequest(base: 'USD', page: N, pageSize: 20)` (правило I.1 и reference currency.md).
+- Трекинг состояния: `_currentPage`, `_hasMore`, `_isLoadingMore`.
+- Кнопка внизу экрана показывает текст из `context.loc.showMore`; когда `hasMore == false` — кнопка **скрывается** (`bottomNavigationBar` возвращает `null`).
+- При нажатии загружается следующая страница, элементы **добавляются** к существующему списку (не заменяют), как требует reference currency.md.
+
+**2. Refresh при потере/возврате фокуса экрана**
+- Экран реализует `WidgetsBindingObserver` и подписывается в `initState`.
+- В `didChangeAppLifecycleState(AppLifecycleState.resumed)` вызывается `_loadInitialPage()` — полный перезапрос с базовой валютой `'USD'`, список сбрасывается.
+
+**3. Убран unnecessary import**
+- Удалён дублирующий импорт `package:flutter/material.dart` (все необходимые типы уже экспортируются через `app.dart`).
+
+### `assets/l10n/locale_en.arb` / `locale_ru.arb` — добавлены l10n ключи
+
+Добавлен новый ключ:
+- **en**: `"showMore": "Show more"`
+- **ru**: `"showMore": "Показать ещё"`
+
+Выполнена регенерация через `flutter.bat gen-l10n`.
+
+### `test/widget/widget.dart` — фикс тестового хелпера
+
+Добавлены делегаты локализации и установлен русский locale по умолчанию (`locale: const Locale('ru')`) для всех widget-тестов. Без этого `context.loc` не работал в тестах, и виджеты не рендерились.
+
+### `changelog/10052.bugfix.rst` — фрагмент описания изменений по I.5
+
+---
+
+## Верификация (правило I.6)
+
+| Команда | Результат |
+|---------|-----------|
+| `flutter.bat analyze` | **No issues found!** ✅ |
+| `flutter.bat test` | **All tests passed! 33/33** ✅ |

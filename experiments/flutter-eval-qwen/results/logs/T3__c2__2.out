@@ -1,0 +1,7 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T3__c2__2\.madharness-mini\traces\20260924-183007-5e512778.jsonl
+**Выполнено.** В `lib/app/news_list/news_list_page.dart` добавлена кнопка «Обновить» (иконка `refresh`) в правую часть `AppBar`. По нажатию вызывается `_initData()`, который делает `loadNewsFeed(NewsFeedFilter(forceRefresh: true))` — принудительная загрузка из сети с перезаписью кэша.
+
+**Верификация:**
+- `flutter.bat analyze` → «No issues found!» ✅
+- `flutter.bat test` → 33 теста, все прошли ✅

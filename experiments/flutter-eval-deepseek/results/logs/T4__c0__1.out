@@ -1,0 +1,27 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T4__c0__1\.madharness-mini\traces\20260924-094537-ddc155ad.jsonl
+The workspace isn't tracked as a git repo at this path, so no diff is available there. That's fine — the changes are complete and verified.
+
+## Итог
+
+Экран новостей переведён на **cache-then-network**: при открытии вкладки мгновенно показывается кэш ленты, параллельно в фоне идёт запрос в сеть, и список обновляется, когда приходит ответ.
+
+**Изменённые файлы (production):**
+- `lib/domain/model/news_feed.dart` (новый) — `NewsFeed` с полями `cached`, `freshStream`, `refresh`.
+- `lib/domain/model/model.dart` — экспорт `news_feed.dart`.
+- `lib/domain/repository/news_repository.dart` — добавлен `watchNewsFeed(NewsFeedFilter)`.
+- `lib/data/repository_impl/news_repository_impl.dart` — реализация: читает кэш, затем в фоне сеть → сохраняет в БД → отдаёт свежие данные через поток; ошибки сети пробрасываются в поток и в `refresh`.
+- `lib/app/news_list/news_list_page.dart` — вместо `FutureBuilder` держит `List<NewsModel>`: сначала рендерит кэш, затем подписывается на `freshStream` и обновляет список; отписка в `dispose`, ошибки сети не ломают уже показанный кэш.
+- `changelog/10053.feature.rst` (новый).
+
+**Тесты:**
+- `test/mocks/repository.mocks.dart` — перегенерированы (`dart run build_runner build`) под новый метод.
+- `test/widget/news_list_page_test.dart` — обновлён под `watchNewsFeed` + новые кейсы: мгновенный показ кэша до ответа сети, обновление после ответа, сохранение кэша при падении сети.
+- `test/widget/home_container_test.dart` — стаб `watchNewsFeed`.
+- `test/unit/repository_test.dart` — два теста на `watchNewsFeed` (кэш+сеть, и сохранение кэша при ошибке сети).
+
+**Проверка:**
+- `flutter analyze` — `No issues found!`
+- `flutter test` — `All tests passed!` (37 тестов)
+
+Примечание: `integration_test/app_test.dart` — device-тест, запускается отдельно (не входит в `flutter test`); он проверяет лишь наличие `NewsCard`, что сохраняется и при новом паттерне.

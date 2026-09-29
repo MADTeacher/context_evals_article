@@ -1,0 +1,52 @@
+T1__c0__1: grep USD 
+T1__c0__2: grep USD 
+T1__c0__3: grep USD 
+T1__c0__4: grep USD 
+T1__c0__5: grep USD 
+T1__c1__1: grep USD 
+T1__c1__2: grep USD 
+T1__c1__3: grep USD 
+T1__c1__4: grep USD 
+T1__c1__5: grep USD 
+T2__c0__1: grep USD 
+T2__c0__2: grep USD 
+T2__c0__3: grep USD 
+T2__c0__4: grep USD 
+T2__c0__5: grep USD 
+T2__c1__1: grep USD 
+T2__c1__2: grep USD 
+T2__c1__3: grep USD 
+T2__c1__4: grep USD 
+T2__c1__5: grep USD 
+T3__c2__3: grep forceRefresh:true 
+T4__c0__1: grep loadNewsFeed>=2 
+T4__c0__2: grep loadNewsFeed>=2 
+T4__c0__3: grep loadNewsFeed>=2 
+T4__c0__4: grep loadNewsFeed>=2 
+T4__c0__5: grep loadNewsFeed>=2 
+T4__c1__1: grep loadNewsFeed>=2 
+T4__c1__2: grep loadNewsFeed>=2 
+T4__c1__3: grep loadNewsFeed>=2 
+T4__c1__4: grep loadNewsFeed>=2 
+T4__c1__5: grep loadNewsFeed>=2 
+T4__c2__1: grep forceRefresh:false|all 
+T6__c0__2: analyze (2 issues) error - Undefined class 'StreamSubscription'. Try changing the name to the name of an existing class, or creating a class with the name 'Str
+T7__c0__2: changelog>=3 
+T7__c0__5: changelog>=3 
+T7__c1__1: changelog>=3 
+T7__c1__2: changelog>=3 
+T7__c1__3: changelog>=3 
+T7__c1__4: changelog>=3 
+T7__c1__5: changelog>=3 
+T7__c2__2: changelog>=3 
+T7__c2__4: changelog>=3 
+T8__c0__2: changelog>=3 
+T8__c0__3: analyze (6 issues) error - Undefined class 'Completer'. Try changing the name to the name of an existing class, or creating a class with the name 'Completer' -
+T8__c0__4: changelog>=3 
+T8__c0__5: changelog>=3 
+T8__c1__1: changelog>=3 
+T8__c1__2: changelog>=3 
+T8__c1__3: changelog>=3 
+T8__c1__4: changelog>=3 
+T8__c1__5: changelog>=3 
+T8__c2__3: changelog>=3 

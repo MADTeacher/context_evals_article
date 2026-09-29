@@ -1,0 +1,18 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T3__c0__3\.madharness-mini\traces\20260923-234632-f0d01437.jsonl
+Готово.
+
+**Что изменено**
+
+- `lib/app/news_list/news_list_page.dart` — в `AppBar` добавлена кнопка `IconButton` с `Icons.refresh` и тултипом из локализации. По нажатию вызывается `_refresh()` → `setState(_initData)`: лента перезагружается через `NewsRepository.loadNewsFeed(const NewsFeedFilter(forceRefresh: true))`, т.е. всегда идёт в сеть и обновляет кэш (БД) — это соответствует проектной конвенции из `docs/migration-v2.md` (п. 2: «любое действие пользователя "Обновить" — всегда `forceRefresh: true`»). Слой domain/data не трогал: `forceRefresh` уже реализован в `NewsRepositoryImpl`.
+- Ключ локализации `refresh` добавлен в `assets/l10n/locale_ru.arb` («Обновить») и `assets/l10n/locale_en.arb` («Refresh»), а также в сгенерированные файлы `lib/app/gen/l10n/app_localizations.dart`, `app_localizations_en.dart`, `app_localizations_ru.dart`. После ручной правки прогнал `flutter gen-l10n` — генератор отработал на изменённых `.arb` без ошибок, содержимое сгенерированных файлов совпадает (проверил `refresh` в `app_localizations_ru.dart:42` и `app_localizations.dart:165`).
+
+**Проверки**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (33 теста, включая `test/widget/news_list_page_test.dart`)
+
+**Замечания**
+
+- Существующий тест `NewsListPage` использует мок `loadNewsFeed(any)`, поэтому кнопка покрыта лишь косвенно: отдельного теста на «нажатие → повторный запрос с `forceRefresh: true`» нет. Скажи, если нужно — добавлю.
+- `docs/migration-v2.md` (п. 4) требует для пользовательских изменений фрагмент `changelog/<номер>.bugfix.rst`; номер задачи не задан, поэтому файл не создавал.

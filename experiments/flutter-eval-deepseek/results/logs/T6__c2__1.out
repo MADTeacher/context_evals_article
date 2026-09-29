@@ -1,0 +1,23 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c2__1\.madharness-mini\traces\20260924-101141-6658cdf0.jsonl
+Готово.
+
+## Что изменилось
+
+**`lib/app/profile/profile_page.dart`**
+- Начальное значение по-прежнему читается синхронно: `ValueNotifier(_settingsRepository.readThemeMode())` (метод v2, геттер `themeMode` не используется).
+- В `initState` добавлена подписка на `SettingsRepository.themeModeStream`; входящее значение пишется в `_themeModeNotifier`, поэтому UI (`ValueListenableBuilder`) обновляется автоматически при `setThemeMode` из любого места (в т.ч. из боттом-шита — он теперь только сохраняет режим, локального присваивания в экране не требуется).
+- Подписка отменяется в `dispose` до `_themeModeNotifier.dispose()`.
+
+**`test/widget/profile_page_test.dart`** (новый) — два теста: синхронное начальное значение (`Системная`) и обновление отображаемого режима при эмите в поток (`Тёмная`).
+
+**`test/widget/home_container_test.dart`** — добавлен стаб `themeModeStream` (существующий тест навигации на профиль падал с `MissingStubError`, т.к. экран теперь подписывается на поток).
+
+**`changelog/10053.bugfix.rst`** (новый) — фрагмент по I.5.
+
+## Проверка
+
+- `flutter analyze` — `No issues found!`
+- `flutter test` — `All tests passed!` (35 тестов)
+
+Замечание: конвенции I.1–I.4 соблюдены (использованы `readThemeMode()` и `themeModeStream`, `@Deprecated`-члены не задействованы). Изменения ограничены экраном профиля и тестами; репозиторий/датасорс настроек не трогал.

@@ -1,0 +1,30 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T5__c0__5\.madharness-mini\traces\20260923-095402-ce0c021b.jsonl
+Flutter SDK недоступен из PATH на этой машине (`flutter --version` возвращает FileNotFoundError), поэтому я не могу запустить `flutter analyze` и `flutter test`. Однако я проверил корректность кода вручную.
+
+## Что сделано
+
+В `test/unit/repository_test.dart` добавлена группа из **5 новых тестов** для `readThemeMode()`:
+
+1. **`readThemeMode returns the current theme mode from datasource`** — проверяет, что метод возвращает значение, которое вернул mock datasource (для `AppThemeMode.dark`)
+2. **`readThemeMode returns system mode by default from datasource`** — аналогично для `AppThemeMode.system`
+3. **`readThemeMode returns light mode set via datasource`** — проверяет для `AppThemeMode.light`
+4. **`readThemeMode works correctly after initAsyncData()`** — асинхронный тест: после вызова `initAsyncData()` метод `readThemeMode()` возвращает актуальное значение из datasource (т.е. его безопасно вызывать после инициализации)
+5. **`readThemeMode reflects mode updated via setThemeMode`** — проверяет, что после `setThemeMode(AppThemeMode.light)` чтение через `readThemeMode()` отражает обновлённое значение
+
+Все тесты используют уже существующий `mockPreferenceDatasource`, настроенный в `setUp()` группы `SettingsRepository`. Существующие 9 тестов группы `SettingsRepository` (и все тесты `CurrencyRepository` / `NewsRepository`) сохранены без изменений.
+
+## Проверка корректности
+
+- `readThemeMode()` объявлен как синхронный метод, возвращающий `AppThemeMode` из `_datasource.themeMode`
+- Mock `PreferenceDatasource` (mockito) автоматически поддерживает stubbing для геттера `themeMode` через `when(mockPreferenceDatasource.themeMode).thenReturn(...)`
+- `AppThemeMode` импортирован в файле через `package:mad_flutter_practicum/domain/domain.dart`
+
+## flutter analyze / flutter test — не удалось запустить
+
+Flutter SDK не установлен или не указан в PATH этой машины. Для проверки нужно запустить на машине, где Flutter доступен:
+
+```bash
+flutter analyze
+flutter test test/unit/repository_test.dart
+```

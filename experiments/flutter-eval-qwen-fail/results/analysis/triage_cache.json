@@ -1,0 +1,281 @@
+{
+"T1__c0__2": {
+"check": "analyze (1 issues)",
+"first": "error - The getter 'showMore' isn't defined for the type 'AppLocalizations'. Try importing the library that defines 'showMore', correcting the name to"
+},
+"T1__c0__4": {
+"check": "analyze (2 issues)",
+"first": "error - The getter 'showMore' isn't defined for the type 'AppLocalizations'. Try importing the library that defines 'showMore', correcting the name to"
+},
+"T1__c0__5": {
+"check": "analyze (1 issues)",
+"first": "warning - This 'onError' handler must return a value assignable to 'List<CurrencyModel>', but ends without returning a value. Try adding a return stat"
+},
+"T1__c1__2": {
+"check": "analyze (1 issues)",
+"first": "error - The getter 'loadMore' isn't defined for the type 'AppLocalizations'. Try importing the library that defines 'loadMore', correcting the name to"
+},
+"T1__c1__4": {
+"check": "analyze (30 issues)",
+"first": "warning - The declaration '_resetPagination' isn't referenced. Try removing the declaration of '_resetPagination' - lib\\app\\currency_list\\currency_lis"
+},
+"T1__c1__5": {
+"check": "analyze (4 issues)",
+"first": "error - Invalid constant value - lib\\app\\currency_list\\currency_list_page.dart:157:27 - invalid_constant"
+},
+"T1__c2__1": {
+"check": "tests: passed?! (accept говорил иное)"
+},
+"T1__c2__2": {
+"check": "tests: FAIL — [E]"
+},
+"T1__c2__3": {
+"check": "analyze (1 issues)",
+"first": "error - The getter 'showMore' isn't defined for the type 'AppLocalizations'. Try importing the library that defines 'showMore', correcting the name to"
+},
+"T1__c2__4": {
+"check": "analyze (2 issues)",
+"first": "error - Undefined class 'Completer'. Try changing the name to the name of an existing class, or creating a class with the name 'Completer' - test\\widg"
+},
+"T1__c2__5": {
+"check": "analyze (1 issues)",
+"first": "info - The import of 'package:flutter/material.dart' is unnecessary because all of the used elements are also provided by the import of 'package:mad_f"
+},
+"T2__c0__1": {
+"check": "analyze (3 issues)",
+"first": "info - The import of 'package:flutter/material.dart' is unnecessary because all of the used elements are also provided by the import of 'package:mad_f"
+},
+"T2__c0__2": {
+"check": "analyze (56 issues)",
+"first": "error - Undefined name '_isLoadingMore'. Try correcting the name to one that is defined, or defining the name - lib\\app\\currency_list\\currency_list_pa"
+},
+"T2__c0__3": {
+"check": "analyze (11 issues)",
+"first": "error - The method 'read' isn't defined for the type 'BuildContext'. Try correcting the name to the name of an existing method, or defining a method n"
+},
+"T2__c0__4": {
+"check": "analyze (8 issues)",
+"first": "warning - The value of the local variable 'data' isn't used. Try removing the variable or using it - lib\\app\\currency_list\\currency_list_page.dart:138"
+},
+"T2__c0__5": {
+"check": "analyze (2 issues)",
+"first": "warning - The method doesn't override an inherited method. Try updating this class to match the superclass, or removing the override annotation - lib\\"
+},
+"T2__c1__1": {
+"check": "tests: passed?! (accept говорил иное)"
+},
+"T2__c1__3": {
+"check": "tests: FAIL — [E]"
+},
+"T2__c1__5": {
+"check": "analyze (1 issues)",
+"first": "info - The import of 'package:flutter/material.dart' is unnecessary because all of the used elements are also provided by the import of 'package:mad_f"
+},
+"T2__c2__3": {
+"check": "analyze (1 issues)",
+"first": "info - The import of 'package:flutter/material.dart' is unnecessary because all of the used elements are also provided by the import of 'package:mad_f"
+},
+"T2__c2__5": {
+"check": "analyze (17 issues)",
+"first": "error - The getter 'showMore' isn't defined for the type 'AppLocalizations'. Try importing the library that defines 'showMore', correcting the name to"
+},
+"T3__c0__3": {
+"check": "analyze (1 issues)",
+"first": "error - The getter 'refresh' isn't defined for the type 'AppLocalizations'. Try importing the library that defines 'refresh', correcting the name to t"
+},
+"T3__c0__4": {
+"check": "analyze (1 issues)",
+"first": "error - The method '_initData' isn't defined for the type '_NewsListPageState'. Try correcting the name to the name of an existing method, or defining"
+},
+"T3__c1__5": {
+"check": "analyze (1 issues)",
+"first": "error - The getter 'refresh' isn't defined for the type 'AppLocalizations'. Try importing the library that defines 'refresh', correcting the name to t"
+},
+"T3__c2__1": {
+"check": "analyze (1 issues)",
+"first": "info - The import of 'package:flutter/material.dart' is unnecessary because all of the used elements are also provided by the import of 'package:mad_f"
+},
+"T3__c2__5": {
+"check": "analyze (1 issues)",
+"first": "error - The getter 'refresh' isn't defined for the type 'AppLocalizations'. Try importing the library that defines 'refresh', correcting the name to t"
+},
+"T4__c0__1": {
+"check": "analyze (1 issues)",
+"first": "error - Local variable 'controller' can't be referenced before it is declared. Try moving the declaration to before the first use, or renaming the loc"
+},
+"T4__c0__3": {
+"check": "analyze (3 issues)",
+"first": "warning - The value of the field '_isLoadingRefresh' isn't used. Try removing the field, or using it - lib\\app\\news_list\\news_list_page.dart:17:8 - un"
+},
+"T4__c0__4": {
+"check": "analyze (8 issues)",
+"first": "error - Const variables must be initialized with a constant value. Try changing the initializer to be a constant expression - lib\\app\\news_list\\news_l"
+},
+"T4__c0__5": {
+"check": "tests: passed?! (accept говорил иное)"
+},
+"T4__c1__1": {
+"check": "analyze (1 issues)",
+"first": "error - Missing concrete implementation of 'NewsRepository.loadNewsFeedLive'. Try implementing the missing method, or make the class abstract - lib\\da"
+},
+"T4__c1__2": {
+"check": "tests: FAIL — [E]"
+},
+"T4__c1__3": {
+"check": "tests: passed?! (accept говорил иное)"
+},
+"T4__c1__4": {
+"check": "analyze (1 issues)",
+"first": "info - The import of 'package:flutter/material.dart' is unnecessary because all of the used elements are also provided by the import of 'package:mad_f"
+},
+"T4__c2__1": {
+"check": "analyze (2 issues)",
+"first": "error - Expected to find '(' - lib\\app\\news_list\\news_list_page.dart:50:56 - expected_token"
+},
+"T4__c2__2": {
+"check": "tests: passed?! (accept говорил иное)"
+},
+"T4__c2__3": {
+"check": "analyze (4 issues)",
+"first": "error - The name 'NewsRepository' isn't a type, so it can't be used as a type argument. Try correcting the name to an existing type, or defining a typ"
+},
+"T4__c2__5": {
+"check": "analyze (3 issues)",
+"first": "warning - The value of the field '_newsListFuture' isn't used. Try removing the field, or using it - lib\\app\\news_list\\news_list_page.dart:16:32 - unu"
+},
+"T5__c0__1": {
+"check": "tests: FAIL — [E]"
+},
+"T5__c1__2": {
+"check": "tests: FAIL — [E]"
+},
+"T5__c1__3": {
+"check": "tests: FAIL — [E]"
+},
+"T5__c2__2": {
+"check": "tests: FAIL — [E]"
+},
+"T5__c2__5": {
+"check": "tests: FAIL — [E]"
+},
+"T6__c0__1": {
+"check": "analyze (1 issues)",
+"first": "info - The import of 'package:flutter/material.dart' is unnecessary because all of the used elements are also provided by the import of 'package:mad_f"
+},
+"T6__c0__2": {
+"check": "analyze (1 issues)",
+"first": "error - Undefined class 'StreamSubscription'. Try changing the name to the name of an existing class, or creating a class with the name 'StreamSubscri"
+},
+"T6__c0__4": {
+"check": "tests: FAIL — [E]"
+},
+"T6__c0__5": {
+"check": "tests: FAIL — [E]"
+},
+"T6__c1__1": {
+"check": "analyze (1 issues)",
+"first": "error - Undefined class 'StreamSubscription'. Try changing the name to the name of an existing class, or creating a class with the name 'StreamSubscri"
+},
+"T6__c1__4": {
+"check": "tests: FAIL — [E]"
+},
+"T6__c1__5": {
+"check": "analyze (1 issues)",
+"first": "error - Undefined class 'StreamSubscription'. Try changing the name to the name of an existing class, or creating a class with the name 'StreamSubscri"
+},
+"T6__c2__1": {
+"check": "analyze (1 issues)",
+"first": "error - Undefined class 'StreamSubscription'. Try changing the name to the name of an existing class, or creating a class with the name 'StreamSubscri"
+},
+"T6__c2__3": {
+"check": "tests: FAIL — [E]"
+},
+"T6__c2__4": {
+"check": "tests: FAIL — [E]"
+},
+"T6__c2__5": {
+"check": "analyze (1 issues)",
+"first": "info - The import of 'package:flutter/material.dart' is unnecessary because all of the used elements are also provided by the import of 'package:mad_f"
+},
+"T7__c0__1": {
+"check": "analyze (1 issues)",
+"first": "error - The getter 'refreshAll' isn't defined for the type 'AppLocalizations'. Try importing the library that defines 'refreshAll', correcting the nam"
+},
+"T7__c0__2": {
+"check": "analyze (3 issues)",
+"first": "error - The name 'CurrencyListPageState' isn't a type, so it can't be used as a type argument. Try correcting the name to an existing type, or definin"
+},
+"T7__c0__4": {
+"check": "analyze (3 issues)",
+"first": "error - The method '_refresh' isn't defined for the type 'CurrencyListPageState'. Try correcting the name to the name of an existing method, or defini"
+},
+"T7__c0__5": {
+"check": "analyze (4 issues)",
+"first": "error - The getter 'loc' isn't defined for the type 'BuildContext'. Try importing the library that defines 'loc', correcting the name to the name of a"
+},
+"T7__c1__1": {
+"check": "analyze (2 issues)",
+"first": "warning - The value of the field '_refreshKey' isn't used. Try removing the field, or using it - lib\\app\\home.dart:13:7 - unused_field"
+},
+"T7__c1__2": {
+"check": "tests: passed?! (accept говорил иное)"
+},
+"T7__c1__3": {
+"check": "analyze (1 issues)",
+"first": "info - The import of 'package:provider/provider.dart' is unnecessary because all of the used elements are also provided by the import of 'package:mad_"
+},
+"T7__c2__1": {
+"check": "analyze (2 issues)",
+"first": "warning - The value of the field '_pages' isn't used. Try removing the field, or using it - lib\\app\\home.dart:29:29 - unused_field"
+},
+"T7__c2__2": {
+"check": "analyze (6 issues)",
+"first": "warning - The getter doesn't override an inherited getter. Try updating this class to match the superclass, or removing the override annotation - lib\\"
+},
+"T7__c2__4": {
+"check": "analyze (2 issues)",
+"first": "info - Unnecessary braces in a string interpolation. Try removing the braces - lib\\app\\home.dart:15:45 - unnecessary_brace_in_string_interps"
+},
+"T7__c2__5": {
+"check": "analyze (55 issues)",
+"first": "error - Target of URI doesn't exist: 'package:mad_flutter_practicum/common/refresh_controller.dart'. Try creating the file referenced by the URI, or t"
+},
+"T8__c0__2": {
+"check": "tests: passed?! (accept говорил иное)"
+},
+"T8__c0__3": {
+"check": "analyze (55 issues)",
+"first": "error - Target of URI doesn't exist: 'widgets/dashboard_currency_row.dart'. Try creating the file referenced by the URI, or try using a URI for a file"
+},
+"T8__c0__4": {
+"check": "analyze (4 issues)",
+"first": "error - The getter 'semiBold16' isn't defined for the type 'ThemeFonts'. Try importing the library that defines 'semiBold16', correcting the name to t"
+},
+"T8__c0__5": {
+"check": "analyze (1 issues)",
+"first": "info - The import of 'package:flutter/material.dart' is unnecessary because all of the used elements are also provided by the import of 'package:mad_f"
+},
+"T8__c1__1": {
+"check": "tests: passed?! (accept говорил иное)"
+},
+"T8__c1__2": {
+"check": "analyze (10 issues)",
+"first": "error - The getter 'dashboard' isn't defined for the type 'AppLocalizations'. Try importing the library that defines 'dashboard', correcting the name "
+},
+"T8__c1__5": {
+"check": "analyze (7 issues)",
+"first": "warning - Unused import: 'package:intl/intl.dart'. Try removing the import directive - lib\\app\\dashboard_page.dart:1:8 - unused_import"
+},
+"T8__c2__1": {
+"check": "analyze (5 issues)",
+"first": "info - The import of 'package:mad_flutter_practicum/app/currency_list/widgets/currency_card.dart' is unnecessary because all of the used elements are "
+},
+"T8__c2__3": {
+"check": "analyze (12 issues)",
+"first": "error - The getter 'semiBold16' isn't defined for the type 'ThemeFonts'. Try importing the library that defines 'semiBold16', correcting the name to t"
+},
+"T8__c2__4": {
+"check": "analyze (3 issues)",
+"first": "error - A value of type 'Future<CurrencyPage>' can't be assigned to a variable of type 'Future<List<CurrencyModel>>'. Try changing the type of the var"
+}
+}

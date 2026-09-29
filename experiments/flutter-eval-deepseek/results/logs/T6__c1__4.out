@@ -1,0 +1,20 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c1__4\.madharness-mini\traces\20260924-101129-7a36d7e6.jsonl
+Готово.
+
+**Что изменено**
+
+- `lib/app/profile/profile_page.dart`
+  - В `initState` добавлена подписка `_settingsRepository.themeModeStream.listen(...)`, которая обновляет `_themeModeNotifier.value`. Начальное значение по-прежнему читается синхронно через `readThemeMode()` в инициализаторе `ValueNotifier`, поэтому UI не «мигает» пустым состоянием.
+  - Подписка отменяется в `dispose` (`_themeModeSubscription?.cancel()`), чтобы не было утечки и обновлений после размонтирования.
+  - Добавлен `import 'dart:async';`.
+- `test/widget/profile_page_test.dart` (новый): три теста — синхронное чтение начального режима, обновление подписи при эмите стрима (Светлая → Тёмная), отсутствие ошибок после dispose.
+- `test/widget/home_container_test.dart`: добавлен стаб `when(mockSettingsRepository.themeModeStream).thenAnswer(...)`, т.к. `ProfilePage` теперь подписывается на стрим при построении (это ломало существующий тест навигации).
+- `changelog/10053.bugfix.rst`: запись в changelog по правилам проекта.
+
+**Проверка**
+
+- `flutter analyze` — `No issues found!`
+- `flutter test` — `All tests passed!` (36 тестов)
+
+Примечание: `ThemeModeSelectorBottomSheet` уже вызывает `setThemeMode(mode)` репозитория, так что и выбор в шите, и любые другие источники изменений теперь автоматически отражаются на экране профиля.

@@ -1,0 +1,16 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T3__c2__1\.madharness-mini\traces\20260924-002027-adae2422.jsonl
+Готово: в AppBar экрана новостей добавлена кнопка «Обновить».
+
+**Изменения**
+- `lib/app/news_list/news_list_page.dart` — в `AppBar` добавлен `IconButton` с иконкой `Icons.refresh`, tooltip из l10n и обработчик `_refresh()`, который через `setState(_initData)` перезапускает `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — сеть + запись в кэш, минуя кэш (конвенция v2, `references/news.md` п.3).
+- `assets/l10n/locale_ru.arb` / `locale_en.arb` — новый ключ `refresh` («Обновить» / «Refresh»).
+- `lib/app/gen/l10n/app_localizations.dart`, `app_localizations_en.dart`, `app_localizations_ru.dart` — вручную синхронизирован сгенерированный l10n-код (без запуска `flutter gen-l10n`).
+- `test/widget/news_list_page_test.dart` — новый тест: клик по `Icons.refresh` вызывает `loadNewsFeed` повторно, оба вызова с `forceRefresh: true`.
+- `changelog/10053.feature.rst` — фрагмент changelog.
+
+**Проверки**
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (34 теста, включая новый)
+
+Примечание: экран по-прежнему грузит ленту одним запросом `forceRefresh: true` в `initState` (это существующее поведение, я его не менял). Полный паттерн cache-then-network из `docs/migration-v2.md` (кэш сразу + фоновое обновление) в этом файле не реализован — если нужно, могу доработать отдельно.

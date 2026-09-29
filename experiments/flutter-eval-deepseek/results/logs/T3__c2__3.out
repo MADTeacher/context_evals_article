@@ -1,0 +1,17 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T3__c2__3\.madharness-mini\traces\20260924-094435-6604c786.jsonl
+**Что сделано**
+
+Кнопка «Обновить» добавлена в `AppBar` экрана новостей.
+
+- `lib/app/news_list/news_list_page.dart` — в `AppBar` добавлен `IconButton` с `Icons.refresh`; обработчик `_refresh()` вызывает `setState(_initData)`, а `_initData()` снова дергает `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` → сеть + запись в кэш (семантика v2, п. I.2 и reference news.md: «действие пользователя „Обновить“ — всегда `forceRefresh: true`»). Кэш не подменяет результат, `FutureBuilder` перестраивается на новом future.
+- `assets/l10n/locale_ru.arb` / `locale_en.arb` — добавлен ключ `refresh` («Обновить» / «Refresh»), используется как `tooltip`.
+- `lib/app/gen/l10n/*` — перегенерировано через `flutter gen-l10n` (вместе с `.arb`), файлы не правились руками.
+- `changelog/10053.feature.rst` — фрагмент changelog по п. I.5.
+
+**Проверка**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (33 теста)
+
+Существующие тесты (`test/widget/news_list_page_test.dart`, `home_container_test.dart`) используют `when(mockNewsRepository.loadNewsFeed(any))`, поэтому покрывают и повторную загрузку по кнопке без изменений. Отдельный тест на сам тап по кнопке не добавлял — скажи, если нужно покрыть его явно.

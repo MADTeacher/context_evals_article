@@ -1,0 +1,29 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T4__c1__2\.madharness-mini\traces\20260924-095227-c034a524.jsonl
+Готово. Экран новостей переведён на cache-then-network.
+
+## Что изменено
+
+**Domain**
+- `lib/domain/model/news_feed.dart` (новый) — `NewsFeed` (снимок ленты) и `NewsFeedSource { cache, network }`, флаг `isStale` для случая «сеть недоступна, показываем кэш».
+- `lib/domain/model/model.dart` — экспорт `news_feed.dart`.
+- `lib/domain/repository/news_repository.dart` — добавлен контракт `Stream<NewsFeed> watchNewsFeed(NewsFeedFilter)`.
+
+**Data**
+- `lib/data/repository_impl/news_repository_impl.dart` — реализация `watchNewsFeed` через `async*`: сначала отдаёт `getNewsList()` из sqflite (эмиссия сразу), затем при `forceRefresh` идёт в REST, сохраняет в БД и эмитит снимок `network`; при ошибке сети эмитит тот же кэш с `isStale = true` (лента не пропадает).
+
+**App**
+- `lib/app/news_list/news_list_page.dart` — `FutureBuilder` заменён на подписку `watchNewsFeed(...)`: кэш рендерится мгновенно, после ответа сети список заменяется свежими данными и перезапускается анимация появления. Подписка отменяется в `dispose()`.
+
+**Тесты / changelog**
+- `test/unit/repository_test.dart` — 3 кейса: кэш → сеть, только кэш без `forceRefresh`, сохранение устаревшего кэша при ошибке сети.
+- `test/widget/news_list_page_test.dart` — кейс «кэш показан сразу, затем заменяется сетевыми данными» (управляемый `StreamController`).
+- `test/widget/home_container_test.dart` — стаб нового стрима.
+- `test/mocks/repository.mocks.dart` — перегенерирован (`dart run build_runner build`), т.к. в моке не было `watchNewsFeed`.
+- `changelog/10053.feature.rst` — запись об изменении.
+
+## Проверки
+- `flutter analyze` — **No issues found!**
+- `flutter test` — **37/37 passed**.
+
+Замечание: `loadNewsFeed` не тронут (остаётся для прежних вызовов), но экран новостей теперь использует только `watchNewsFeed`.

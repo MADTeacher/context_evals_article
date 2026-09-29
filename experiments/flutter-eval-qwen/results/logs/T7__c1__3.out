@@ -1,0 +1,35 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T7__c1__3\.madharness-mini\traces\20260925-023238-15ec6025.jsonl
+Отлично! Задача выполнена полностью. Вот краткая сводка изменений:
+
+## Что добавлено
+
+### 1. Кнопка «Обновить всё» на HomePage (`lib/app/home.dart`)
+- **FloatingActionButton.extended** с текстом и иконкой sync, расположенная в правом нижнем углу экрана
+- При нажатии одновременно обновляются курсы валют и лента новостей через `Future.wait`
+- Иконка вращается во время загрузки (AnimatedRotation)
+- Кнопка блокируется (`onPressed: null`) пока обновление идёт
+
+### 2. Pull-to-refresh
+- Каждая вкладка обернута в **RefreshIndicator** — можно обновить свайпом вниз на CurrencyListPage или NewsListPage
+
+### 3. Обновлённые страницы
+- **CurrencyListPageState** и **NewsListPageState** — состояния вынесены из приватных классов для доступа через `GlobalKey`
+- Оба класса получили публичный метод `refreshData()` с типом `Future<void>`, который выполняет сетевой запрос заново
+
+### 4. Динамический AppBar
+- Заголовок меняет название текущей вкладки (Курс Валют / Новости / Профиль)
+
+### 5. Локализация
+- Добавлен ключ `updateAll` в оба ARB-файла (`locale_ru.arb`, `locale_en.arb`) → «Обновить всё» / «Update all»
+- Перегенерированы сгенерированные файлы локализации
+
+### 6. Changelog
+- Создан файл **CHANGELOG.md** с описанием всех изменений
+
+## Верификация
+
+| Команда | Результат |
+|---------|-----------|
+| `flutter analyze` | ✅ **No issues found!** (0 ошибок, 0 warning'ов) |
+| `flutter test` | ✅ **All tests passed!** — все 33 теста пройдены |

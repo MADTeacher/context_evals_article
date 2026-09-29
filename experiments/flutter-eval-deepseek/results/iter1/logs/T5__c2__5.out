@@ -1,0 +1,23 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T5__c2__5\.madharness-mini\traces\20260924-004743-fe5925ea.jsonl
+Готово.
+
+## Что сделано
+
+**`test/unit/repository_test.dart`** — в группу `SettingsRepository` добавлены 3 теста на `readThemeMode()`:
+- `readThemeMode returns actual theme mode value after initAsyncData` — после `initAsyncData()` метод возвращает актуальное значение из preference-датасорса и читает его ровно один раз.
+- `readThemeMode returns updated value after setThemeMode` — после `setThemeMode(dark)` чтение отдаёт новое значение, `setThemeMode` вызван 1 раз.
+- `readThemeMode is called only after initAsyncData` — проверяет контракт v2: до `initAsyncData()` (Splash) датасорс не читается (`verifyNever`), после — читается и возвращает актуальный режим.
+
+**`lib/app/profile/profile_page.dart`** — нашёл и починил реальный дефект по конвенции v2: `readThemeMode()` вызывался в инициализаторе поля (`late final ... = ValueNotifier(_settingsRepository.readThemeMode())`), т.е. до `initAsyncData()`. Перенёс чтение в `initState()` (поле объявлено без инициализатора), как в `currency_list_page.dart`.
+
+**`changelog/10053.bugfix.rst`** — фрагмент changelog по правилу I.5.
+
+## Важное замечание
+
+Реализация `SettingsRepositoryImpl.readThemeMode()` **не имеет init-guard** — это просто `=> _datasource.themeMode`, поэтому тест вида «до `initAsyncData()` бросается исключение» физически не может пройти. Я проверил это эмпирически (падал с `returned AppThemeMode:<...>`), поэтому тест на «безопасность» сформулирован через порядок вызовов (`verifyNever` до init + успешное чтение после), а не через ожидание исключения. Если нужен настоящий guard (например, `StateError` при чтении до инициализации) — это правка `lib/data/repository_impl/settings_repository_impl.dart`; скажите, и я добавлю его вместе с тестом на исключение.
+
+## Проверка
+
+- `flutter analyze` → **No issues found!**
+- `flutter test` → **36 тестов, все зелёные** (существующие тесты не сломаны; в `repository_test.dart` — 18).

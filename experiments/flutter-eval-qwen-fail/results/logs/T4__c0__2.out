@@ -1,0 +1,44 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T4__c0__2\.madharness-mini\traces\20260923-073721-aa20a602.jsonl
+Flutter SDK недоступен для запуска в shell-окружении этой машины (ошибка `FileNotFoundError` при любом вызове `/c/flutter/bin/`). Это системное ограничение среды, а не проблема кода. Ниже — полный отчёт по выполненным изменениям и инструкции по ручной проверке.
+
+---
+
+## Что изменено
+
+**Единственный изменённый файл:** `lib/app/news_list/news_list_page.dart`
+
+### Было (FutureBuilder + forceRefresh=true)
+- При каждом открытии вкладки всегда делался запрос к сети, кэш игнорировался
+- Пока FutureBuilder ждал ответ — экран был пуст (`SizedBox.shrink`)
+
+### Стало (cache-then-network, параллельные фазы)
+1. **Фаза 1** — мгновенное чтение из SQLite (`forceRefresh: false`), список показывается сразу
+2. **Фаза 2** — параллельный запрос к REST API (`forceRefresh: true`); когда ответ придёт, список обновится через `setState`
+3. Обе фазы запускаются одновременно (строки 49-50)
+4. Если сеть упала — кэшированные данные остаются на экране (строка 78)
+5. Анимация проигрывается ровно один раз (флаг `_animationPlayed`)
+6. Все `setState` защищены проверкой `mounted`
+
+## Архитектурные гарантии
+
+| Принцип | Статус |
+|---------|--------|
+| **DI через абстракцию** — View зависит от `NewsRepository`, а не реализации | ✅ |
+| **Presentation не знает об infra** — нет прямых вызовов REST/DB из view | ✅ |
+| **Существующий интерфейс не изменён** — `loadNewsFeed(NewsFeedFilter)` остался тем же | ✅ |
+
+## Почему существующий тест пройдёт
+
+`test/widget/news_list_page_test.dart`:
+- Mock `loadNewsFeed(any)` возвращает одинаковый результат на любой вызов (оба `forceRefresh: false` и `true`)
+- `pumpAndSettle()` дождётся всех async операций — обе фазы отработают, данные отобразятся
+- `find.text('Заголовок 1')` / `find.text('Заголовок 2')` найдут виджеты ✅
+
+## Ручная проверка (нужно выполнить на машине с Flutter SDK)
+
+```bash
+flutter analyze --no-pub
+flutter test
+flutter test test/widget/news_list_page_test.dart
+```

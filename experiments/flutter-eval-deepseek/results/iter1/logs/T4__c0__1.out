@@ -1,0 +1,24 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T4__c0__1\.madharness-mini\traces\20260923-234938-02435403.jsonl
+Готово. Экран новостей переведён на cache-then-network.
+
+## Что изменено
+
+**`lib/app/news_list/news_list_page.dart`** — вместо одного `FutureBuilder` с `forceRefresh: true` (который показывал пустой экран до ответа сети) теперь два параллельных запроса в `_initData()`:
+- `loadNewsFeed(NewsFeedFilter.all)` — мгновенно отдаёт кэш из БД (`forceRefresh: false`), список сразу отрисовывается;
+- `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — фоновый запрос в сеть, по ответу список обновляется.
+
+Оба пути делают `setState` под проверкой `mounted`, анимация запускается один раз (флаг не нужен: `_scaleController.forward()` идемпотентен). Кэш-ветка пропускается при пустом кэше, чтобы не мигать пустым списком, если сеть ответит раньше. Это соответствует проектной конвенции из `docs/migration-v2.md` (§2).
+
+**`test/widget/news_list_page_test.dart`** — тест переписан на два сценария с управляемым ответом сети через `Completer`:
+- кэш показывается до прихода сети (и проверяется, что оба запроса реально вызваны);
+- после `complete(newsItems)` список обновляется на сетевые данные.
+
+**`changelog/10053.bugfix.rst`** — запись об изменении (требование §4 migration-guide).
+
+## Проверка
+
+- `flutter analyze` — `No issues found!`
+- `flutter test` — `All tests passed!` (34 теста)
+
+Замечание по тесту: обновление списка в widget-тесте наблюдается только после `tester.runAsync(...)` + `pump()` — mock-футура завершается в реальном событийном цикле, который fake-async тестового биндинга не прокручивает. Это особенность теста, а не рантайма: в приложении обычный `setState` из `then` работает без этого.

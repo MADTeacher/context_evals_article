@@ -1,0 +1,17 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T2__c0__2\.madharness-mini\traces\20260924-091859-3978faee.jsonl
+Готово. Что сделано:
+
+**Экран курса валют** — `lib/app/currency_list/currency_list_page.dart` переписан:
+- «Показать ещё» теперь реально есть: кнопка под списком (`ElevatedButton` с текстом из локализации), она вызывает `_showMore()`, который запрашивает следующую страницу через `CurrencyRepository.fetchRates(CurrencyPageRequest(base: 'EUR', page: N, pageSize: 20))`, дописывает элементы к уже загруженным и сохраняет объединённый список в кэш.
+- Кнопка скрывается по признаку конца страниц `CurrencyPage.hasMore` (а также на время активной догрузки) — `_hasMoreListenable` + `ValueListenableBuilder`, при `hasMore == false` рендерится `SizedBox.shrink()`.
+- При потере фокуса экрана список перезагружается свежим запросом с базовой валютой проекта (`_baseCurrency = 'EUR'`, совпадает с дефолтом `CurrencyPageRequest.base`): сбрасываются страницы/поиск-фильтр не сбрасывается, а позиция скролла сохраняется, т.к. обновляется только `ValueNotifier`.
+- Начальная загрузка вынесена в `_initialLoadFuture`, анимация `FadeTransition` больше не дёргается лишний раз.
+
+**Детектор фокуса** — новый `lib/app/utils/focus_detector.dart` (экспортирован через `utils.dart`/`app.dart`): слушает `ModalRoute.animation` и `WidgetsBindingObserver`, сообщает о потере/возврате фокуса (уход на другой маршрут, вкладку или сворачивание приложения). Повторное обновление на один и тот же уход не срабатывает (флаг `_isRouteFocused`).
+
+**Локализация** — добавлен ключ `showMore` («Показать ещё» / «Show more») в `assets/l10n/*.arb`, файлы `lib/app/gen/l10n/*` перегенерированы через `flutter gen-l10n`.
+
+**Тесты** — `test/widget/currency_list_page_test.dart`: три новых теста (кнопка скрыта при `hasMore: false`; кнопка видна, догружает вторую страницу и исчезает, когда страницы кончились; при `onFocusLost` выполняется повторный запрос с базовой валютой проекта `EUR`, страница 0).
+
+**Проверки:** `flutter analyze` — `No issues found!`; `flutter test` — `+36: All tests passed!` (включая 3 новых). Интеграционный тест `integration_test/app_test.dart` не запускался (требует устройства/эмулятора).

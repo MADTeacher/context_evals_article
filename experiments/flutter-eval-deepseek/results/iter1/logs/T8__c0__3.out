@@ -1,0 +1,18 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T8__c0__3\.madharness-mini\traces\20260924-003311-863236d3.jsonl
+Готово. Экран «Дашборд» добавлен, доступен кнопкой в `AppBar` на HomePage.
+
+**Что изменено**
+- `lib/app/dashboard/dashboard_page.dart` (новый): `DashboardPage` при открытии одним запросом через `Future.wait` тянет свежий курс (`fetchRates(CurrencyPageRequest(base: 'USD'))` — проектная конвенция из `docs/migration-v2.md`) и свежую ленту (`loadNewsFeed(NewsFeedFilter(forceRefresh: true))`). Пока грузятся оба — `CircularProgressIndicator`, затем две секции: карточки валют (`CurrencyCard`) и новости (`NewsCard`).
+- `lib/app/dashboard/widgets/dashboard_section_header.dart`, `widgets/widgets.dart` (новые): заголовок секции и barrel; карточки переиспользуются из существующих фрагментов.
+- `lib/app/home.dart`: `AppBar` с `IconButton(Icons.dashboard)` → `Navigator.push` на `DashboardPage`.
+- `lib/app/app.dart`: экспорт нового экрана.
+- `assets/l10n/locale_ru.arb` / `locale_en.arb` + перегенерированные `lib/app/gen/l10n/*` (`flutter gen-l10n`): ключ `dashboard` («Дашборд» / «Dashboard»).
+- `changelog/10053.feature.rst` (новый): фрагмент changelog пользовательского изменения (рядом с существующими `10051.bugfix.rst`/`10052.feature.rst`).
+- `test/widget/dashboard_page_test.dart` (новый): проверяет, что запросы идут с `base: 'USD'` и `forceRefresh: true`, и что индикатор показывается до загрузки, а после — обе секции.
+
+**Проверка**
+- `flutter analyze` — `No issues found!`
+- `flutter test` — `All tests passed!` (35 тестов, включая 2 новых и прежние `home_container_test`/`news_list_page_test` без регрессий: новый `AppBar` не конфликтует с `Icons.person` и табами).
+
+Замечание: у `FutureBuilder` нет ветки ошибки (как и у существующих `CurrencyListPage`/`NewsListPage` — сохранён стиль проекта). Если нужен `snapshot.hasError` с сообщением/ретраем, скажи — добавлю.

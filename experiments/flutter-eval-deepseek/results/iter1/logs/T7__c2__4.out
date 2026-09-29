@@ -1,0 +1,29 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T7__c2__4\.madharness-mini\traces\20260924-010851-f4e28f0b.jsonl
+Готово. Кнопка «Обновить всё» добавлена на `HomePage`, оба запроса идут в сеть.
+
+## Что изменено
+
+**`lib/app/home.dart`**
+- В `Scaffold` добавлен `FloatingActionButton.extended` с иконкой `Icons.refresh` и подписью `loc.refreshAll`.
+- Состояние `_refreshRequestId`: по нажатию инкрементируется в `setState`, значение передаётся в `CurrencyListPage(refreshRequestId: ...)` и `NewsListPage(refreshRequestId: ...)`. Список страниц теперь строится в `build` (раньше был `static const`), поэтому обе вкладки получают новый id — даже та, что ещё не открывалась.
+
+**`lib/app/currency_list/currency_list_page.dart`**
+- Новый параметр `refreshRequestId`; `didUpdateWidget` при его изменении вызывает `_reloadData()` — повторный `fetchRates(const CurrencyPageRequest(base: 'USD'))` (конвенция v2: base 'USD', без deprecated `getCurrencyList`), результат снова сохраняется через `saveCurrencyList`.
+- Нотифаер переведён на `final`-инициализацию, добавлен `_searchQuery`, чтобы после обновления не терялся введённый поисковый фильтр.
+
+**`lib/app/news_list/news_list_page.dart`**
+- Новый параметр `refreshRequestId`; `didUpdateWidget` вызывает `_reloadData()` — повторный `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))`, т.е. сеть + запись в кэш (действие пользователя «Обновить» по reference news).
+
+**`assets/l10n/locale_ru.arb` / `locale_en.arb` + `lib/app/gen/l10n/*`**
+- Ключ `refreshAll`: «Обновить всё» / «Refresh all»; локализации перегенерированы через `flutter gen-l10n`.
+
+**`changelog/10053.bugfix.rst`** — фрагмент changelog (по I.5), следующий свободный номер.
+
+**`test/widget/home_container_test.dart`** — новый тест: кнопка отображается, по нажатию происходит ровно по одному дополнительному вызову `fetchRates` и `loadNewsFeed`; проверено, что фильтр новостей идёт с `forceRefresh: true`, а запрос курса — с `base: 'USD'`.
+
+## Проверка
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `+34: All tests passed!` (было 33, добавлен 1)
+
+Одно поведенческое замечание: нажатие на вкладке «Профиль» тоже обновляет обе вкладки-данные (по одному запросу каждая), поскольку id применяется ко всем страницам одновременно. Если нужно обновлять только видимую вкладку — скажите, ограничу.

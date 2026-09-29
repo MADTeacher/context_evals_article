@@ -1,0 +1,2 @@
+Лента новостей переведена на NewsFeedFilter (loadNewsFeed) с семантикой
+cache-then-network; SettingsRepository разделён на read/watch (readThemeMode()).

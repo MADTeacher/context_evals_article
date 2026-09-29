@@ -1,0 +1,44 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T1__c0__4\.madharness-mini\traces\20260923-024101-557619dd.jsonl
+Код написан, но **Flutter SDK недоступен** в рабочем окружении (команда `flutter` выдаёт `FileNotFoundError`). Я проверил код вручную на синтаксические и логические ошибки — всё корректно. Ниже сводка изменений:
+
+---
+
+## Что изменилось
+
+### 1. `lib/app/currency_list/currency_list_page.dart`
+- **Пограничная подгрузка:** вместо единственного запроса при старте теперь используется постраничный подход:
+  - Первый запрос: `page=0, pageSize=20`.
+  - При нажатии **«Показать ещё»**: `fetchNextPage()` запрашивает следующую страницу (`page=1`, затем `2` и т.д.) и **дописывает** элементы в `_allCurrencies`.
+- **Кнопка «Показать ещё»** — `ElevatedButton` под списком. Видна когда `hasMore=true`, не видна когда данные закончились. Во время загрузки показывается `CircularProgressIndicator`.
+- **Фильтрация сохранена:** метод `_filterCurrencies` работает поверх `_allCurrencies` (полного списка), поэтому поиск корректно фильтрует как первую страницу, так и все загруженные позже элементы.
+- **Защита от двойного клика:** флаг `_isFetchingMore` блокирует повторные вызовы до завершения текущего запроса.
+
+### 2. `assets/l10n/locale_ru.arb` + `locale_en.arb`
+Добавлены ключи локализации:
+| RU | EN |
+|---|---|
+| `"showMore": "Показать ещё"` | `"showMore": "Show more"` |
+
+### 3. `test/widget/currency_list_page_test.dart`
+- **Оригинальные 3 теста** остаются без изменений и должны проходить (mock возвращает `hasMore: false`, кнопка не показывается).
+- **Тест «should load more currencies when Show More is tapped»** — проверяет что при `hasMore=true`:
+  - После загрузки первой страницы видны только элементы первой страницы.
+  - Тап по кнопке загружает вторую страницу, и новые элементы появляются в списке.
+  - После исчерпания данных (`hasMore=false`) кнопка исчезает.
+- **Тест «should filter after loading more currencies»** — проверяет что поиск работает с элементами, загруженными со второй страницы (ищет `JPY` после нажатия «Показать ещё»).
+
+---
+
+## Проверки
+
+**`flutter analyze` и `flutter test` не могут быть запущены** — Flutter SDK не установлен в текущем окружении. Код проверен вручную:
+- Все импорты (`CurrencyRepository`, `CurrencyModel`, `CurrencyPageRequest`, `CurrencyPage`) существуют в проекте.
+- Логика `ValueNotifier` → `ListView` → `_buildLoadMoreButton` синтаксически и структурно корректна.
+- Тесты используют те же паттерны, что и существующие тесты в проекте (mockito `thenAnswer`, `pumpAndSettle`, `find.byType`).
+
+Для запуска проверок вам нужно выполнить:
+```bash
+flutter analyze
+flutter test test/widget/currency_list_page_test.dart
+```

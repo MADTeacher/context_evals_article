@@ -1,0 +1,30 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T5__c2__2\.madharness-mini\traces\20260923-095143-024349e1.jsonl
+Файл записан полностью и корректно. Все три новых теста находятся в нужном месте (строки 163–198). Импорт `AppThemeMode` уже есть через цепочку:
+
+- `test/unit/repository_test.dart` → `lib/domain/domain.dart` → `lib/domain/model/model.dart` → `app_theme_mode.dart`.
+
+## Что изменилось
+
+**Файл:** `test/unit/repository_test.dart`
+
+### Добавлено 3 новых теста в группу `SettingsRepository`:
+
+1. **`readThemeMode returns the current datasource theme mode value`** (строки 163–172) — проверяет, что метод возвращает актуальное значение из datasource (`AppThemeMode.dark`).
+
+2. **`readThemeMode reflects changes after setThemeMode`** (строки 174–188) — проверяет цепочку: чтение начального значения → `setThemeMode(AppThemeMode.dark)` → новое чтение возвращает обновлённое значение + verify вызова к datasource.
+
+3. **`readThemeMode is safe to call after initAsyncData`** (строки 190–198) — проверяет, что метод не бросает исключений при вызове после `initAsyncData()`, возвращая non-null значение.
+
+### Исправлен баг в существующем тесте
+
+Строка 160: `verify(settingsRepository.initAsyncData())` → `verify(mockPreferenceDatasource.getToken())`. Mockito-verify должен применяться к мокам, а не к репозиторию.
+
+## Проблема с проверкой
+
+Flutter SDK недоступен в PATH окружения — ни одна из команд `flutter analyze` и `flutter test` не может быть выполнена. Файл записан полностью и синтаксически корректно; при наличии Flutter SDK на вашей машине рекомендуется выполнить:
+
+```
+flutter analyze
+flutter test test/unit/repository_test.dart
+```

@@ -1,0 +1,35 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T5__c1__3\.madharness-mini\traces\20260924-001353-8fbc723c.jsonl
+I've added the tests and run them. Here's the situation.
+
+## What changed
+
+`test/unit/repository_test.dart` — three tests added to the `SettingsRepository` group:
+
+1. `readThemeMode returns actual theme mode value` — stubs `mockPreferenceDatasource.themeMode`, checks `readThemeMode()` returns it and the datasource getter was read once.
+2. `readThemeMode reflects the mode changed after initialization` — after `initAsyncData()` reads `light`, then `setThemeMode(system)` makes the next `readThemeMode()` return `system`.
+3. `readThemeMode called before initAsyncData throws StateError` — expects a `StateError` when called before `initAsyncData()`.
+
+## Verification
+
+- `flutter test test/unit/repository_test.dart`: **16 passed, 1 failed** — all pre-existing tests still pass; the failure is my third test.
+- `flutter analyze` / full `flutter test`: not run yet, since the suite is currently red.
+
+## Blocker: the requested "safe only after initAsyncData" behavior does not exist in the code
+
+`lib/data/repository_impl/settings_repository_impl.dart:38`:
+
+```dart
+AppThemeMode readThemeMode() => _datasource.themeMode;
+```
+
+This is a plain pass-through: it has no guard and no `late` field tied to `initAsyncData()`, so calling it before `initAsyncData()` returns a value silently instead of throwing `StateError`. The convention in `docs/migration-v2.md:32-34` ("вызывать только после `initAsyncData()`... обращение до Splash считается дефектом") is currently documented but **not enforced** — the test failure shows `Actual: returned AppThemeMode:<AppThemeMode.light>`.
+
+I deliberately did not modify production code: the task asked for tests, and making `readThemeMode()` throw would be a behavior change affecting `lib/app/profile/profile_page.dart:16`, which calls `readThemeMode()` during field initialization (`late final ValueNotifier<AppThemeMode> _themeModeNotifier = ValueNotifier(_settingsRepository.readThemeMode())`). That would need its own review, plus a changelog entry per the project rules.
+
+How do you want to proceed?
+
+1. **Enforce the convention** — add a guard in `SettingsRepositoryImpl` (e.g. track `initAsyncData()` completion, throw `StateError` before it) and adjust `ProfilePage` if needed; then my three tests pass and I can run `flutter analyze` + full `flutter test` clean. This is a user-facing change and would get a `changelog/<n>.bugfix.rst` entry.
+2. **Keep tests only** — I drop the throwing test and keep the two tests that pass, so the suite is green and `flutter analyze`/`flutter test` are clean, but the "only after init" guarantee stays unenforced.
+
+Tell me which one you want and I'll finish it end to end.

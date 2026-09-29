@@ -1,0 +1,25 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T5__c2__1\.madharness-mini\traces\20260924-210803-0591bdfd.jsonl
+## Что сделано
+
+В `test/unit/repository_test.dart` добавлена группа из **6 новых тестов** для `readThemeMode()`:
+
+| Тест | Что проверяет |
+|---|---|
+| `returns datasource theme mode after initAsyncData` | `readThemeMode()` возвращает актуальное значение после `initAsyncData()` |
+| `returns light when datasource provides light` | Корректный возврат `AppThemeMode.light` из datasource |
+| `returns dark when datasource provides dark` | Корректный возврат `AppThemeMode.dark` из datasource |
+| `returns system when datasource provides system` | Корректный возврат `AppThemeMode.system` из datasource |
+| `reads directly from datasource` | `readThemeMode()` вызывает метод datasource напрямую (verify) |
+| `readThemeMode returns actual value not default mock` | Возвращаемое значение — реальное, а не дефолтное (`light`) |
+
+### Изменения в инфраструктуре тестов
+- Добавлен `reset(mockPreferenceDatasource)` в `setUp` группы SettingsRepository — устраняет накопление вызовов/стубов между тестами при использовании глобального мока.
+- Добавлен дефолтный стуб `when(mockPreferenceDatasource.themeMode).thenReturn(AppThemeMode.light)` в `setUp` группы, чтобы базовые тесты не падали с MissingStubError.
+
+### Верификация
+
+| Команда | Результат |
+|---|---|
+| `flutter.bat analyze` | **No issues found!** |
+| `flutter.bat test` (все 39 тестов) | **All tests passed!** ✅ |

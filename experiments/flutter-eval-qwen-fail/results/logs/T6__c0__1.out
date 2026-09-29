@@ -1,0 +1,48 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T6__c0__1\.madharness-mini\traces\20260923-100528-db864e05.jsonl
+Flutter/Dart CLI недоступны в текущем окружении — ни `flutter`, ни `dart` не найдены. Проверить наличие тестов для профиля тоже не удалось (пустой каталог `test/`). Ниже — описание внесённых изменений и ручная проверка корректности.
+
+---
+
+## Что изменилось
+
+### `lib/app/profile/profile_page.dart`
+
+**До:** режим темы читался один раз через `ValueNotifier<AppThemeMode>` в `initState`. Если значение менялось извне (другой экран вызывал `setThemeMode`), профиль об этом не узнавал. Кнопка изменения режима писала обратно в тот же `ValueNotifier`.
+
+**После:**
+1. Удалён `_themeModeNotifier` — больше нет `ValueNotifier`.
+2. Вместо него используется **`StreamBuilder<AppThemeMode>`**, который:
+   - подписывается на `_settingsRepository.themeModeStream`;
+   - получает начальное значение синхронно через `_settingsRepository.readThemeMode()` (`initialData:`).
+3. При выборе нового режима в `onTap` вызывается напрямую `_settingsRepository.setThemeMode(newMode)` — это метод репозитория, который (см. `SettingsRepositoryImpl`) одновременно:
+   - сохраняет значение в дата-соурс;
+   - публикует событие через `_themeModeController.add(mode)`, что триггерит все подписчики (`StreamBuilder`).
+4. В `dispose()` больше не нужно вызывать `.dispose()` для нотификатора.
+
+### Почему это работает корректно
+
+| Аспект | Было | Стало |
+|---|---|---|
+| **Начальное значение** | Синхронно из `readThemeMode()` при создании нотификатора | Синхронно через `initialData` у `StreamBuilder` |
+| **Обновление извне** | Не работало (поток не подписан) | Работает — `StreamBuilder` слушает `themeModeStream` |
+| **Изменение внутри экрана** | Запись в `_themeModeNotifier.value` → rebuild | Вызов `setThemeMode()` → поток → `StreamBuilder` → rebuild |
+
+### Проверка импортов
+
+Файл импортирует:
+- `package:flutter/material.dart` — через явный импорт (нужен для `Scaffold`, `AppBar`, `ListTile`, `Icon`, `ElevatedButton`, `StreamBuilder`, `AsyncSnapshot`).
+- `app/app.dart` — даёт `context.read`, `ThemeFonts`, `AppLocalizations`, `colors`.
+- `domain/domain.dart` — даёт `SettingsRepository`, `AppThemeMode`.
+
+Всё необходимое покрыто.
+
+---
+
+## Вердикт по запуску анализа/тестов
+
+**Невозможно выполнить:** `flutter analyze` и `flutter test` не установлены в окружении (ошибка `FileNotFoundError`). Если вы запустите их локально — код должен пройти без замечаний, так как:
+
+- типизация корректна (`StreamBuilder<AppThemeMode>` с `initialData: AppThemeMode`);
+- нет неиспользуемых импортов или переменных;
+- синтаксис соответствует Dart/Flutter.

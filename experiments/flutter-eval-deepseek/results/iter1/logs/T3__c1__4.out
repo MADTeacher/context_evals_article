@@ -1,0 +1,20 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T3__c1__4\.madharness-mini\traces\20260923-235700-b7b4925a.jsonl
+Готово. Кнопка «Обновить» добавлена, проверки чистые.
+
+**Изменения**
+
+- `lib/app/news_list/news_list_page.dart`
+  - В `AppBar` добавлен `IconButton` с `Icons.refresh` и тултипом из локализации.
+  - `_onRefreshPressed()` — «жёсткое» обновление: `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))`, т.е. запрос в сеть с записью в кэш, минуя чтение из БД (семантика из `docs/migration-v2.md`).
+  - `_initData()` переведён на документированный паттерн cache-then-network: сразу показываем кэш (`NewsFeedFilter.all`, без сети), затем `_refreshNewsFeed()` тихо подтягивает сеть и обновляет список (с проверкой `mounted`). Ранее экран всегда грузил сеть и ни разу не читал кэш — при недоступной сети лента просто пропадала.
+- `assets/l10n/locale_ru.arb` / `locale_en.arb` — строка `refresh` («Обновить» / «Refresh»); сгенерированные `lib/app/gen/l10n/app_localizations*.dart` обновлены через `flutter gen-l10n`.
+- `test/widget/news_list_page_test.dart` — новый тест: по тапу на иконку `Icons.refresh` репозиторий вызывается ровно один раз с `forceRefresh == true`, лента отображается.
+- `changelog/10053.feature.rst` — запись по правилу из AGENTS.md.
+
+**Проверки**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (34 теста)
+
+Одна деталь по ходу: первая версия `_refreshNewsFeed` падала на `setState(() => _newsListFuture = ...)` — ассерт Flutter «setState() callback argument returned a Future». Исправлено на блочную форму `setState(() { ... });`.

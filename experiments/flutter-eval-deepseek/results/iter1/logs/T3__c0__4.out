@@ -1,0 +1,15 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T3__c0__4\.madharness-mini\traces\20260923-234742-8234943d.jsonl
+**Что сделано**
+
+- `lib/app/news_list/news_list_page.dart`: в `AppBar` добавлена кнопка-иконка «Обновить» (`IconButton` с `Icons.refresh`, `tooltip: context.loc.refresh`). Загрузка вынесена в `_loadNewsFeed({required bool forceRefresh})`, который передаёт `NewsFeedFilter(forceRefresh: ...)` в `NewsRepository.loadNewsFeed` и обновляет `_newsListFuture` через `setState`. По нажатию кнопки вызывается `_onRefreshPressed()` → `forceRefresh: true`, т.е. всегда запрос в сеть мимо кэша (согласно конвенции из `docs/migration-v2.md`, п. 2). Анимация масштаба перезапускается через `forward(from: 0)`, чтобы повторное нажатие снова её проигрывало.
+- Локализация: ключ `refresh` добавлен в `assets/l10n/locale_ru.arb` («Обновить») и `locale_en.arb` («Refresh»), файлы `lib/app/gen/l10n/*` перегенерированы командой `flutter gen-l10n`.
+- `changelog/10053.feature.rst`: фрагмент changelog (нумерация продолжает существующие 10051/10052).
+- `test/widget/news_list_page_test.dart`: добавлен виджет-тест, который после загрузки очищает взаимодействия с моком, меняет ответ репозитория, нажимает кнопку обновления и проверяет, что `loadNewsFeed` вызван с `NewsFeedFilter.forceRefresh == true` и в списке появились новые данные.
+
+**Проверки**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (34 теста, включая новый).
+
+Примечание: на экране осталась существовавшая ранее логика `FutureBuilder`, который при `snapshot.data == null` (в т.ч. во время перезагрузки) показывает пустой экран — это поведение не менял, чтобы не расширять задачу; при необходимости можно добавить индикатор загрузки отдельной правкой.

@@ -1,0 +1,23 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T5__c1__4\.madharness-mini\traces\20260923-094712-a3bc9db0.jsonl
+Задача выполнена. Вот что сделано:
+
+## Изменения
+
+**Файл:** `test/unit/repository_test.dart`
+
+В группу `SettingsRepository` добавлены **2 новых теста**:
+
+1. **`readThemeMode returns the actual value from datasource`** — проверяет, что метод возвращает актуальное значение из `_datasource.themeMode`, а не захардкоженное. Стейбит `AppThemeMode.dark`, читает через `readThemeMode()` и верифицирует обращение к датасорсу.
+
+2. **`readThemeMode can be called before and after initAsyncData without errors`** — подтверждает безопасность вызова до и после `initAsyncData()`. Явно устанавливает `AppThemeMode.light`, проверяет значение до `initAsyncData()` (ожидаемый `light`) и после (не `null`).
+
+### Важный нюанс
+Поскольку mock-объект `mockPreferenceDatasource` объявлен как финальная переменная на уровне файла, стейбы сохраняются между тестами. Предыдущий тест (`readThemeMode returns the actual value...`) устанавливал `thenReturn(AppThemeMode.dark)`, что ломало следующий тест. Решение — явный `when()` в начале теста безопасности с ожидаемым значением.
+
+## Результаты проверок
+
+| Команда | Результат |
+|---------|-----------|
+| `flutter analyze` | ✅ No issues found (3.8s) |
+| `flutter test` | ✅ All 34 tests passed, 0 failed |

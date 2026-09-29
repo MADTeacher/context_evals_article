@@ -1,0 +1,34 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T4__c0__5\.madharness-mini\traces\20260924-212845-1b8d6ef9.jsonl
+Отлично! Все 33 теста прошли, `flutter analyze` без замечаний. Вот итог изменений:
+
+## Что изменилось
+
+### 1. `lib/domain/repository/news_repository.dart`
+Добавлен новый метод в интерфейс:
+```dart
+Future<List<NewsModel>> loadCachedNewsList();
+```
+
+### 2. `lib/data/repository_impl/news_repository_impl.dart`
+Реализация делегирует запрос к БД:
+```dart
+@override
+Future<List<NewsModel>> loadCachedNewsList() => _dbDatasource.getNewsList();
+```
+
+### 3. `lib/app/news_list/news_list_page.dart` — переработка на cache-then-network
+
+**Было:** `FutureBuilder` ждал ответа от сети (`forceRefresh: true`) → UI пустовал до прихода данных.
+
+**Стало:** В `initState` запускаются два параллельных процесса:
+1. **`_loadCachedNewsList()`** — мгновенно загружает из БД и отображает кэш через `setState`.
+2. **`_fetchFreshNewsFeed()`** — в фоне запрашивает сеть, при получении ответа обновляет список через тот же `setState`, запускает анимацию.
+
+```
+initState
+  ├─ loadCachedNewsList()    → setState(_cachedItems = cached)  ← мгновенно видно кэш
+  └─ fetchFreshNewsFeed()    → setState(_cachedItems = fresh)   ← обновить когда сеть ответит
+```
+
+Если кэша нет — экран пуст до ответа сети. Если сеть недоступна — остаёмся с кэшем. Ошибки обоих запросов подавлены (`catch`), чтобы не ломать UI.

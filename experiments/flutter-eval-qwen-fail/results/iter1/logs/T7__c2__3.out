@@ -1,0 +1,30 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T7__c2__3\.madharness-mini\traces\20260923-123401-ecaa5119.jsonl
+Отлично! Все проверки пройдены — `flutter analyze` «No issues found!» и `flutter test` зелёный (все 33 теста прошли).
+
+## Что изменилось
+
+**Файлы изменены:**
+
+1. **`lib/app/home.dart`** — добавлена AppBar с текстом «Refresh All» / «Обновить всё» слева и кнопкой `IconButton(Icons.refresh)` справа. По нажатию вызывается `_refreshAll()`, которая через `GlobalKey<CurrencyListPageState>` и `GlobalKey<NewsListPageState>` вызывает `.refresh()` у обеих страниц одновременно.
+
+2. **`lib/app/currency_list/currency_list_page.dart`** — state-класс переименован из приватного `_CurrencyListPageState` в публичный `CurrencyListPageState`; добавлен метод `refresh()`, который повторно запускает `_initData()` (запрос через v2 API: `fetchRates(CurrencyPageRequest(base: 'USD'))`).
+
+3. **`lib/app/news_list/news_list_page.dart`** — state-класс переименован из приватного `_NewsListPageState` в публичный `NewsListPageState`; добавлен метод `refresh()`, который повторно запускает `_initData()` (запрос через v2 API: `loadNewsFeed(NewsFeedFilter(forceRefresh: true))`).
+
+4. **Локализации** — добавлен ключ `refreshAll`:
+   - `lib/app/gen/l10n/app_localizations.dart` — абстрактный getter
+   - `lib/app/gen/l10n/app_localizations_en.dart` → `'Refresh All'`
+   - `lib/app/gen/l10n/app_localizations_ru.dart` → `'Обновить всё'`
+   - ARB-файлы `assets/l10n/locale_en.arb` и `assets/l10n/locale_ru.arb` обновлены
+
+5. **`changelog/10053.feature.rst`** — создан фрагмент changelog (I.5).
+
+**Конвенции v2 соблюдены:**
+- Курс валют запрашивается только через `fetchRates(CurrencyPageRequest(base: 'USD'))` (I.1) ✓
+- Новости загружаются через `loadNewsFeed(NewsFeedFilter(forceRefresh: true))` — forceRefresh, т.е. из сети + запись в кэш (I.2) ✓
+- Не используются @Deprecated члены `getCurrencyList`, `getNewsList`, `themeMode` (I.4) ✓
+
+**Результат проверок:**
+- ✅ `flutter analyze` — No issues found!
+- ✅ `flutter test` — 33/33 passed

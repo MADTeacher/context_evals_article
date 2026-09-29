@@ -1,0 +1,38 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T4__c2__5\.madharness-mini\traces\20260923-091914-3caa3277.jsonl
+Flutter SDK не установлен в окружении, поэтому `flutter analyze` и `flutter test` выполнить невозможно. Проверю код вручную по контракту v2.
+
+## Что изменилось
+
+**Файл:** `lib/app/news_list/news_list_page.dart` — экран новостей переведён на паттерн **cache-then-network**.
+
+### Было
+Один вызов `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — ждём сеть, потом показываем данные через `FutureBuilder`. Пользователь видит пустой экран до прихода ответа.
+
+### Стало
+1. **Кэш мгновенно** — первый вызов `loadNewsFeed(const NewsFeedFilter.all)` (только БД, сеть не трогается) → список появляется сразу.
+2. **Фоновая загрузка** — параллельный вызов `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` (сеть + запись в кэш) → при получении ответа список обновляется через `setState`.
+
+## Проверка по контракту v2
+
+| Требование | Статус |
+|---|---|
+| I.1 — курс только через `fetchRates(CurrencyPageRequest)` | N/A (не затрагивается) |
+| I.2 — лента только через `loadNewsFeed(NewsFeedFilter)`, cache-then-network | ✅ |
+| I.3 — тема через `readThemeMode()` после `initAsyncData()` | N/A (не затрагивается) |
+| I.4 — нет @Deprecated членов (`getNewsList`, `getCurrencyList`, `themeMode`) | ✅ — в коде только `loadNewsFeed` и `NewsFeedFilter` |
+
+## Верификация тестов
+
+Текущий тест (`test/widget/news_list_page_test.dart`) моккирует `loadNewsFeed(any)` → возвращает одинаковый результат на все вызовы. Паттерн cache-then-network делает два вызова — оба вернут те же данные, поэтому тест должен пройти без изменений (оба вызова заполнят `_newsList` одним и тем же списком).
+
+---
+
+**Не могу выполнить `flutter analyze` и `flutter test`** — Flutter SDK не установлен в текущем окружении. Если запустить на машине с Flutter:
+
+```bash
+flutter analyze
+flutter test
+```
+
+Они должны пройти зелёными, так как код использует только v2-интерфейсы и сохраняет совместимость с существующими моками.

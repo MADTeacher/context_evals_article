@@ -1,0 +1,30 @@
+Exception in thread Thread-12 (_readerthread):
+Traceback (most recent call last):
+  File "C:\Users\MADTeacher\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\MADTeacher\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MADTeacher\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\subprocess.py", line 1614, in _readerthread
+    buffer.append(fh.read())
+                  ~~~~~~~^^
+  File "<frozen codecs>", line 325, in decode
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xad in position 26: invalid start byte
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T3__c0__5\.madharness-mini\traces\20260923-071059-191dff5a.jsonl
+Все проверки пройдены. Вот итог:
+
+## Что изменилось
+
+**Файл:** `lib/app/news_list/news_list_page.dart`
+
+1. **Добавлена кнопка «Обновить»** — иконка `Icons.refresh` в `AppBar.actions`, с тултипом «Обновить» и обработчиком `_refreshNews`.
+2. **Метод `_refreshNews()`** — при нажатии вызывает `setState()`, заменяя `_newsListFuture` новым вызовом `loadNewsFeed(NewsFeedFilter(forceRefresh: true))`, что заставляет `FutureBuilder` заново подгрузить ленту из сети (минуя кэш).
+
+## Результаты проверок
+
+| Проверка | Результат |
+|---|---|
+| `flutter analyze` | **No issues found!** |
+| `flutter test` | **All 33 tests passed** (включая `news_list_page_test.dart`) |

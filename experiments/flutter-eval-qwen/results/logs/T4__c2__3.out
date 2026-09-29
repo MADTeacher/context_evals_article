@@ -1,0 +1,19 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T4__c2__3\.madharness-mini\traces\20260924-201745-9d469f5f.jsonl
+## Что изменилось
+
+**Файл:** `lib/app/news_list/news_list_page.dart`
+
+### Было
+Один вызов `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — экран ждал ответа от сети и только потом показывал контент через `FutureBuilder`.
+
+### Стало (cache-then-network)
+1. **`ValueNotifier<List<NewsModel>>`** вместо `FutureBuilder` — позволяет реактивно обновлять список при поступлении данных из любого источника.
+2. **Шаг 1:** мгновенная загрузка кэша через `loadNewsFeed(NewsFeedFilter.all)` (только БД, без сетевых запросов). Как только данные пришли — показываем их и запускаем анимацию масштабирования.
+3. **Шаг 2:** параллельный фоновый вызов `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — сеть + запись в кэш. При получении ответа обновляем список через `setState`.
+
+Это полностью соответствует паттерну из reference (`.agents/skills/migration-v2/references/news.md`, п.2) и правилу I.2 контракта проекта.
+
+### Верификация
+- `flutter.bat analyze` — **No issues found!** ✅
+- `flutter.bat test` — **33 теста, все прошли** ✅

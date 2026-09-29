@@ -1,0 +1,23 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T6__c1__4\.madharness-mini\traces\20260923-103757-eb9e5e03.jsonl
+Flutter SDK не найден в PATH на этой машине (получаю `FileNotFoundError`). Не могу выполнить `flutter analyze` и `flutter test`.
+
+Но изменения кода корректны — давайте проверю логику вручную:
+
+**Что изменилось в `lib/app/profile/profile_page.dart`:**
+
+1. **Добавлен import:** `import 'dart:async';` (нужен для `StreamSubscription`)
+2. **Поля изменены:** `_themeModeNotifier` инициализируется лениво (в `initState`), добавлено поле `late StreamSubscription<AppThemeMode> _themeModeSubscription`
+3. **В `initState()`:**
+   - Начальное значение читается синхронно: `_settingsRepository.readThemeMode()` — это тот же метод, что и раньше
+   - Подписка на поток: `_settingsRepository.themeModeStream.listen(...)` — при каждом изменении режима темы `ValueNotifier` обновляется
+   - Проверка `if (mounted)` защищает от вызова `setState` после dispose
+4. **В `dispose()`:** подписка сначала отменяется через `.cancel()`, затем `notifier.dispose()`
+
+Это соответствует паттерну Clean Architecture: репозиторий (`SettingsRepository`) имеет `Stream<AppThemeMode> themeModeStream`, а реализация (`SettingsRepositoryImpl`) добавляет новый режим в `_themeModeController` при каждом вызове `setThemeMode`. Экран профиля теперь реагирует на такие обновления.
+
+**Недостаток:** без установленного Flutter SDK я не могу запустить анализ и тесты, как вы просили. На вашей машине выполните:
+```bash
+flutter analyze
+flutter test
+```

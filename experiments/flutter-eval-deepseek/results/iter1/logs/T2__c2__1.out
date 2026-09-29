@@ -1,0 +1,26 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T2__c2__1\.madharness-mini\traces\20260923-233341-fb13bb42.jsonl
+Готово.
+
+## Что изменено
+
+**`lib/app/currency_list/currency_list_page.dart`**
+- Состояние вынесено в публичный `CurrencyListPageState` (создание виджета — внизу файла), добавлен публичный `refreshCurrencyList()`.
+- Список строится постранично: хранятся `_currentPage`, `_hasMore`, `_isLoadingMore`. `_refresh()` — свежий запрос первой страницы `CurrencyPageRequest(base: 'USD', page: 0)`, список заменяется целиком; `_loadNextPage()` — запрос `page: _currentPage + 1`, элементы **добавляются** к уже загруженным, `saveCurrencyList` вызывается для элементов страницы (конвенции v2).
+- Кнопка «Показать ещё» рендерится только при `_hasMore == true`, т.е. скрывается при `hasMore == false` (признак конца страниц).
+- Побочно исправлен дефект: `_filteredCurrenciesNotifier` был `late final` и создавался только внутри колбэка future — при ошибке/зависании запроса `dispose()` падал с `LateInitializationError`. Теперь notifier создаётся сразу.
+
+**`lib/app/home.dart`** — `_pages` стал `late final` с `GlobalKey<CurrencyListPageState>` для экрана курса; при переключении на другую вкладку (`_selectedIndex == 0` → другой индекс) вызывается `refreshCurrencyList()` — экран теряет фокус, список обновляется свежим запросом с `base: 'USD'`.
+
+**l10n** — добавлен ключ `showMore` («Показать ещё» / «Show more») в `assets/l10n/locale_{ru,en}.arb` и в сгенерированные `lib/app/gen/l10n/*` (файлы генерируются в репозиторий, `flutter gen-l10n` не запускался).
+
+**`changelog/10053.bugfix.rst`** — фрагмент по правилу I.5.
+
+**Тесты** — в `test/widget/currency_list_page_test.dart` добавлены два кейса (скрытие кнопки при `hasMore: false`; добавление следующей страницы и скрытие кнопки на последней странице), в `test/widget/home_container_test.dart` — кейс проверки, что при потере фокуса уходит запрос `base: 'USD'`, `page: 0`.
+
+## Проверка
+
+- `flutter analyze` → **No issues found!**
+- `flutter test` → **All tests passed!** (36 тестов)
+
+Одна деталь для сведения: тестовый харнесс `test/widget/widget.dart` не подключает `AppLocalizations.delegate`, поэтому `context.loc` там отдаёт кэшированный `AppLocalizationsRu` — тесты кнопки опираются на русскую строку «Показать ещё». В приложении строка берётся из делегата.

@@ -1,0 +1,19 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c0__5\.madharness-mini\traces\20260924-001244-b1359e7a.jsonl
+Готово.
+
+**Изменения**
+
+`lib/app/profile/profile_page.dart`:
+- добавлен `import 'dart:async';` (для `StreamSubscription`);
+- поле `_themeModeSubscription` — в `initState` подписка на `_settingsRepository.themeModeStream`, которая обновляет `_themeModeNotifier.value` (то есть UI перестраивается при любом изменении режима, в т.ч. из других мест);
+- начальное значение по-прежнему читается синхронно: `ValueNotifier(_settingsRepository.readThemeMode())` (deprecated `themeMode` не используется);
+- в `dispose` подписка отменяется до `dispose()` нотификатора;
+- из `onTap` убран ручной `_themeModeNotifier.value = newMode` — источником истины стал поток (`ThemeModeSelectorBottomSheet` уже вызывает `setThemeMode`, который эмитит в поток), остался только ранний выход при `null`.
+
+`test/widget/home_container_test.dart`:
+- добавлен стаб `when(mockSettingsRepository.themeModeStream).thenAnswer((_) => const Stream<AppThemeMode>.empty());` — без него мок падал с `MissingStubError` при построении `ProfilePage` (страница теперь подписывается на поток).
+
+**Проверки**
+- `flutter analyze` — No issues found.
+- `flutter test` — All tests passed (33 теста).

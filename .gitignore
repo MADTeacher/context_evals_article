@@ -1,0 +1,19 @@
+# Секреты (ключи API) — никогда не коммитить; перед push прогонять
+# grep -rl "sk-" --exclude-dir=.git --exclude=local-key.json .
+**/local-key.json
+**/keyfile*.json
+
+# Operational-активы: workspaces генерируются и содержат инжектированный ключ;
+# fixture/ и harness/ — финальные состояния, коммитятся без билд-артефактов
+**/workspaces/
+**/data/
+
+# Кэши сборки и среды
+build/
+.dart_tool/
+.venvs/
+__pycache__/
+.idea/
+
+# Служебные каталоги сессий
+.zcode/

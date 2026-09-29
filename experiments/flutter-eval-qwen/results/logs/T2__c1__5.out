@@ -1,0 +1,37 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T2__c1__5\.madharness-mini\traces\20260924-182001-2f17a1ec.jsonl
+Все **33 теста прошли**, `flutter analyze` — **0 замечаний**. 
+
+## Что изменилось
+
+### 1. Кнопка «Показать ещё» с авто-скрытием (`lib/app/currency_list/currency_list_page.dart`)
+
+Кнопка `ElevatedButton(context.loc.showMore)` отображается только когда:
+- `_hasMorePages == true` — список не пустой и длина >= 20 (страница заполнена, есть следующая)
+- Не идёт загрузка (`!_isLoadingMore`)
+
+Как только пагинация исчерпана (`hasMore: false` или загружено < 20 элементов), кнопка скрывается.
+
+### 2. Обновление при возврате на экран
+
+Добавлен `WidgetsBindingObserver` с методом `didChangeAppLifecycleState`:
+- **При `resumed`** (пользователь вернулся на вкладку валют) — вызывается `_refreshData()`, который сбрасывает страницу на 0, очищает список и делает свежий запрос с базовой валютой по умолчанию (`EUR`)
+- **При `paused`/`inactive`** (переключились на Новости или Профиль) — сбрасывается флаг загрузки
+
+### 3. Локализация кнопки
+
+Добавлен ключ в ARB-файлы:
+- `locale_ru.arb`: `"showMore": "Показать ещё"`
+- `locale_en.arb`: `"showMore": "Show more"`
+
+Файлы `lib/app/gen/l10n/app_localizations_*.dart` перегенерированы через `flutter pub get`.
+
+### 4. Исправления стабильности
+- `_filteredCurrenciesNotifier` инициализируется пустым списком сразу в `initState` — предотвращает `LateInitializationError` при первом рендеринге
+- Корректное управление состоянием загрузки через `FutureBuilder<void>`
+
+### Результат верификации
+| Команда | Результат |
+|---------|-----------|
+| `flutter analyze` | 0 issues |
+| `flutter test` | 33/33 passed |

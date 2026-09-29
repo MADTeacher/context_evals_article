@@ -1,0 +1,25 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T3__c1__1\.madharness-mini\traces\20260924-094533-0f8fc581.jsonl
+Готово.
+
+## Что изменено
+
+**`lib/app/news_list/news_list_page.dart`**
+- В `AppBar` добавлен `IconButton` с `Icons.refresh` и tooltip из локализации (`context.loc.refresh`).
+- Добавлен `_refreshData()`: сбрасывает анимацию, пересоздаёт `_newsListFuture` через `newsRepository.loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` в `setState` — то есть перезагрузка идёт из сети (REST), минуя кэш БД, и свежие данные снова сохраняются в кэш (логика уже была в `NewsRepositoryImpl`), затем запускается анимация.
+
+**Локализация**
+- `assets/l10n/locale_ru.arb` → `"refresh": "Обновить"`, `assets/l10n/locale_en.arb` → `"refresh": "Refresh"`.
+- Сгенерированные классы обновлены вручную в соответствии с gen-l10n: `lib/app/gen/l10n/app_localizations.dart` (абстрактный геттер), `app_localizations_ru.dart`, `app_localizations_en.dart`.
+
+**Тесты**
+- `test/widget/news_list_page_test.dart`: добавлен тест «should reload news feed from network when refresh pressed» — тапает по иконке, проверяет, что `loadNewsFeed` вызван с `NewsFeedFilter(forceRefresh: true)`, и что список отрисован.
+
+**Changelog**
+- Создан `CHANGELOG.md` с записью о кнопке и новой строке локализации.
+
+## Проверки
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (34 теста, включая новый)
+
+Замечание: файлы в `lib/app/gen/l10n/` сгенерированы, но зависимость `flutter_gen` не подключена — код импортирует их напрямую, поэтому я обновил их вручную в том же стиле; при запуске `flutter gen-l10n` из ARB-файлов результат будет идентичным.

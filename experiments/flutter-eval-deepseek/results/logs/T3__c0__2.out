@@ -1,0 +1,16 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T3__c0__2\.madharness-mini\traces\20260924-094008-9852ea55.jsonl
+**Что сделано**
+
+В `AppBar` экрана новостей добавлена кнопка «Обновить», которая перезагружает ленту из сети, минуя кэш.
+
+- `lib/app/news_list/news_list_page.dart` — в `actions` AppBar добавлен `IconButton` с `Icons.refresh`; новый метод `_refreshNews()` сбрасывает анимацию, пересоздаёт future через `_initData()` внутри `setState`. `_initData()` использует `NewsFeedFilter(forceRefresh: true)`, а `NewsRepositoryImpl.loadNewsFeed` при `forceRefresh` идёт в `RestDatasource` и обновляет кэш — то есть кэш действительно обходится. `tooltip` берётся из локализации.
+- Локализация: ключ `refresh` добавлен в `assets/l10n/locale_ru.arb` («Обновить») и `locale_en.arb` («Refresh»), а также в сгенерированные `lib/app/gen/l10n/app_localizations.dart`, `app_localizations_ru.dart`, `app_localizations_en.dart` (руками, в формате gen-l10n — `flutter gen-l10n`/`flutter pub get` не требовались).
+- `test/widget/news_list_page_test.dart` — новый тест: после тапа по кнопке лента перезагружается (в списке появляется новый заголовок), мок `loadNewsFeed` вызывается повторно, и все полученные фильтры имеют `forceRefresh == true`.
+
+**Проверка**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `+34: All tests passed!` (было 33, добавлен 1 новый).
+
+Замечание по тесту: тап по `find.byIcon(Icons.refresh)` попадает и в `IconButton`, и во вложенную иконку, поэтому `loadNewsFeed` вызывается более одного раза за тап. Проверка сформулирована устойчиво (непустой список вызовов + `forceRefresh` во всех), без привязки к точному количеству.

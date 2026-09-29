@@ -1,0 +1,25 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T1__c2__5\.madharness-mini\traces\20260923-172138-d35463bb.jsonl
+## Что сделано
+
+Добавлена кнопка **«Показать ещё»** для подгрузки следующей страницы курса валют на экран `CurrencyListPage`.
+
+### Ключевые изменения
+
+**`lib/app/currency_list/currency_list_page.dart`:**
+- Добавлены поля `_nextPage`, `_hasMore`, `_isLoadingMore`, `_searchQuery` для управления пагинацией
+- Метод `_loadMore()` запрашивает следующую страницу через `fetchRates(CurrencyPageRequest(base: 'USD', page: _nextPage))` и дописывает элементы к текущему списку (не заменяет) — согласно конвенции v2 (`references/currency.md`)
+- После загрузки обновляется `_hasMore`: если `false`, кнопка «Показать ещё» не отображается
+- Поисковый фильтр работает по полному списку `_allCurrencies` (включая подгруженные страницы) — сохранена работа поиска
+- Убран лишний импорт `package:flutter/material.dart`
+
+**`assets/l10n/locale_en.arb` / `locale_ru.arb`:**
+- Добавлен ключ `showMore`: «Show more» / «Показать ещё»
+- Выполнен `flutter.bat gen-l10n` после правки ARB-файлов
+
+### Верификация
+
+| Команда | Результат |
+|---|---|
+| `flutter.bat analyze` | **No issues found!** (0 замечаний) |
+| `flutter.bat test` | **33 теста, все прошли** (green) |

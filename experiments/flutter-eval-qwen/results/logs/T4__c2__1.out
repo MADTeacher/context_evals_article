@@ -1,0 +1,21 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T4__c2__1\.madharness-mini\traces\20260924-191500-a5f5050b.jsonl
+Задача выполнена. Экран новостей переведён на паттерн cache-then-network.
+
+## Что изменилось
+
+**Файл:** `lib/app/news_list/news_list_page.dart`
+
+**До:** экран использовал единственный `FutureBuilder` с `forceRefresh: true` — список ждал ответа от сети, пустая загрузка при долгом ответе.
+
+**После (паттерн cache-then-network по v2):**
+1. **Мгновенно показывается кэш из БД** (`loadNewsFeed(const NewsFeedFilter())`)
+2. **Параллельно в фоне запрашивается сеть** с `forceRefresh: true`, пришедшие данные обновляют список через `setState`
+3. Фоновая ошибка не ломает отображение — кэш уже показан
+
+## Верификация
+
+| Команда | Результат |
+|---------|-----------|
+| `flutter.bat analyze` | **No issues found!** (0 замечаний) |
+| `flutter.bat test` | **33/33 тестов прошли** (включая обновлённый `news_list_page_test.dart`) |

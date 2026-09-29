@@ -1,0 +1,22 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T6__c1__2\.madharness-mini\traces\20260925-000754-0b6cd3e5.jsonl
+Готово. Вот что было сделано:
+
+### Изменения в коде
+
+**`lib/app/profile/profile_page.dart`**:
+- Добавлена подписка на `themeModeStream` через `_settingsRepo.themeModeStream.listen()` — теперь при изменении темы в любом месте экрана профиля автоматически обновляется отображаемый режим
+- Начальное значение читается синхронно через `_settingsRepo.readThemeMode()` и сразу присваивается `ValueNotifier` через конструктор
+- Добавлен `cancel()` подписки в `dispose()`, проверка `mounted` при получении нового значения из потока
+
+**`test/widget/home_container_test.dart`**:
+- Добавлен stub для `themeModeStream` в моке, чтобы тесты прошли (раньше вызов этого метода на MockSettingsRepository падал с `MissingStubError`)
+
+### Changelog
+
+Добавлен файл **`changelog/10053.bugfix.rst`** с описанием исправления.
+
+### Верификация
+
+- ✅ `flutter analyze` — No issues found
+- ✅ `flutter test` — All 33 tests passed

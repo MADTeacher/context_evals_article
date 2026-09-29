@@ -1,0 +1,23 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c2__4\.madharness-mini\traces\20260924-101530-efae25b6.jsonl
+Готово.
+
+## Что изменено
+
+**`lib/app/profile/profile_page.dart`**
+- Начальное значение по-прежнему читается синхронно: `ValueNotifier(_settingsRepository.readThemeMode())` (метод v2, не deprecated-геттер).
+- В `initState` добавлена подписка на `_settingsRepository.themeModeStream`; при событии поток обновляет `_themeModeNotifier`, поэтому `ValueListenableBuilder` перерисовывает подпись режима автоматически — в том числе если режим изменили не с этого экрана.
+- Подписка отменяется в `dispose`.
+- В `onTap` убрано ручное `_themeModeNotifier.value = newMode`: источником истины стал поток (`ThemeModeSelectorBottomSheet` уже вызывает `setThemeMode`, который публикует значение). Так UI не расходится с настройками.
+
+**`test/widget/home_container_test.dart`**
+- Добавлен стаб `when(mockSettingsRepository.themeModeStream).thenAnswer((_) => const Stream<AppThemeMode>.empty())` — без него `MockSettingsRepository` бросал `MissingStubError` при монтировании `ProfilePage`.
+
+**`changelog/10053.bugfix.rst`** — фрагмент по правилу I.5.
+
+## Проверка
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (33 теста)
+
+Замечание: изменения в `lib/app/**` затрагивают только `profile_page.dart`; правила I.1–I.4 не нарушены (deprecated-члены не используются).

@@ -1,0 +1,19 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\probe\T1__c0__P2\.madharness-mini\traces\20260924-090447-3dd69cc2.jsonl
+Both checks are green. Summary of the change:
+
+**`lib/app/currency_list/currency_list_page.dart`**
+- Added pagination state: `_loadedPage`, `_hasMore`, `_isLoadingMore`, `_query`, plus `static const int _pageSize = 20`.
+- `_initData()` now remembers `page.page` / `page.hasMore` from the first `CurrencyPage` response.
+- New `_loadNextPage()` requests `CurrencyPageRequest(page: _loadedPage + 1, pageSize: _pageSize)`, appends `page.items` to `_allCurrencies`, updates `_loadedPage`/`_hasMore`, and re-applies the current filter. It guards against re-entry and against loads when `hasMore == false`; the loading flag is reset in a `finally` block (with a `mounted` check).
+- Search logic moved into `_applyFilter()`, which filters `_allCurrencies` (already-merged pages) by the stored `_query`, so filtering keeps working after a page is appended. `_filterCurrencies` just stores the query and delegates.
+- List area is now `Column` → `ListView` + a "Показать ещё" button rendered only while `_hasMore` is true.
+
+**`lib/app/currency_list/widgets/show_more_button.dart`** (new, exported from `widgets/widgets.dart`)
+- `ShowMoreButton` with `isLoading`/`onPressed`; disabled with a spinner while a page is loading, styled with the existing theme colors/fonts.
+
+**Localization** — added `showMore` to `assets/l10n/locale_ru.arb` ("Показать ещё") and `locale_en.arb` ("Show more"), plus the matching getter in the generated `lib/app/gen/l10n/app_localizations.dart`, `_ru.dart`, `_en.dart` (gen-l10n isn't run automatically here, so the generated files were updated in sync).
+
+**`test/widget/currency_list_page_test.dart`** — existing stubs unchanged; added three tests: no button when `hasMore == false`, appending page 1 on tap (asserts the request had `page: 1` and that the button disappears), and that an active search filter is preserved after appending.
+
+Verification: `flutter analyze` → "No issues found!"; `flutter test` → 36 tests, all passed.

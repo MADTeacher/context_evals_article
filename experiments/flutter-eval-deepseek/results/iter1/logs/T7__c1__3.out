@@ -1,0 +1,21 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T7__c1__3\.madharness-mini\traces\20260924-003244-1cae07c2.jsonl
+Готово. Кнопка «Обновить всё» добавлена на `HomePage`, оба запроса уходят в сеть параллельно.
+
+**Что изменено**
+
+- `lib/app/home.dart`
+  - `Scaffold.floatingActionButton` → `FloatingActionButton.extended` с локализованной подписью `loc.refreshAll`.
+  - `_refreshAll()` через `Future.wait` **одновременно** запускает `refreshCurrencyRates()` и `refreshNewsFeed()` (оба обращения к репозиториям стартуют до ожидания ответов).
+  - Введены контракты `CurrencyRateRefresher` / `NewsFeedRefresher` (по образцу `SettingsRepository.read/watch`), чтобы кнопка не зависела от конкретных страниц.
+  - Тело переведено с `_pages[_selectedIndex]` на `IndexedStack`: обе страницы смонтированы, поэтому обновление работает с любой вкладки, а не только с открытой. Индикация вкладок теперь по индексу.
+- `lib/app/currency_list/currency_list_page.dart` — реализует `CurrencyRateRefresher`; `refreshCurrencyRates()` делает `fetchRates(base: 'USD')` (конвенция v2), обновляет список и `_currencyListFuture`, затем `saveCurrencyList`. Состояние получило публичное имя `CurrencyListPageState` для `GlobalKey`. Заодно устранён латентный дефект: `_filteredCurrenciesNotifier` переведён на инициализатор, иначе `LateInitializationError` при обновлении до/без загрузки или при dispose.
+- `lib/app/news_list/news_list_page.dart` — реализует `NewsFeedRefresher`; `refreshNewsFeed()` вызывает `loadNewsFeed(NewsFeedFilter(forceRefresh: true))` (сеть + запись в кэш, как в docs/migration-v2.md); состояние переименовано в `NewsListPageState`.
+- l10n: ключ `refreshAll` в `assets/l10n/locale_ru.arb` («Обновить всё») и `locale_en.arb` («Refresh all»), генерация через `flutter gen-l10n` в `lib/app/gen/l10n/` (проектная схема, без `package:flutter_gen`).
+- `test/widget/home_container_test.dart` — новый тест: оба запроса стартуют, не дожидаясь ответа друг друга, с проверкой параметров `CurrencyPageRequest(base: 'USD')` и `NewsFeedFilter(forceRefresh: true)`; `test/widget/widget.dart` — хелпер `pumpHome` (на главном экране есть бесконечная анимация кнопки «Выйти», поэтому `pumpAndSettle` не завершается).
+- `changelog/10053.feature.rst` — фрагмент changelog по правилам проекта.
+
+**Проверка**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (34 теста, включая новый).

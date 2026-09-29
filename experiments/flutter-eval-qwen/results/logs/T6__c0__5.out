@@ -1,0 +1,24 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T6__c0__5\.madharness-mini\traces\20260924-234932-9c959f8a.jsonl
+Отлично! Все 33 теста прошли, анализ чистый. Вот что было сделано:
+
+## Что изменилось
+
+### 1. `lib/app/profile/profile_page.dart` — основная правка
+
+**Проблема:** `_themeModeNotifier` инициализировался как поле класса с обращением к `_settingsRepository`, который зависит от `context`. В момент инициализации поля `context` ещё недоступен, что могло приводить к ошибкам. И не было подписки на поток изменений — UI не обновлялся при смене темы из другого места приложения.
+
+**Решение:**
+- Добавлен импорт `dart:async` для работы со стримами.
+- `_themeModeNotifier` теперь создаётся в методе `_initThemeMode()` внутри `initState()`, где `context` уже доступен. Начальное значение читается **синхронно** через `settings.readThemeMode()`.
+- Добавлена подписка на `settings.themeModeStream.listen(...)` — при любом изменении режима темы (из настроек, из другого экрана и т.д.) UI профиля обновляется автоматически.
+- `StreamSubscription` корректно отменяется в `dispose()`, чтобы не было утечек.
+
+### 2. `test/widget/home_container_test.dart` — фикс теста
+
+Добавлен стаб для `mockSettingsRepository.themeModeStream` в `setUp()`, чтобы моковый репозиторий возвращал пустой поток вместо выброса `MissingStubError`.
+
+## Результаты проверок
+
+- **`flutter analyze`** → No issues found!
+- **`flutter test`** → 33 tests passed, 0 failed

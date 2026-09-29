@@ -1,0 +1,21 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T5__c2__3\.madharness-mini\traces\20260924-100610-49d43977.jsonl
+Done. Summary of the work:
+
+## What changed
+
+**`test/unit/repository_test.dart`** (SettingsRepository group):
+- Added `reset(mockPreferenceDatasource)` in `setUp` — the shared mock previously accumulated invocations across tests, which made call-count assertions order-dependent.
+- Added test **`readThemeMode returns actual theme mode after initAsyncData`**: stubs `themeMode` → `dark`, runs `initAsyncData()`, asserts `readThemeMode()` returns `dark` and delegates to the datasource exactly once.
+- Added test **`readThemeMode is safe to call only after initAsyncData`**: runs `initAsyncData()` first, then asserts `readThemeMode()` returns the stored mode and that both `getToken()` and `themeMode` were hit once — i.e. the init path completed before the read.
+- Fixed the pre-existing test `should return current theme mode value`: it read the deprecated `themeMode` getter without ever initializing, so it relied on leftover mock interactions from earlier tests. It now stubs `getToken()`, awaits `initAsyncData()`, then reads `themeMode` (which delegates to `readThemeMode()`), keeping its original assertion.
+
+**`changelog/10053.bugfix.rst`** — new fragment per rule I.5.
+
+## Verification
+- `flutter analyze` → **No issues found!**
+- `flutter test` → **All 35 tests passed** (baseline was 33; +2 new, 0 broken)
+- `flutter test test/unit/repository_test.dart` → 17/17 passed
+
+## Note on the requirement
+The project contract (AGENTS.md I.3, `migration-v2/references/settings.md`) defines `readThemeMode()` as a *synchronous* read that must only be called after `initAsyncData()` — `SettingsRepositoryImpl.readThemeMode()` is `=> _datasource.themeMode` with no init guard, and `SplashPage` doesn't call `initAsyncData()`. So the tests assert the documented ordering contract rather than a thrown error on misuse. If you actually want a runtime guard (e.g. a `StateError` when read before init), that's a production change in `lib/data/repository_impl/settings_repository_impl.dart` — say the word and I'll implement it and add the corresponding negative test.

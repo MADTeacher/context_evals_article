@@ -1,0 +1,13 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T5__c0__5\.madharness-mini\traces\20260924-103706-3113fc89.jsonl
+Done.
+
+**Что добавлено** — `test/unit/repository_test.dart`, группа `SettingsRepository`:
+- `readThemeMode returns actual theme mode after initAsyncData` — после `initAsyncData()` стаб `mockPreferenceDatasource.themeMode` меняется (light → dark), и `readThemeMode()` возвращает именно актуальное значение `dark` (1 вызов геттера).
+- `readThemeMode is safe to call only after initAsyncData` — проверяет безопасный сценарий: вызов только после инициализации возвращает `system` и обращается к датасорсу ровно один раз.
+
+Тесты опираются на фактическую реализацию: `SettingsRepositoryImpl.readThemeMode()` просто делегирует в `PreferenceDatasource.themeMode` (`lib/data/repository_impl/settings_repository_impl.dart:38`), а `initAsyncData()` (`:18`) — единственная «точка входа», после которой геттеры репозитория (`isAuth`, `themeMode`) валидны в рантайме (`_isAuth` объявлен `late`).
+
+**Проверка:**
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (35 тестов, включая 2 новых и все существующие; регрессий нет).

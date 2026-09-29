@@ -1,0 +1,25 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T8__c1__5\.madharness-mini\traces\20260924-005802-f8900616.jsonl
+Готово. Экран «Дашборд» добавлен и доступен кнопкой на HomePage.
+
+**Что изменено**
+
+- `lib/app/dashboard/dashboard_page.dart` — новый `DashboardPage`: при открытии параллельно запрашивает свежие данные через `Future.wait` (пара `(fetchRates, loadNewsFeed).wait`):
+  - `currencyRepository.fetchRates(const CurrencyPageRequest(base: 'USD'))` — по проектной конвенции из `docs/migration-v2.md` (не дефолтный `'EUR'`);
+  - `newsRepository.loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — принудительно свежая лента, без обращения к депрекированным `getCurrencyList()`/`getNewsList()`.
+  - Пока грузится (`snapshot.data == null`) — `CircularProgressIndicator`, после — контент.
+- `lib/app/dashboard/widgets/dashboard_view.dart` — `DashboardData` + `DashboardView`: секции «Курс Валют» и «Новости» с переиспользованием существующих `CurrencyCard`/`NewsCard`; `widgets/widgets.dart` — barrel-экспорт.
+- `lib/app/home.dart` — на `HomePage` добавлен `AppBar` с кнопкой `Icons.dashboard_outlined` (tooltip «Дашборд»), открывающей экран через `Navigator.push`; таб-бар не тронут.
+- `lib/app/app.dart` — экспорт нового экрана.
+- Локализация: ключи `appTitle` и `dashboard` в `assets/l10n/locale_ru.arb` и `locale_en.arb`, генераты (`lib/app/gen/l10n/*`) перегенерированы через `flutter gen-l10n`.
+- `changelog/10053.feature.rst` — фрагмент changelog (нумерация продолжает существующие 10051/10052).
+
+**Тесты**
+
+- `test/widget/dashboard_page_test.dart` — индикатор прогресса во время загрузки; отображение карточек курса и новостей после загрузки; проверка, что запросы уходят с `base: 'USD'` и `forceRefresh: true`.
+- `test/widget/home_container_test.dart` — добавлен кейс перехода на `DashboardPage` по кнопке.
+
+**Проверки**
+
+- `flutter analyze` — No issues found.
+- `flutter test` — All tests passed (37 тестов).

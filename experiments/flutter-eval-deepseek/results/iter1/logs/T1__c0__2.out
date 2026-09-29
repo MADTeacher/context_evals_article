@@ -1,0 +1,21 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T1__c0__2\.madharness-mini\traces\20260923-232735-443fd76c.jsonl
+Готово: на экране курса валют работает подгрузка следующей страницы.
+
+**Что изменено**
+
+- `lib/app/currency_list/currency_list_page.dart`
+  - Первый запрос идёт через `fetchRates(CurrencyPageRequest(base: 'USD', page: 0, pageSize: CurrencyListPage.pageSize))` (константа `pageSize = 20`).
+  - Хранится состояние пагинации: `_loadedPage`, `_hasMore`, `_isLoadingMore`.
+  - Внизу списка кнопка «Показать ещё» (`TextButton`), которая вызывается только при `hasMore`; во время загрузки она блокируется и показывает индикатор. Кнопка добавлена как последний элемент `ListView.builder` (`itemCount: data.length + (_hasMore ? 1 : 0)`), поэтому вёрстка списка и ключи карточек не пострадали.
+  - `_loadNextPage()` запрашивает `_loadedPage + 1`, дописывает `page.items` к `_allCurrencies`, обновляет `_hasMore`, затем заново применяет текущий поисковый запрос (`_applyFilter(_query)`) — фильтр сохраняется, новые элементы тоже фильтруются. После подгрузки обновлённый полный список снова сохраняется через `saveCurrencyList`.
+  - Ошибка запроса не роняет экран: сбрасывается флаг загрузки, кнопку можно нажать снова; используется проверка `mounted`.
+
+- Локализация: ключ `showMore` добавлен в `assets/l10n/locale_ru.arb` («Показать ещё») и `locale_en.arb` («Show more»), а также в сгенерированные `lib/app/gen/l10n/app_localizations.dart`, `app_localizations_ru.dart`, `app_localizations_en.dart` (генератор не запускался, файлы правлены вручную в том же стиле).
+
+- `test/widget/currency_list_page_test.dart`: добавлены 3 теста — кнопка скрыта при `hasMore == false`; тап по кнопке дописывает вторую страницу (проверяется запрос `page: 1`, `pageSize: CurrencyListPage.pageSize`) и кнопка исчезает; при активном поиске после подгрузки фильтр сохраняется (остаётся только EUR, JPY не показывается).
+
+**Проверка**
+
+- `flutter analyze` — `No issues found!`
+- `flutter test` — все 36 тестов прошли (было 33, добавлено 3).

@@ -1,0 +1,14 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c0__1\.madharness-mini\traces\20260924-103752-53e0b8af.jsonl
+Done.
+
+**Что изменилось**
+
+- `lib/app/profile/profile_page.dart`: заменил локальный `ValueNotifier<AppThemeMode>` (который только устанавливался при выборе, но не отражал внешние изменения) на `StreamBuilder`, подписанный на `SettingsRepository.themeModeStream`. Начальное значение читается синхронно через `readThemeMode()` как fallback, пока поток не отдал данные: `snapshot.data ?? _settingsRepository.readThemeMode()` — тот же паттерн, что уже используется в `lib/main.dart`. Выбор режима теперь идёт через `_settingsRepository.setThemeMode(newMode)`, который эмитит в поток, обновляя и UI, и тему всего приложения. Убрал неиспользуемый `_themeModeNotifier` и его `dispose`.
+
+- `test/widget/home_container_test.dart`: добавил стаб `when(mockSettingsRepository.themeModeStream).thenAnswer((_) => const Stream<AppThemeMode>.empty());` — без него существующий тест навигации падал с `MissingStubError`, так как `ProfilePage` теперь читает поток.
+
+**Проверка**
+
+- `flutter analyze` — No issues found.
+- `flutter test` — All tests passed (33 теста).

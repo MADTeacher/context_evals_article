@@ -1,0 +1,18 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T6__c1__4\.madharness-mini\traces\20260925-003229-31a462da.jsonl
+Готово. Вот что изменилось:
+
+## Изменения
+
+### `lib/app/profile/profile_page.dart`
+- **Убран** `ValueNotifier<AppThemeMode>` и `ValueListenableBuilder` (которые обновлялись только при нажатии в этом же экране)
+- **Добавлен** `StreamBuilder<AppThemeMode>`, подписанный на `_settingsRepository.themeModeStream` — режим темы теперь автоматически обновляется при любом изменении из других частей приложения
+- **Начальное значение** читается синхронно через `_settingsRepository.readThemeMode()` и передаётся в `initialData` StreamBuilder'а
+
+### `test/widget/home_container_test.dart`
+- Добавлен stub для `themeModeStream` (MockSettingsRepository требует его при вызове): создан broadcast-контроллер, возвращаемый через `thenAnswer((_) => settingsStreamController.stream)`
+
+## Верификация
+
+- `flutter analyze` — **No issues found** ✅
+- `flutter test` — **All 33 tests passed** ✅

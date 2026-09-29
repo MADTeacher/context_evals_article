@@ -1,0 +1,20 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T3__c2__5\.madharness-mini\traces\20260924-094641-fad89efe.jsonl
+Готово. Кнопка «Обновить» добавлена в AppBar экрана новостей.
+
+**Изменения**
+
+- `lib/app/news_list/news_list_page.dart`
+  - В `AppBar` добавлен `IconButton` с `Icons.refresh` и локализованным tooltip (`context.loc.refresh`).
+  - Обработчик `_refreshNews()` вызывает `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — свежая загрузка из сети с записью в кэш (I.2), результат публикуется через `setState`, с проверкой `mounted`.
+  - `_initData()` приведён к паттерну cache-then-network: сразу `loadNewsFeed(NewsFeedFilter.all)` (только кэш), затем фоновая сетевая загрузка `_refreshNews()` — как в reference `news.md`.
+- `assets/l10n/locale_ru.arb` / `locale_en.arb` — ключ `refresh` («Обновить» / «Refresh»); сгенерированные `lib/app/gen/l10n/*` обновлены через `flutter gen-l10n`.
+- `test/widget/news_list_page_test.dart` — новый тест: после тапа по кнопке (по tooltip) ровно один раз вызывается `loadNewsFeed(NewsFeedFilter(forceRefresh: true))`, список отображается.
+- `changelog/10053.feature.rst` — фрагмент changelog (I.5).
+
+**Проверка**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (34 теста)
+
+Одно замечание: `l10n.yaml` содержит устаревший ключ `synthetic-package` — `flutter gen-l10n` выдаёт предупреждение (не ошибку). Не менял, так как вне рамок задачи.

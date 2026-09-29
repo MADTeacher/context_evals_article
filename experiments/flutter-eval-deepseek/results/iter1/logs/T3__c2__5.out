@@ -1,0 +1,18 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T3__c2__5\.madharness-mini\traces\20260924-002638-db143960.jsonl
+**Что сделано**
+
+Кнопка «Обновить» в AppBar экрана новостей, перезагружающая ленту из сети мимо кэша.
+
+- `lib/app/news_list/news_list_page.dart` — в `AppBar.actions` добавлен `IconButton` с `Icons.refresh` (tooltip — локализованная строка). Общая логика вынесена в `_loadFromNetwork(...)`, который всегда вызывает `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` (сеть + запись в кэш, п. 2/3 контракта news). `_refresh()` перезапускает future через `setState`, сохраняя анимацию появления; `_initData()` использует тот же путь.
+- `assets/l10n/locale_ru.arb` / `locale_en.arb` — ключ `refresh` («Обновить» / «Refresh»); сгенерированные `lib/app/gen/l10n/*` перегенерированы через `flutter gen-l10n`.
+- `test/widget/news_list_page_test.dart` — новый тест: после тапа по иконке перехватывается `NewsFeedFilter` и проверяется `forceRefresh == true`.
+- `changelog/10053.feature.rst` — фрагмент changelog (правило I.5).
+
+**Проверка**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (34 теста, включая новый)
+- @Deprecated-члены (`getNewsList`, `getCurrencyList`, `.themeMode`) не используются.
+
+Примечание: `flutter gen-l10n` выдаёт предупреждение о неактуальном `synthetic-package` в `l10n.yaml` — это существующая конфигурация проекта, я её не менял.

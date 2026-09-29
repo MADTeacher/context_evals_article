@@ -1,0 +1,27 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T6__c2__5\.madharness-mini\traces\20260924-230138-a4559649.jsonl
+## Готово ✅
+
+### Что изменилось
+
+**`lib/app/profile/profile_page.dart`**
+
+1. **Начальное значение читается синхронно** — `readThemeMode()` вызывается в `initState`, после получения репозитория из `context.read<SettingsRepository>()`.
+2. **Подписка на поток изменений** — добавлена подписка на `_settingsRepository.themeModeStream` в `initState`. При каждом изменении режима темы через `setThemeMode()` (`BroadcastStream`) `ValueNotifier` обновляется, и `ValueListenableBuilder` перестраивает виджет.
+3. **Гигиена** — убран getter `_settingsRepository`, теперь репозиторий сохраняется в поле после получения из контекста (контекст доступен только после вызова `super.initState()`).
+
+### Изменения в тесте
+
+**`test/widget/home_container_test.dart`**
+
+Добавлен stub для `themeModeStream`:
+```dart
+when(mockSettingsRepository.themeModeStream)
+    .thenAnswer((_) => Stream<AppThemeMode>.empty());
+```
+Без этого Mockito бросал `MissingStubError`, так как новый код обращается к потоку в `initState`.
+
+### Верификация
+
+- **`flutter.bat analyze`** — «No issues found!» (0 замечаний)
+- **`flutter.bat test`** — все 33 теста прошли ✅

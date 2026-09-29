@@ -1,0 +1,21 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T2__c2__4\.madharness-mini\traces\20260924-093014-478ff85d.jsonl
+Готово. Изменения (все — в рабочей копии проекта):
+
+**Что изменено**
+
+1. `lib/app/currency_list/currency_list_page.dart`
+   - Кнопка «Показать ещё» рендерится только при `_hasMore == true` и исчезает, когда `CurrencyPage.hasMore == false` (конец страниц). Догрузка: `fetchRates(_request(_currentPage + 1))`, элементы **добавляются** к списку, `saveCurrencyList` — для элементов новой страницы.
+   - Запросы строятся только как `CurrencyPageRequest(base: 'USD', page: N, pageSize: 20)` — базовая валюта проекта вынесена в `CurrencyListPage.baseCurrency`, default `'EUR'` в приложении не используется (I.1).
+   - Добавлен `_refresh()` — свежий запрос первой страницы (замена списка) при возврате фокуса на экран: карточка вызывает `onReturned` после закрытия экрана деталей (`Navigator.push` → await), т.е. фокус вернулся на список.
+   - Заодно устранён баг: обновление `_hasMore`/`_currentPage` после догрузки не перестраивало `build` (кнопка оставалась видимой) — теперь есть `setState`.
+
+2. `lib/app/currency_list/widgets/currency_card.dart` — опциональный `onReturned` (обратная совместимость: существующие вызовы без него не ломаются).
+
+3. l10n: `showMore` добавлен в `assets/l10n/locale_ru.arb` / `locale_en.arb` и сгенерирован `flutter gen-l10n` в `lib/app/gen/l10n/*` («Показать ещё» / «Show more»).
+
+4. Тесты `test/widget/currency_list_page_test.dart`: базовая валюта первого запроса (`USD`, не `EUR`, page 0, pageSize 20); кнопка скрыта при `hasMore: false`; кнопка видна при `hasMore: true`, догрузка добавляет элементы и скрывает кнопку; возврат фокуса (карточка → закрытие деталей) даёт повторный запрос первой страницы с базовой валютой.
+
+5. `changelog/10053.bugfix.rst` — фрагмент по I.5.
+
+**Проверки**: `flutter analyze` → «No issues found!»; `flutter test` → 37 тестов, все зелёные. Конвенции v2 (I.1–I.4) соблюдены, deprecated-члены не использовались.

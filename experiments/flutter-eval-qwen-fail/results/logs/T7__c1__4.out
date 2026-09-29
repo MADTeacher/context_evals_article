@@ -1,0 +1,35 @@
+Exception in thread Thread-8 (_readerthread):
+Traceback (most recent call last):
+  File "C:\Users\MADTeacher\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\MADTeacher\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MADTeacher\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\subprocess.py", line 1614, in _readerthread
+    buffer.append(fh.read())
+                  ~~~~~~~^^
+  File "<frozen codecs>", line 325, in decode
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0x88 in position 29: invalid start byte
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T7__c1__4\.madharness-mini\traces\20260923-115114-c1785a5b.jsonl
+Все 33 теста прошли, анализ без замечаний. Вот что было сделано:
+
+## Изменённые файлы
+
+### `lib/app/home.dart` — главная модификация
+- **Добавлена кнопка «Обновить всё»** через `_onRefreshAllPressed()`: инкрементирует `_refreshCounter` (пересоздаёт страницы с новым key) и параллельно вызывает `fetchRates(base: 'USD')` для курсов валют и `loadNewsFeed(NewsFeedFilter(forceRefresh: true))` для новостей.
+- **AppBar** — добавлена кнопка Refresh (`Icons.refresh`) справа сверху с тултипом из локализации.
+- **FloatingActionButton** — добавлена расширенная FAB с иконкой `sync` и текстом «Обновить всё» / «Обновить всё».
+- **Ленивая перестройка страниц** — вместо `IndexedStack` (который строил все 3 страницы сразу, вызывая двойные сетевые запросы в тестах) используется `switch`, который создаёт только текущую страницу. При инкременте `_refreshCounter` ключ `ValueKey` меняется, и Flutter пересоздаёт нужную страницу — запуская повторный запрос из сети.
+
+### `assets/l10n/locale_en.arb` / `locale_ru.arb`
+- Добавлен ключ `"refreshAll"`: `"Refresh All"` (EN) / `"Обновить всё"` (RU).
+- Пересгенерирован `lib/app/gen/l10n/app_localizations.dart`.
+
+### `changelog/10053.feature.rst`
+- Создан фрагмент changelog для пользовательского изменения.
+
+## Проверки
+- **`flutter analyze`** — ✅ No issues found!
+- **`flutter test`** — ✅ All 33 tests passed!

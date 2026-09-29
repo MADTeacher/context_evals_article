@@ -1,0 +1,22 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T7__c2__1\.madharness-mini\traces\20260924-101744-8f2c7c81.jsonl
+All changes are in place. Done.
+
+## Что сделано
+
+На `HomePage` добавлена кнопка **«Обновить всё»** (`FloatingActionButton.extended`), по нажатию одновременно запускаются сетевые обновления курса валют и ленты новостей.
+
+**Изменённые файлы:**
+- `lib/app/home.dart` — кнопка + `_refreshAll()`, который через `GlobalKey` вызывает `refresh()` обеих страниц параллельно (`Future.wait`). Кнопка вынесена в FAB, чтобы не создавать вложенный второй `AppBar` над уже существующими `AppBar` дочерних страниц.
+- `lib/app/currency_list/currency_list_page.dart` — State сделан публичным (`CurrencyListPageState`), добавлен `refresh()`: `fetchRates(CurrencyPageRequest(base: 'USD'))` (конвенция v2, явный base 'USD') + `saveCurrencyList` в кэш.
+- `lib/app/news_list/news_list_page.dart` — State публичный (`NewsListPageState`), `refresh()`: `loadNewsFeed(NewsFeedFilter(forceRefresh: true))` (сеть + запись в кэш).
+- `assets/l10n/locale_en.arb`, `locale_ru.arb` + сгенерированные `lib/app/gen/l10n/app_localizations*.dart` — строка `refreshAll` («Обновить всё» / «Refresh all»).
+- `changelog/10053.bugfix.rst` — фрагмент changelog (I.5).
+
+**Соблюдение контракта v2:** использованы только `fetchRates`/`loadNewsFeed`; `@Deprecated`-члены (`getCurrencyList`, `getNewsList`) не затронуты; `forceRefresh: true` для пользовательского действия «Обновить».
+
+**Проверка:**
+- `flutter analyze` → No issues found!
+- `flutter test` → All tests passed! (33 теста)
+
+Замечание: новых тестов на кнопку я не добавлял — если нужно, могу добавить widget-тест на `_refreshAll` (проверка, что оба репозитория дёргаются из сети).

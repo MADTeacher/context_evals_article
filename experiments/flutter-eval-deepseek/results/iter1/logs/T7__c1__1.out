@@ -1,0 +1,21 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T7__c1__1\.madharness-mini\traces\20260924-002410-8334207c.jsonl
+**Готово.** Кнопка «Обновить всё» добавлена на `HomePage`, оба запроса выполняются параллельно из сети.
+
+## Что изменено
+
+- `lib/app/home.dart` — `FloatingActionButton.extended` с иконкой `Icons.refresh` и подписью `loc.refreshAll`. Обработчик `_refreshAll()`:
+  - `Future.wait` запускает **одновременно** `CurrencyRepository.fetchRates(CurrencyPageRequest(base: 'USD'))` (с записью в кэш через `saveCurrencyList`) и `NewsRepository.loadNewsFeed(NewsFeedFilter(forceRefresh: true))` — оба уходят в сеть согласно конвенциям `docs/migration-v2.md`;
+  - после завершения обеих операций вкладки обновляются через `GlobalKey` → `reload()`, без пересоздания страниц (вкладки остаются живыми, как и раньше).
+- `lib/app/currency_list/currency_list_page.dart` — state переименован в публичный `CurrencyListPageState` (приватный тип недоступен из `home.dart`), добавлен `reload()`; `ValueNotifier` создаётся один раз, чтобы повторная загрузка не теряла подписки.
+- `lib/app/news_list/news_list_page.dart` — state переименован в `NewsListPageState`, добавлен `reload()`.
+- `assets/l10n/locale_ru.arb` / `locale_en.arb` — ключ `refreshAll` («Обновить всё» / «Refresh All»), файлы `lib/app/gen/l10n/*` перегенерированы через `flutter gen-l10n`.
+- `test/widget/home_container_test.dart` — новый тест: по нажатию кнопки повторно вызываются оба сетевых запроса (`fetchCount` 1→2, у новостей последний фильтр с `forceRefresh: true`).
+- `changelog/10053.feature.rst` — фрагмент changelog (пользовательское изменение).
+
+## Проверки
+
+- `flutter analyze` — `No issues found!`
+- `flutter test` — `All tests passed!` (34 теста, включая новый)
+
+Примечание: `l10n.yaml` содержит устаревшую опцию `synthetic-package: false` — Flutter 3.47 выдаёт предупреждение «no longer has any effect». Генерация при этом проходит; опцию не трогал, так как это выходит за рамки задачи.

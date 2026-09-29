@@ -1,0 +1,25 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T3__c2__1\.madharness-mini\traces\20260924-094209-894a556d.jsonl
+Готово. Кнопка «Обновить» добавлена, обе проверки зелёные.
+
+## Что изменено
+
+**`lib/app/news_list/news_list_page.dart`**
+- В `AppBar` добавлен `IconButton` (`Icons.refresh`, tooltip из l10n) с обработчиком `_refreshNews()`.
+- `_refreshNews()` внутри `setState` сбрасывает анимацию (`_scaleController.reset()`) и заново вызывает `_initData()`, который делает `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — то есть сеть + запись в кэш, без чтения из БД (конвенция I.2 / reference `news.md`, п. 3: действие «Обновить» — всегда `forceRefresh: true`).
+
+**Локализация** (новая строка `refresh`):
+- `assets/l10n/locale_ru.arb` → `"Обновить"`, `assets/l10n/locale_en.arb` → `"Refresh"`.
+- Сгенерированы `lib/app/gen/l10n/app_localizations.dart`, `..._ru.dart`, `..._en.dart` командой `flutter gen-l10n`.
+
+**Тесты — `test/widget/news_list_page_test.dart`**
+- Добавлен кейс «should reload news from network when refresh button is tapped»: до тапа мок отдаёт один набор, после тапа — другой; проверяется, что список перерисовался и что все вызовы `loadNewsFeed` шли с `forceRefresh: true`.
+
+**Changelog — `changelog/10053.bugfix.rst`** (по правилу I.5).
+
+## Проверки
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (34 теста)
+
+Примечание: `flutter gen-l10n` печатает предупреждение, что `synthetic-package` в `l10n.yaml` больше не действует — это существующая конфигурация проекта, я её не трогал.

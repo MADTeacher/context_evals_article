@@ -1,0 +1,26 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T7__c2__2\.madharness-mini\traces\20260924-005634-61b59377.jsonl
+Everything is in place. Final summary:
+
+## Что изменено
+
+**Кнопка «Обновить всё» на HomePage** — `FloatingActionButton.extended` в `Scaffold`. По нажатию `_HomePageState._refreshAll()` параллельно (`Future.wait`) выполняет **два сетевых запроса напрямую через репозитории**, соблюдая конвенции v2:
+- `currencyRepository.fetchRates(const CurrencyPageRequest(base: 'USD'))` — base `'USD'`, не default `'EUR'` (I.1);
+- `newsRepository.loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — свежая загрузка из сети с записью в кэш (I.2);
+- `@Deprecated`-члены (`getCurrencyList`, `getNewsList`, `themeMode`) не используются (I.4).
+
+Чтобы обновился именно видимый список, `HomePage` после завершения запросов инкрементирует `ValueNotifier<int> _refreshTick`, на который подписаны `CurrencyListPage` и `NewsListPage`: страница перечитывает данные и перезапускает анимацию. Ленивая сборка вкладок сохранена (не `IndexedStack` — иначе `ProfilePage` с `repeat()`-анимацией ломает `pumpAndSettle`).
+
+**Файлы:**
+- `lib/app/home.dart` — FAB, `_refreshAll`, `_refreshTick`
+- `lib/app/currency_list/currency_list_page.dart` — параметр `refreshTick`, подписка, `_onRefreshTick`; notifier инициализируется сразу (иначе `dispose` падал с `LateInitializationError`)
+- `lib/app/news_list/news_list_page.dart` — параметр `refreshTick`, подписка, `_onRefreshTick`
+- `assets/l10n/locale_ru.arb` / `locale_en.arb` + регенерация `lib/app/gen/l10n/*` — ключ `refreshAll` («Обновить всё» / «Refresh all»)
+- `changelog/10053.bugfix.rst` — фрагмент changelog (I.5)
+- `test/widget/home_container_test.dart` — 2 новых теста: оба запроса уходят в сеть (проверяется `base == 'USD'` и `forceRefresh == true`) при активной вкладке валют и при активной вкладке новостей
+
+## Проверка
+- `flutter analyze` → **No issues found!**
+- `flutter test` → **35 тестов, все зелёные**
+
+Замечание: `fetchRates` и `loadNewsFeed` вызываются из `HomePage` и дополнительно из подписавшейся страницы, поэтому при нажатии кнопки монтированная страница делает повторный запрос — это осознанный компромисс, чтобы видимый список гарантированно обновился, а оба источника всегда опрашивались из сети.

@@ -1,0 +1,19 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T5__c2__2\.madharness-mini\traces\20260924-004230-b3285b6d.jsonl
+**Что сделано**
+
+В `test/unit/repository_test.dart` (группа `SettingsRepository`) добавлены 3 теста:
+
+1. `readThemeMode returns actual value after initAsyncData` — после `await initAsyncData()` метод возвращает актуальное значение из preference-датасорса (`AppThemeMode.dark`), проверяется и обращение к датасорсу.
+2. `readThemeMode reflects the mode set after initAsyncData` — значение, установленное через `setThemeMode` после инициализации, читается через `readThemeMode()` (актуальность, а не кэш).
+3. `readThemeMode is safe to call after initAsyncData` — `initAsyncData` и последующий `readThemeMode()` выполняются без исключений (`returnsNormally`), плюс побочный эффект инициализации `isAuth == true` при наличии токена.
+
+Существующие тесты не тронуты (в т.ч. старые проверки `themeMode`/`getToken` — они остались, только добавлены новые кейсы; новых `@Deprecated` обращений не появилось).
+
+**Проверка**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test test/unit/repository_test.dart` → 18 тестов зелёные
+- `flutter test` → `All tests passed!` (36 тестов, включая widget-тесты `home_container_test.dart`, где `readThemeMode()` мокается)
+
+Замечание: `test/unit/repository_test.dart` — тестовый файл, поэтому хук v2 (блокирующий `.themeMode` только в `lib/**`) его не затрагивает; старые тесты с deprecated-геттером я оставил как есть, чтобы дифф был минимальным. Если нужно, могу перевести и их на `readThemeMode()` отдельным изменением.

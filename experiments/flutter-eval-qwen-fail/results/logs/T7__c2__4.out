@@ -1,0 +1,39 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T7__c2__4\.madharness-mini\traces\20260923-192946-5ef9308c.jsonl
+Все 33 теста прошли зелёными! И `flutter analyze` прошёл с результатом «No issues found!». Changelog-фрагмент создан по правилу I.5.
+
+Давайте подведём итог: что было сделано.
+
+## Что изменилось
+
+### Новые файлы:
+1. **`lib/app/refresh_trigger.dart`** — новый `ChangeNotifier` (RefreshTrigger), который управляет триггером обновления данных. При вызове `trigger()` все подписчики получают уведомление.
+
+2. **`changelog/1006.bugfix.rst`** — фрагмент changelog по правилу I.5.
+
+### Изменённые файлы:
+3. **`lib/app/home.dart`**:
+   - Заменён `StatefulWidget` на использование `IndexedStack` (страницы не уничтожаются при переключении вкладок, сохраняя состояние)
+   - Добавлен `ChangeNotifierProvider<RefreshTrigger>` — провайдирует триггер обновления для всех дочерних страниц
+   - Добавлена FAB-кнопка «Обновить всё» с иконкой `sync`
+
+4. **`lib/app/currency_list/currency_list_page.dart`**:
+   - Подписка на `RefreshTrigger` через `addListener` — при повторном вызове запускается `fetchRates(CurrencyPageRequest(base: 'USD'))` из сети (по правилам v2)
+   - Инициализация `_filteredCurrenciesNotifier = ValueNotifier([])` в `initState` вместо `late final`
+   - Сохранение референса `RefreshTrigger` для безопасного `dispose()`
+
+5. **`lib/app/news_list/news_list_page.dart`**:
+   - Аналогично — подписка на триггер, при обновлении вызывается `loadNewsFeed(NewsFeedFilter(forceRefresh: true))` из сети
+   - Сохранение референса trigger'а для корректного dispose
+
+6. **`lib/app/app.dart`** — добавлен export `'refresh_trigger.dart'`
+
+7. **`assets/l10n/locale_en.arb` / `locale_ru.arb`** — добавлен ключ `"refreshAll"` ("Refresh All" / "Обновить всё") + `flutter gen-l10n` выполнен
+
+8. **`test/widget/widget.dart`** — в helper `buildWidget` добавлен дефолтный `ChangeNotifierProvider<RefreshTrigger>`, чтобы все виджет-тесты имели доступ к триггеру
+
+9. **`test/widget/home_container_test.dart`** — заменён `pumpAndSettle()` на конкретную длительность, так как `ProfilePage` содержит бесконечную анимацию (`repeat(reverse: true)`), которая не завершается при `IndexedStack`.
+
+### Результат верификации:
+- ✅ `flutter.bat analyze` — «No issues found!» (без замечаний любого уровня)
+- ✅ `flutter.bat test` — все 33 теста зелёные

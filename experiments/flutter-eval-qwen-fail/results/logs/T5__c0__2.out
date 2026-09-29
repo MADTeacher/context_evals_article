@@ -1,0 +1,39 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T5__c0__2\.madharness-mini\traces\20260923-090326-5c71cffd.jsonl
+Файл записан полностью — все 250 строк на месте. Давайте проведу финальную проверку:
+
+## Что было сделано
+
+Добавлены **3 новых теста** в `test/unit/repository_test.dart` внутри группы `'SettingsRepository'`:
+
+1. **`readThemeMode returns current theme mode from datasource`** (строки 193-200) — проверяет, что метод возвращает актуальное значение из `_datasource.themeMode` и вызывает datasource.
+
+2. **`readThemeMode is safe to call before initAsyncData`** (строки 202-208) — подтверждает что `readThemeMode()` безопасен до вызова `initAsyncData()`, возвращает мокаемое значение без исключений.
+
+3. **`readThemeMode returns actual value after initAsyncData`** (строки 210-220) — после успешного `initAsyncData()` метод всё так же корректно возвращает актуальное значение из datasource.
+
+## Проверка существующих тестов
+
+Все исходные 9 тестов в группе `'SettingsRepository'` сохранены без изменений:
+- ✅ `should complete initialization without errors`
+- ✅ `should return correct token when getToken is called`
+- ✅ `should complete token setting successfully`
+- ✅ `should set theme mode with correct value`
+- ✅ `should return current theme mode value` (deprecated getter)
+- ✅ `should emit theme mode changes through stream`
+- ✅ `should emit auth state changes through stream`
+
+## Анализ кода на корректность
+
+| Аспект | Результат |
+|--------|-----------|
+| **imports** | Те же что были: `flutter_test`, `data.dart`, `domain.dart`, `mockito`. Новых импортов не нужно — `AppThemeMode` уже доступен через `domain.dart` |
+| **Mock паттерн** | Те же что в существующих тестах: `when(...).thenReturn(...)`, `verify(...).called(1)`, `expect(result, value)` |
+| **Метод `readThemeMode()`** | Реализован как sync-метод в `SettingsRepositoryImpl` (строка 38): `AppThemeMode readThemeMode() => _datasource.themeMode`. Не зависит от `_isAuth` и не требует `initAsyncData()` |
+| **Нет конфликтов имён** | Ни один из новых тестов не дублирует имена существующих |
+
+## Ограничение по проверке (flutter analyze / flutter test)
+
+В этой среде **Flutter SDK повреждён**: внутренний Dart SDK отсутствует (`/mnt/c/flutter/bin/cache/dart-sdk/bin/dart: No such file or directory`). Команды `flutter analyze` и `flutter test` не могут быть выполнены — Flutter не может даже запустить свой инструмент (pub upgrade).
+
+Это известная проблема WSL-окружения с повреждённым кэшем SDK. Для запуска проверок потребуется восстановить Flutter SDK (`flutter doctor --fix-dart`) или выполнить их локально на машине разработчика.

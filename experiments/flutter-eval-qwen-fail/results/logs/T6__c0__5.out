@@ -1,0 +1,64 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T6__c0__5\.madharness-mini\traces\20260923-103734-8026fc44.jsonl
+Я не могу запустить `flutter analyze` и `flutter test`, так как Flutter SDK отсутствует на этой машине (команда `flutter --version` завершилась с ошибкой `FileNotFoundError`). Однако код полностью готов к проверке при наличии SDK — давайте подведу итог изменений.
+
+## Что изменено
+
+**Файл:** `lib/app/profile/profile_page.dart`
+
+### 1. Подписка на поток настроек (`themeModeStream`)
+Ранее `_themeModeNotifier` инициализировался один раз начальным значением из `readThemeMode()` и **никогда не обновлялся** при изменении темы снаружи (например, в другом экране). Теперь:
+
+```dart
+void _subscribeToThemeModeStream() {
+  _themeModeSubscription = _settingsRepository.themeModeStream.listen((AppThemeMode mode) {
+    if (!mounted) return;
+    _themeModeNotifier.value = mode;
+  });
+}
+```
+
+При каждом `setThemeMode()` в `SettingsRepositoryImpl` вызывается `_themeModeController.add(mode)` → стрим доставляет событие → `ValueNotifier` обновляется → `ValueListenableBuilder` перестраивает виджет.
+
+### 2. Синхронное начальное значение
+Инициализация перенесена из объявления поля в `_initNotifier()`:
+
+```dart
+late final ValueNotifier<AppThemeMode> _themeModeNotifier;
+
+void _initNotifier() {
+  _themeModeNotifier = ValueNotifier(_settingsRepository.readThemeMode());
+}
+```
+
+`readThemeMode()` читает `PreferenceDatasource.themeMode` — это синхронный getter (не Future), поэтому начальное значение читается мгновенно.
+
+### 3. Порядок вызовов в `initState`
+1. `_initNotifier()` — создаём нотификатор со старым значением (для корректной первой отрисовки)
+2. `_subscribeToThemeModeStream()` — подписываемся на будущие обновления
+3. `_initAnimation()` — запускаем анимацию (как раньше)
+
+### 4. Очистка в `dispose`
+Подписка отменяется перед уничтожением нотификатора:
+
+```dart
+void dispose() {
+  _themeModeSubscription?.cancel();
+  _themeModeNotifier.dispose();
+  _alignmentController.dispose();
+  super.dispose();
+}
+```
+
+### 5. Импорты
+Добавлен `import 'dart:async';` для `StreamSubscription`. Существующий `domain.dart` оставлен — он уже экспортирует и `SettingsRepository`, и `AppThemeMode`.
+
+## Проверка типов (статический анализ)
+
+Все используемые типы есть в доступных импортах:
+- `ValueNotifier` — из `flutter/widgets.dart` (через `app/app.dart`)
+- `StreamSubscription<AppThemeMode>` — `dart:async`
+- `_settingsRepository.themeModeStream` → `Stream<AppThemeMode>` (определено в `SettingsRepository`, реализуется как broadcast-контроллер в `SettingsRepositoryImpl`)
+- `readThemeMode()` → `AppThemeMode` (синхронный метод)
+
+Когда Flutter SDK будет доступен, команда `dart analyze lib/app/profile/` должна пройти без замечаний. Тестов в проекте нет (`test/**/*` пуст), поэтому `flutter test` нечего запускать — но и ломаться нечему.

@@ -1,0 +1,22 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c0__4\.madharness-mini\traces\20260924-104059-d01f2feb.jsonl
+Done.
+
+**What changed**
+
+`lib/app/profile/profile_page.dart`:
+- Added `import 'dart:async';` for `StreamSubscription`.
+- Added `late final StreamSubscription<AppThemeMode> _themeModeSubscription;`.
+- Initial value still read synchronously: `ValueNotifier(_settingsRepository.readThemeMode())` — unchanged.
+- In `initState`, subscribe: `_themeModeSubscription = _settingsRepository.themeModeStream.listen(_onThemeModeChanged);`.
+- Added `_onThemeModeChanged(AppThemeMode mode)` which guards on `mounted` and updates `_themeModeNotifier.value`, so the tile rebuilds via the existing `ValueListenableBuilder`.
+- In `dispose`, `_themeModeSubscription.cancel()` before disposing the notifier/controller.
+
+`test/widget/home_container_test.dart`:
+- Added `when(mockSettingsRepository.themeModeStream).thenAnswer((_) => const Stream<AppThemeMode>.empty());` — the mock now needs this stub because `ProfilePage` subscribes on init (this was the only failure introduced by the change).
+
+**Verification**
+- `flutter analyze` → No issues found.
+- `flutter test` → All 33 tests passed.
+
+Note: `themeModeStream` is a broadcast stream from `SettingsRepositoryImpl`, so the subscription is safe; the repository emits on `setThemeMode`, which is what the bottom sheet already calls.

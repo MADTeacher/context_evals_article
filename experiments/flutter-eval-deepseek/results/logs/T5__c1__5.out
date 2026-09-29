@@ -1,0 +1,19 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T5__c1__5\.madharness-mini\traces\20260924-100507-a0105058.jsonl
+Готово.
+
+**Что изменено**
+
+`test/unit/repository_test.dart` — в группу `SettingsRepository` добавлены 4 теста на чтение режима темы:
+- `readThemeMode should return actual theme mode after initAsyncData` — после `initAsyncData()` возвращается актуальное значение датасорса (`dark`).
+- `readThemeMode should return updated theme mode after setThemeMode` — после `setThemeMode()` чтение отдаёт новое значение (light → system).
+- `readThemeMode should be safe to call after initAsyncData` — после инициализации вызов не бросает исключений (`returnsNormally`), а deprecated-геттер `themeMode` делегирует в `readThemeMode()`.
+- `readThemeMode should be called only after initAsyncData` — `verifyInOrder` подтверждает порядок: сначала `initAsyncData()` (через `getToken()`), затем чтение `themeMode`.
+
+Плюс одна правка существующего теста: `should return current theme mode value` теперь начинается с `clearInteractions(mockPreferenceDatasource)`. Мок `MockPreferenceDatasource` объявлен на уровне `main()` и не сбрасывается между тестами, поэтому накопленные моими новыми тестами вызовы `themeMode` ломали `verify(...).called(1)` (падало с `Actual: <5>`). Это минимальная изоляция, не меняющая сути проверки. По той же причине в первом новом тесте использовано `called(greaterThanOrEqualTo(1))`.
+
+`changelog/10053.test.rst` — запись в changelog по правилам проекта.
+
+**Проверка**
+- `flutter analyze` → `No issues found!` (exit 0)
+- `flutter test` → `All tests passed!` (37 тестов, 0 падений)

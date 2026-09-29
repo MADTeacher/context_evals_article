@@ -1,0 +1,14 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T3__c0__5\.madharness-mini\traces\20260923-234851-776cb798.jsonl
+Готово. Кнопка «Обновить» добавлена в AppBar экрана новостей.
+
+**Что изменено:**
+- `lib/app/news_list/news_list_page.dart` — в `AppBar` добавлен `IconButton` с иконкой `Icons.refresh` и тултипом из локализации. Новый метод `_refreshData()` вызывает `NewsRepository.loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` внутри `setState`, что перезапрашивает ленту из сети (в `NewsRepositoryImpl.loadNewsFeed` при `forceRefresh: true` идёт запрос в `_restDatasource.getNewsList()` и последующее сохранение в БД, минуя чтение из кэша). Анимация сбрасывается и проигрывается заново, поэтому UI обновляется.
+- `assets/l10n/locale_ru.arb` / `locale_en.arb` — добавлен ключ `refresh` («Обновить» / «Refresh»).
+- `lib/app/gen/l10n/*` — перегенерированы через `flutter gen-l10n` (появился геттер `refresh`).
+
+**Проверки:**
+- `flutter analyze` — `No issues found!`
+- `flutter test` — `All tests passed!` (33 теста, включая существующий `news_list_page_test.dart`).
+
+Примечание: `flutter gen-l10n` вывел предупреждение, что опция `synthetic-package` в `l10n.yaml` больше не имеет эффекта (устарела). На генерацию и проверки это не влияет, но при желании строку можно удалить из `l10n.yaml` — это вне рамок запроса, поэтому я её не трогал.

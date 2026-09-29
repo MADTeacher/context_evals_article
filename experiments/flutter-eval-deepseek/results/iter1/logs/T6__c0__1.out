@@ -1,0 +1,23 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c0__1\.madharness-mini\traces\20260924-000716-53948228.jsonl
+Готово.
+
+**Что изменено**
+
+`lib/app/profile/profile_page.dart`:
+- Убран `ValueNotifier<AppThemeMode>` (вместе с `dispose` для него) — состояние темы больше не дублируется локально.
+- Вместо `ValueListenableBuilder` теперь `StreamBuilder<AppThemeMode>`:
+  - `stream: _settingsRepository.themeModeStream` — подписка на поток настроек, поэтому подпись режима обновляется при любом изменении темы (в т.ч. из других мест);
+  - `initialData: _settingsRepository.readThemeMode()` — начальное значение читается синхронно, без «пустого» первого кадра;
+  - `final AppThemeMode mode = snapshot.data ?? _settingsRepository.readThemeMode();` — подстраховка на случай отсутствия данных.
+- Тап по плитке теперь вызывает `_settingsRepository.setThemeMode(newMode)` (запись в источник истины), а не пишет в локальный notifier — `ThemeModeSelectorBottomSheet` уже делает то же самое, так что поведение согласовано, а UI обновится из потока.
+- Заголовок плитки (`loc.theme`) передан напрямую в `title`, т.к. `child` у `StreamBuilder` отсутствует.
+
+`test/widget/home_container_test.dart`:
+- Добавлен стаб `when(mockSettingsRepository.themeModeStream).thenAnswer((_) => const Stream<AppThemeMode>.empty())` — без него `MockSettingsRepository` бросал `MissingStubError` при построении `ProfilePage` (мок строгий, не nice).
+
+**Проверки**
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (33 теста)
+
+Побочно замечено (не менял, вне рамок задачи): в `PreferenceDatasourceImpl.getToken()` используется ключ `_Keys.theme` вместо `_Keys.token` — из-за этого сохранённый токен не читается, а `setToken(null)` не очищает значение.

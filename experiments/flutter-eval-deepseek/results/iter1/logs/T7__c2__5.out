@@ -1,0 +1,22 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T7__c2__5\.madharness-mini\traces\20260924-011243-246a5561.jsonl
+Everything looks good. The implementation is complete and verified.
+
+## Что сделано
+
+Добавлена кнопка «Обновить всё» на главный экран (`HomePage`) с параллельным сетевым обновлением курса валют и ленты новостей.
+
+**Изменённые файлы:**
+- `lib/app/home.dart` — добавлен `AppBar` с кнопкой «Обновить всё». Обработчик `_refreshAll()` через `Future.wait` одновременно вызывает:
+  - `currencyRepository.fetchRates(const CurrencyPageRequest(base: 'USD'))` — сеть, с записью страницы в кэш через `saveCurrencyList` (конвенция v2, base `'USD'`, не `'EUR'`);
+  - `newsRepository.loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — сеть + запись в кэш.
+  - Кнопка блокируется на время выполнения (`_isRefreshingAll`), есть guard от повторного нажатия и проверка `mounted`.
+- `assets/l10n/locale_ru.arb`, `assets/l10n/locale_en.arb` + сгенерированные `lib/app/gen/l10n/app_localizations*.dart` — строка `refreshAll` («Обновить всё» / «Refresh all»).
+- `test/widget/home_container_test.dart` — новый тест: по тапу проверяется, что `fetchRates` вызван с `base == 'USD'`, а `loadNewsFeed` — с `forceRefresh == true`.
+- `changelog/10053.feature.rst` — фрагмент changelog (пользовательское изменение по I.5).
+
+**Проверка:**
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `+34: All tests passed!`
+
+Замечу: в существующих `CurrencyListPage`/`NewsListPage` осталась двойная загрузка данными (собственные `_initData`), но я не трогал их — дифф минимален и сфокусирован на запросе. Если нужно, чтобы кнопка также обновляла UI уже открытых списков, потребуется вынести состояние в общий источник (это выходит за рамки текущей задачи).

@@ -1,0 +1,30 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T5__c1__2\.madharness-mini\traces\20260923-091154-d0f5f989.jsonl
+## Что сделано
+
+### Изменения
+
+**`test/unit/repository_test.dart`** — добавлены 2 новых теста в группу `SettingsRepository`:
+
+1. **`readThemeMode returns the datasource current value after init`** — после вызова `initAsyncData()` метод `readThemeMode()` возвращает актуальное значение из datasource (`AppThemeMode.light`). Это подтверждает, что `readThemeMode()` безопасно вызывать только *после* инициализации.
+
+2. **`setThemeMode calls datasource setter with correct mode`** — вызывает `setThemeMode(AppThemeMode.dark)` через репозиторий и проверяет, что `mockPreferenceDatasource.setThemeMode(AppThemeMode.dark)` был вызван ровно 1 раз. (Mock не поддерживает stateful-поведение — `themeMode` всегда возвращает дефолт `light`, поэтому проверка ограничивается `verify`.)
+
+**`changelog/10053.task.rst`** — запись о добавленных тестах.
+
+### Статическая проверка
+
+Ручной анализ и ревью от `reviewer` подтвердили:
+- ✅ Импорты корректны (`AppThemeMode` из `domain/domain.dart`)
+- ✅ Mock `PreferenceDatasource` имеет дефолт `light` для `themeMode` и поддерживает `setThemeMode`
+- ✅ `throwOnMissingStub(this)` активен — незамоксанные вызовы будут отловлены
+- ✅ Нет конфликтов с существующими тестами (каждая группа создаёт новый инстанс репозитория, mock'и перезаписываются через `when()`)
+
+### flutter analyze / flutter test
+
+Flutter SDK недоступен в этой оболочке (ошибка `FileNotFoundError`). Команды выполнить не удалось. В CI/локальной среде с установленным Flutter рекомендую запустить:
+
+```bash
+flutter analyze
+flutter test test/unit/repository_test.dart
+```

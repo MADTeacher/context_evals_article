@@ -1,0 +1,20 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T1__c0__3\.madharness-mini\traces\20260924-091322-3bb35562.jsonl
+Готово: на экране курса валют появилась подгрузка следующей страницы.
+
+**Что изменено**
+
+- `lib/app/currency_list/currency_list_page.dart`
+  - состояние пагинации: `_lastLoadedPage`, `_hasMore`, `_isLoadingMore`, размер страницы `_pageSize = 20`;
+  - первая загрузка — `fetchRates(CurrencyPageRequest(pageSize: _pageSize))`, из ответа берутся `page.page`/`page.hasMore`;
+  - новый `_loadNextPage()`: запрашивает `page: _lastLoadedPage + 1`, дописывает `page.items` к `_allCurrencies`, обновляет `_hasMore`, защищён от повторных нажатий и от `setState` после `dispose` (`mounted`);
+  - поиск сохранён: введённый запрос хранится в `_query`, а фильтрация вынесена в `_applyFilter()`, который применяется и к уже загруженным, и к дописанным элементам (после подгрузки фильтр не сбрасывается);
+  - под списком кнопка «Показать ещё» (видна только при `hasMore`), список и кнопка — в `Column`, поэтому кнопка не мешает скроллу карточек.
+- `lib/app/currency_list/widgets/show_more_button.dart` (новый) — `OutlinedButton` с индикатором загрузки и блокировкой нажатия во время запроса; экспортирован из `lib/app/currency_list/widgets/widgets.dart`.
+- Локализация: ключ `showMore` («Показать ещё» / «Show more») добавлен в `assets/l10n/locale_ru.arb`, `locale_en.arb` и в сгенерированные `lib/app/gen/l10n/app_localizations*.dart` (сгенерированы тем же форматом, что `flutter gen-l10n`; команда прогонялась, генератор поддерживает файлы как есть).
+- `test/widget/currency_list_page_test.dart` — два новых теста: подгрузка второй страницы по кнопке (проверяется запрос `page: 1`, дописывание карточек, скрытие кнопки при `hasMore: false`) и сохранение фильтра поиска после подгрузки; в существующий тест добавлена проверка отсутствия кнопки при `hasMore: false`.
+
+**Проверки**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (35 тестов, включая 5 в `currency_list_page_test.dart`)

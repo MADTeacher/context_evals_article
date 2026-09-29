@@ -1,0 +1,21 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c0__3\.madharness-mini\traces\20260924-001011-d1edbec6.jsonl
+Готово.
+
+## Что изменено
+
+**`lib/app/profile/profile_page.dart`**
+- Начальное значение по-прежнему читается синхронно: `ValueNotifier(_settingsRepository.readThemeMode())` (без `@Deprecated`-геттера `themeMode`).
+- В `initState` добавлена подписка на `_settingsRepository.themeModeStream`; приходящее значение пишется в `_themeModeNotifier`, поэтому `ValueListenableBuilder` в `ListTile.subtitle` обновляет отображаемый режим автоматически (в т.ч. при изменении из другого места приложения).
+- Подписка отменяется в `dispose` перед `dispose()` нотификатора; добавлен импорт `dart:async`.
+
+**`test/widget/home_container_test.dart`**
+- Добавлен стаб `when(mockSettingsRepository.themeModeStream).thenAnswer((_) => const Stream<AppThemeMode>.empty())` — без него `MockSettingsRepository` бросал `MissingStubError` при монтировании `ProfilePage` (тест открывает вкладку профиля).
+
+**`changelog/10053.bugfix.rst`** — фрагмент по конвенции проекта (`docs/migration-v2.md`, п.4).
+
+## Проверка
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (33 теста)
+
+Примечание: `readThemeMode()` вызывается в инициализаторе поля, т.е. при первом обращении к `_settingsRepository` в `initState` — это по-прежнему после `initAsyncData()` на Splash, как требует проектная конвенция.

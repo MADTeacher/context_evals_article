@@ -1,0 +1,16 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T3__c1__3\.madharness-mini\traces\20260924-094755-618bee15.jsonl
+Готово.
+
+**Что изменено**
+- `lib/app/news_list/news_list_page.dart` — в `AppBar` добавлен `IconButton` с `Icons.refresh` (tooltip из локализации). Обработчик `_refreshData()` сбрасывает анимацию и пересоздаёт future через `_initData()`, который вызывает `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — т.е. данные тянутся из сети (`RestDatasource`) и перезаписывают кэш БД, минуя чтение из кэша.
+- `assets/l10n/locale_ru.arb` / `locale_en.arb` — новая строка `refresh` («Обновить» / «Refresh»).
+- `lib/app/gen/l10n/app_localizations.dart`, `app_localizations_ru.dart`, `app_localizations_en.dart` — вручную дописаны геттеры `refresh` (по образцу сгенерированного gen-l10n кода, т.к. `flutter gen-l10n` в harness не запускался; можно перегенерировать командой при желании).
+- `test/widget/news_list_page_test.dart` — новый тест: после нажатия на иконку refresh проверяется, что репозиторий вызван с `NewsFeedFilter.forceRefresh == true`.
+- `changelog/10053.feature.rst` — запись по правилу AGENTS.md.
+
+**Проверка**
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (34 теста, включая новый).
+
+Примечание: перезагрузка использует тот же код, что и первичная загрузка (`forceRefresh: true`), поэтому кнопка действительно идёт в сеть, а не в sqflite-кэш.

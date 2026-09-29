@@ -1,0 +1,23 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T4__c2__4\.madharness-mini\traces\20260924-003139-b9f569c0.jsonl
+Готово — экран новостей переведён на cache-then-network.
+
+**Что изменено**
+
+- `lib/app/news_list/news_list_page.dart`
+  - Убран `FutureBuilder` с единственным `forceRefresh: true` запросом (кэш вообще не читался).
+  - `initState` → `_initData()` запускает два вызова параллельно:
+    - `loadNewsFeed(NewsFeedFilter.all)` — только кэш (БД), показывается мгновенно;
+    - `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — сеть + запись в кэш, результат обновляет список по приходу.
+  - Оба ответа идут в `_showNews(...)`: `setState` со списком + запуск анимации; есть guard `if (!mounted) return`, чтобы поздний сетевой ответ не трогал уничтоженный State.
+  - Список хранится в `List<NewsModel> _newsList`; пока пусто — `SizedBox.shrink()`, затем `ScaleTransition` + `ListView.builder` (разметка карточек не менялась).
+  - Никаких @Deprecated-членов (`getNewsList`, `themeMode`) не используется.
+- `test/widget/news_list_page_test.dart` — добавлен тест «should show cached feed first and then network feed»: сетевой вызов отдаётся через `Completer` (сеть «висит»), проверяется, что сначала виден кэш, а после завершения сетевого ответа список заменяется свежими данными. Импортирован `dart:async`.
+- `changelog/10053.bugfix.rst` — фрагмент changelog по правилу I.5.
+
+**Проверки**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (34 теста, включая новый)
+
+Примечание: в тесте первая версия стаба кэша регистрировалась после `pumpWidget`, из-за чего `initState` успевал получить generic-стаб; порядок стабов исправлен.

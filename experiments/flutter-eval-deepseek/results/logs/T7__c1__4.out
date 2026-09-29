@@ -1,0 +1,17 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T7__c1__4\.madharness-mini\traces\20260924-103121-38446df6.jsonl
+Готово. Кнопка «Обновить всё» добавлена на HomePage, оба запроса идут из сети параллельно.
+
+**Что изменено**
+
+- `lib/app/home.dart` — `FloatingActionButton.extended` с локализованным текстом «Обновить всё» и иконкой `Icons.refresh` (во время загрузки — спиннер, кнопка блокируется). `_refreshAll()` через `Future.wait` одновременно вызывает `CurrencyRepository.fetchRates(...)` и `NewsRepository.loadNewsFeed(NewsFeedFilter(forceRefresh: true))`, затем раздаёт результаты вкладкам (`applyRefreshedData`) и сохраняет их в кэш (`saveCurrencyList` / `saveNewsList`). Ключи страниц (`refreshKey` + `GlobalKey`) нужны, чтобы достать state уже созданной вкладки.
+- `lib/app/currency_list/currency_list_page.dart`, `lib/app/news_list/news_list_page.dart` — добавлены `static const Key refreshKey`, публичные state-классы (`CurrencyListPageState`, `NewsListPageState`) и метод `applyRefreshedData(...)`, который подменяет данные и перезапускает анимацию появления.
+- Локализация: `assets/l10n/locale_ru.arb` / `locale_en.arb` → `refreshAll` («Обновить всё» / «Refresh all») и соответствующие геттеры в `lib/app/gen/l10n/app_localizations*.dart`.
+- `test/widget/home_refresh_all_test.dart` — новый тест: тап по кнопке вызывает оба сетевых запроса (сеть, а не кэш: `forceRefresh == true`), результат сохраняется в кэш и отображается на вкладках.
+- `test/widget/widget.dart` — тестовый `MaterialApp` теперь использует `appThemeData` (нужно для `context.colors` в HomePage).
+- `changelog/10053.feature.rst` — фрагмент changelog по правилу проекта.
+
+**Проверка**
+
+- `flutter analyze` — `No issues found!`
+- `flutter test` — `All tests passed!` (35 тестов, включая 2 новых).

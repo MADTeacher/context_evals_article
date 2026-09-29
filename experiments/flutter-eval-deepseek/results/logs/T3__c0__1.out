@@ -1,0 +1,16 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T3__c0__1\.madharness-mini\traces\20260924-093655-eb9af0ac.jsonl
+Готово.
+
+**Что изменено**
+
+- `lib/app/news_list/news_list_page.dart` — в `AppBar` добавлен `IconButton` с иконкой `Icons.refresh` и `tooltip` из локализации. По нажатию вызывается новый `_refresh()`: сбрасывает анимацию (`_scaleController.reset()`) и через `setState` подменяет `_newsListFuture` на `newsRepository.loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — тот же путь, что и при первичной загрузке, т.е. запрос идёт в сеть (`RestDatasource`) с записью в БД, минуя кэш (`NewsRepositoryImpl.loadNewsFeed` при `forceRefresh: true`).
+- `assets/l10n/locale_ru.arb` / `locale_en.arb` — добавлен ключ `refresh` («Обновить» / «Refresh»); сгенерированные файлы в `lib/app/gen/l10n/` перегенерированы через `flutter gen-l10n` (`AppLocalizations.refresh`).
+- `test/widget/news_list_page_test.dart` — добавлен тест «should reload news from network bypassing cache when refresh tapped»: тап по кнопке приводит к дополнительному вызову `loadNewsFeed(NewsFeedFilter(forceRefresh: true))`.
+
+**Проверка**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (34 теста), включая новый.
+
+Примечание: в этом окружении `pumpAndSettle` не «прокручивает» микротаски Future, поэтому проверка в тесте сформулирована как счётчик вызовов `forceRefresh`-загрузки (3 к моменту после тапа) с комментарием в коде — тест падает, если убрать `onPressed` у кнопки.

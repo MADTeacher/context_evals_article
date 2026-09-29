@@ -1,0 +1,19 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T7__c1__3\.madharness-mini\traces\20260924-102902-2861b9d7.jsonl
+Готово. Кнопка «Обновить всё» добавлена на `HomePage` и обновляет оба источника данных параллельно, оба запроса идут в сеть.
+
+**Что изменено**
+
+- `lib/app/home.dart` — `FloatingActionButton`-кнопка `ElevatedButton.icon` с иконкой обновления и локализованным лейблом. `_refreshAll()` через `Future.wait` параллельно вызывает `refresh()` у обеих страниц (по `GlobalKey`), блокируется повторное нажатие и показывается индикатор, пока идут запросы. Страницы теперь создаются с ключами (список стал `late final`, а не `static const`).
+- `lib/app/currency_list/currency_list_page.dart` — состояние сделано публичным (`CurrencyListPageState`), добавлен `refresh()`: повторный `fetchRates(...)` из сети (репозиторий ходит в `RestDatasource`) + `saveCurrencyList` в БД, обновление `_filteredCurrenciesNotifier.value` и перезапуск fade-анимации. `_filteredCurrenciesNotifier` теперь `final` (иначе повторная инициализация падала с `LateInitializationError`).
+- `lib/app/news_list/news_list_page.dart` — состояние публичное (`NewsListPageState`), `refresh()` заново зовёт `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — это гарантированно сетевой путь в `NewsRepositoryImpl`, с перезапуском scale-анимации.
+- Локализация: `assets/l10n/locale_ru.arb` → `"refreshAll": "Обновить всё"`, `locale_en.arb` → `"Refresh all"`, плюс обновлены сгенерированные `lib/app/gen/l10n/app_localizations*.dart` (вручную, т.к. `flutter gen-l10n` — кодогенерация; ключи совпадают с тем, что сгенерировал бы gen-l10n).
+- `test/widget/home_container_test.dart` — новый тест: кнопка «Обновить всё» отображается на `HomePage` и нажатие не приводит к ошибкам (страницы с моками репозиториев перезагружаются).
+- `CHANGELOG.md` — создан, запись в `[Unreleased] / Added` про новую кнопку.
+
+**Проверки**
+
+- `flutter analyze` — `No issues found!`
+- `flutter test` — `All tests passed!` (34 теста, был 31 + 3 в home_container_test).
+
+Замечание: `_loadRates`/`_loadFeed` вызываются синхронно до первого `await`, поэтому `context.read` в `refresh()` безопасен (виджет к моменту нажатия уже в дереве).

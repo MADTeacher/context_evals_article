@@ -1,0 +1,25 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T6__c1__2\.madharness-mini\traces\20260923-101148-90c9f4d5.jsonl
+Отлично! Все **33 теста** прошли. Подведу итог изменений:
+
+## Что изменилось
+
+### 1. `lib/app/profile/profile_page.dart` — подписка на поток темы
+
+- Добавлен импорт `dart:async`.
+- `_themeModeNotifier` больше не инициализируется в поле класса, а создаётся в `initState()` синхронно через `_settingsRepository.readThemeMode()` (чтение из SharedPreferences).
+- Добавлена **подписка** на `_settingsRepository.themeModeStream`, которая обновляет `_themeModeNotifier.value` при каждом изменении режима темы.
+- В `dispose()` добавлен отписка (`_themeModeStreamSubscription.cancel()`), чтобы избежать утечек памяти.
+
+Теперь, если режим темы меняется из другого места приложения (например, через `SettingsRepository.setThemeMode`), UI на экране профиля автоматически обновляется через `ValueListenableBuilder`.
+
+### 2. `test/widget/home_container_test.dart` — stub для мока
+
+- Добавлен `when(mockSettingsRepository.themeModeStream).thenAnswer(...)` в `setUp`, чтобы мокаемый `MockSettingsRepository` возвращал пустой поток и не выбрасывал `MissingStubError` при вызове `themeModeStream.listen()` в новом коде.
+
+### Проверки
+
+| Команда | Результат |
+|---|---|
+| `flutter analyze` | ✅ No issues found! |
+| `flutter test` | ✅ All 33 tests passed |

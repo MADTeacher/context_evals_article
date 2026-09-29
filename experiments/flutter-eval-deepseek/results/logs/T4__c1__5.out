@@ -1,0 +1,28 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T4__c1__5\.madharness-mini\traces\20260924-095906-7f1f914a.jsonl
+Экран новостей переведён на cache-then-network.
+
+## Что изменилось
+
+**`lib/app/news_list/news_list_page.dart`** — `_NewsListPageState`:
+- Больше не делает один `loadNewsFeed(NewsFeedFilter(forceRefresh: true))`. Теперь сначала запрашивается кэш: `loadNewsFeed(NewsFeedFilter.all)` (в реализации репозитория это чтение из `DbDatasource`), и результат сразу отдаётся в `FutureBuilder` — лента появляется мгновенно.
+- Параллельно (через `unawaited`) запускается `_refreshFromNetwork`, который вызывает `loadNewsFeed(NewsFeedFilter(forceRefresh: true))` — REST + сохранение свежих данных в БД. При ответе список обновляется через `setState` (`_applyNewsList`), в `build` приоритет отдаётся `_newsList`, а `snapshot.data` используется как fallback.
+- Пустой кэш не перебивает ожидающий snapshot; пустой/идентичный сетевой ответ не вызывает лишний ребилд (сравнение через `listEqualsX`).
+- Сетевые ошибки перехватываются: остаётся кэш, экран не падает. Добавлена защита `mounted` перед `setState`.
+- Анимация `_scaleController.forward()` по-прежнему стартует после первой (кэшевой) выдачи данных.
+
+**`lib/app/utils/list_equals.dart`** (новый) + экспорт в `lib/app/utils/utils.dart` — небольшая обёртка `listEqualsX` для поэлементного сравнения списков (импорт `package:flutter/foundation.dart` в файле экрана не нужен, т.к. `app.dart` его не реэкспортирует).
+
+**`test/widget/news_list_page_test.dart`** — тест переписан и расширен:
+- кэш показывается до ответа сети (сеть «зависает» на `Completer`, проверяется, что видны кэшевые заголовки и нет свежего);
+- после ответа сети список заменяется свежими данными;
+- при ошибке сети кэш сохраняется и исключение не всплывает (`tester.takeException()` == null).
+
+**`changelog/10053.feature.rst`** (новый) — запись об изменении, по правилу из AGENTS.md.
+
+## Проверки
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (34 теста, включая 2 новых сценария; до правки было 33)
+
+Контракт `NewsRepository`/`NewsFeedFilter` не менялся, поэтому unit-тесты репозитория и остальные экраны не затронуты.

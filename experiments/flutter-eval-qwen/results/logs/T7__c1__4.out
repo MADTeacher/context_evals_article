@@ -1,0 +1,46 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T7__c1__4\.madharness-mini\traces\20260925-031608-98de6756.jsonl
+Задача полностью выполнена. Вот итог реализации кнопки «Обновить всё»:
+
+## Что добавлено
+
+### 📁 Новые файлы:
+- **`lib/app/utils/refresh_controller.dart`** — контроллер обновления, использует ChangeNotifier для координации между страницами
+
+### ✏️ Изменённые файлы:
+
+1. **`lib/app/home.dart`**:
+   - Заменён `Stack` на `IndexedStack` (сохраняет состояние вкладок)
+   - Добавлена FAB-кнопка с иконкой refresh
+   - Обработчик `_onRefreshAll()` вызывает `context.read<RefreshController>().requestRefresh()`
+
+2. **`lib/app/currency_list/currency_list_page.dart`**:
+   - Подписка на `_refreshController` в `initState`
+   - Отписка в `dispose` (сохраняем ссылку на контроллер, чтобы избежать ошибок при unmount)
+   - Метод `refresh()` вызывает `setState(() => _initData())`
+
+3. **`lib/app/news_list/news_list_page.dart`**:
+   - Аналогичная подписка на `_refreshController`
+   - При обновлении автоматически делается forceRefresh для новостей
+
+4. **`lib/main.dart`**:
+   - Добавлен `ChangeNotifierProvider<RefreshController>` в GlobalProviders
+
+5. **`assets/l10n/locale_en.arb`** и **`assets/l10n/locale_ru.arb`**:
+   - Добавлены ключи `"refreshAll": "Refresh All"` / `"Обновить всё"`
+
+6. **`lib/app/utils/utils.dart`**:
+   - Экспортирован `refresh_controller.dart`
+
+7. **`test/widget/widget.dart`**:
+   - Добавлен `ChangeNotifierProvider(create: (_) => RefreshController())` в тестовый билдер
+
+8. **`test/widget/home_container_test.dart`**:
+   - Обновлены тайминги анимаций для стабильной работы тестов
+   - Добавлен тест `should display refresh FAB button`
+
+9. **`CHANGELOG.md`** — создана запись о новом функционале
+
+## ✅ Результаты проверок:
+- `flutter analyze` — **No issues found!**
+- `flutter test` — **34 теста прошли успешно**, все зелёные

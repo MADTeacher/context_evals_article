@@ -1,0 +1,18 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T6__c2__2\.madharness-mini\traces\20260923-185034-38ff27e1.jsonl
+Готово. Вот что изменилось:
+
+## Что сделано
+
+**`lib/app/profile/profile_page.dart`:**
+- Убрал инициализацию `_themeModeNotifier` как поле-инициатор — теперь `readThemeMode()` вызывается синхронно внутри `initState()`, после того как `Splash` выполнил `initAsyncData()`.
+- Добавил поле `_themeModeSubscription` и подписался на `themeModeStream` в `initState()` — при любом изменении режима темы через `setThemeMode()` экран профиля обновляется автоматически (через обновление `_themeModeNotifier.value`).
+- В `dispose()` подписка корректно отменяется.
+- Добавлен импорт `dart:async` для `StreamSubscription`.
+
+**`test/widget/home_container_test.dart`:**
+- Добавлен стаб `when(mockSettingsRepository.themeModeStream).thenAnswer((_) => Stream.value(AppThemeMode.system))`, чтобы мокабельный репозиторий не падал при вызове нового потока.
+
+## Верификация
+- `flutter.bat analyze` — **No issues found!**
+- `flutter.bat test` — **33/33 тестов пройдено**

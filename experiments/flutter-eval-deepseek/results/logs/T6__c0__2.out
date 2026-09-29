@@ -1,0 +1,21 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c0__2\.madharness-mini\traces\20260924-103847-ecfbe0ec.jsonl
+Готово.
+
+**Что изменено**
+
+`lib/app/profile/profile_page.dart`:
+- Добавлен `import 'dart:async';` и поле `StreamSubscription<AppThemeMode>? _themeModeSubscription`.
+- Начальное значение по-прежнему читается синхронно: `ValueNotifier(_settingsRepository.readThemeMode())`.
+- В `initState` добавлена подписка на `_settingsRepository.themeModeStream`, которая обновляет `_themeModeNotifier.value` при каждом изменении режима (изменения из любого места приложения теперь отражаются на экране профиля).
+- В `dispose` подписка отменяется до `dispose()` нотификатора.
+- Из `onTap` убран ручной `await ... newMode` + присваивание — обновление UI теперь идёт через поток (bottom sheet уже вызывает `setThemeMode`, который эмитит в стрим).
+
+`test/widget/home_container_test.dart`:
+- Добавлен стаб `when(mockSettingsRepository.themeModeStream).thenAnswer((_) => const Stream<AppThemeMode>.empty())`, иначе `MockSettingsRepository` (со `throwOnMissingStub`) падал при монтировании `ProfilePage`.
+
+**Проверка**
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (33 теста)
+
+Примечание: в `PreferenceDatasourceImpl.getToken()` используется ключ `_Keys.theme` вместо `_Keys.token` — это существующий баг вне рамок задачи, я его не трогал.

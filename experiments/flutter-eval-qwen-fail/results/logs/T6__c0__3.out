@@ -1,0 +1,31 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T6__c0__3\.madharness-mini\traces\20260923-101530-911c1e33.jsonl
+Все изменения внесены и проверены. Вот итог:
+
+## Что изменилось
+
+### 1. `lib/app/profile/profile_page.dart`
+- Добавлен `import 'dart:async'` для работы с `StreamSubscription`.
+- `_themeModeNotifier` больше не инициализируется при объявлении поля — теперь это делается в `initState`, где также читается начальное значение через синхронный `readThemeMode()`.
+- В `initState` добавлена подписка на поток настроек:
+  ```dart
+  _subscription = _settingsRepository.themeModeStream.listen(
+    (AppThemeMode mode) => _themeModeNotifier.value = mode,
+  );
+  ```
+  Теперь при изменении темы в любом месте приложения экран профиля будет обновляться автоматически.
+- В `dispose` добавлен `_subscription.cancel()` для корректной отписки.
+
+### 2. `test/widget/home_container_test.dart`
+- Добавлен stub для моккированного `themeModeStream`:
+  ```dart
+  when(mockSettingsRepository.themeModeStream).thenAnswer((_) => Stream.empty());
+  ```
+  Без этого теста падал с `MissingStubError`, так как новый код обращается к этому getter'у в `initState`.
+
+## Результаты проверки
+
+| Команда | Результат |
+|---------|-----------|
+| `flutter analyze` | ✅ No issues found! |
+| `flutter test` | ✅ Все 33 теста пройдены |

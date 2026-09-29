@@ -1,0 +1,22 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c1__1\.madharness-mini\traces\20260924-001713-2e9e9e7b.jsonl
+Готово: экран профиля теперь берёт начальный режим темы синхронно и подписывается на поток изменений.
+
+**Что изменено**
+
+- `lib/app/profile/profile_page.dart`
+  - `ValueNotifier` заменён на поле `_themeMode` + `StreamSubscription<AppThemeMode>`.
+  - В `initState` начальное значение читается синхронно: `readThemeMode()` (по конвенции v2 — уже после `initAsyncData()` на Splash), затем подписка на `themeModeStream`; в `dispose` подписка отменяется.
+  - Вместо `ValueListenableBuilder` — обычный `ListTile`; по тапу экран сам вызывает `setThemeMode(newMode)` (раньше значение писалось в нотифаер, и поток репозитория не срабатывал).
+- `lib/app/profile/theme_mode_selector_bs.dart`
+  - Шторка больше не вызывает `setThemeMode()` (это ответственность экрана) и стала реактивной: `StreamBuilder` c `initialData: selectedMode`, поэтому при изменении темы извне открытая шторка тоже обновляется.
+- `test/widget/profile_page_test.dart` (новый) — 3 теста: синхронное чтение начального значения, обновление по эмиту потока, запись выбранного режима в репозиторий.
+- `test/widget/home_container_test.dart` — добавлен стаб `themeModeStream` (без него навигация на профиль падала с `MissingStubError`).
+- `changelog/8.bugfix.rst` — запись о пользовательском изменении.
+
+**Проверка**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (36 тестов)
+
+Нюанс: в тесте шторки используются покадровые `pump` вместо `pumpAndSettle`, потому что на странице есть бесконечно повторяющаяся `AlignTransition` — `pumpAndSettle` на ней не завершается.

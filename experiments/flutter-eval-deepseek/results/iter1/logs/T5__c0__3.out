@@ -1,0 +1,22 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T5__c0__3\.madharness-mini\traces\20260924-000345-1c74df9f.jsonl
+Готово.
+
+## Что сделано
+
+В `test/unit/repository_test.dart` (группа `SettingsRepository`) добавлены три теста на `readThemeMode()`:
+
+1. **`readThemeMode returns actual value after initAsyncData`** — после `initAsyncData()` метод возвращает актуальное значение из датасорса (`AppThemeMode.dark`).
+2. **`readThemeMode returns the latest value after theme mode is changed`** — значение читается «свежим» при каждом вызове: после смены значения в датасорсе `system` → `light` метод возвращает новое значение.
+3. **`readThemeMode is safe to call only after initAsyncData`** — проверяет проектный контракт из `docs/migration-v2.md`: значение корректно читается только после завершения `initAsyncData()`.
+
+## Важное уточнение по контракту
+
+Изначально я предполагал, что `readThemeMode()` до `initAsyncData()` бросает исключение. Проверка это опровергла: в `SettingsRepositoryImpl.readThemeMode()` просто делегирует в `_datasource.themeMode` без защиты, поэтому до инициализации он не падает, а возвращает значение датасорса. Поэтому третий тест сформулирован под реальное поведение — вызов безопасен и даёт корректный результат именно после `initAsyncData()` (до Splash значение по конвенции не определено).
+
+## Проверки
+
+- `flutter analyze` — **No issues found!**
+- `flutter test` — **All tests passed!** (36 тестов, включая все существующие; ничего не сломалось).
+
+Примечание: моки в файле объявлены один раз на весь `main()` и переиспользуются, поэтому в тестах не проверяю точное число вызовов `mockPreferenceDatasource.themeMode` — счётчик накапливается между тестами.

@@ -1,0 +1,14 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T3__c0__4\.madharness-mini\traces\20260924-171431-d76deaf1.jsonl
+Готово! Все проверки прошли без замечаний и падений. Вот что сделано:
+
+### Изменённые файлы:
+
+**`lib/app/news_list/news_list_page.dart`**
+- Вынесена логика загрузки в отдельный метод `_loadNews()` (переиспользуется при старте и обновлении)
+- В `AppBar` добавлена кнопка `IconButton(Icons.refresh)` справа через `actions`
+- Кнопка обернута в `Tooltip(message: context.loc.refresh)` — подсказка «Обновить»/«Refresh»
+- При нажатии вызывается `_loadNews()` с `forceRefresh: true`, что заставляет репозиторий забрать данные из сети, минуя кэш
+
+**`assets/l10n/locale_ru.arb` / `assets/l10n/locale_en.arb`**
+- Добавлен ключ `refresh` («Обновить» / «Refresh») с метаданными для Tooltip

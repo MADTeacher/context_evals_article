@@ -1,0 +1,29 @@
+Exception in thread Thread-18 (_readerthread):
+Traceback (most recent call last):
+  File "C:\Users\MADTeacher\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\MADTeacher\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MADTeacher\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\subprocess.py", line 1614, in _readerthread
+    buffer.append(fh.read())
+                  ~~~~~~~^^
+  File "<frozen codecs>", line 325, in decode
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xcd in position 0: invalid continuation byte
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T5__c2__4\.madharness-mini\traces\20260923-184048-a424ad4b.jsonl
+## Итог
+
+В `test/unit/repository_test.dart` добавлена группа из **3 новых тестов** на `readThemeMode()`:
+
+1. **«returns the current value from datasource by default»** — проверяет, что по умолчанию mock возвращает `AppThemeMode.light`, и `readThemeMode()` корректно его проксирует.
+2. **«returns updated value after setThemeMode is called»** — через `thenAnswer` с мутабельной переменной проверяет цепочку: чтение → `setThemeMode(AppThemeMode.system)` → повторное чтение = `system`. Подтверждает, что `readThemeMode()` всегда отдаёт актуальное значение из датасорса.
+3. **«readThemeMode returns actual value when explicitly set in datasource»** — явная установка `AppThemeMode.system` через `thenReturn` и проверка возврата.
+
+### Верификация
+
+| Команда | Результат |
+|---|---|
+| `flutter.bat analyze` | **No issues found!** (0 замечаний) |
+| `flutter.bat test` | **All 36 tests passed** — все существующие тесты зелёные, +3 новых |

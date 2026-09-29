@@ -1,0 +1,34 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T4__c2__3\.madharness-mini\traces\20260923-084723-9a03d00a.jsonl
+## Что сделано
+
+**Файл изменён:** `lib/app/news_list/news_list_page.dart`
+
+### До → После
+
+| Было | Стало |
+|---|---|
+| Один вызов `loadNewsFeed(forceRefresh: true)` — UI заблокирован до ответа сети | **Два параллельных вызова**: кэш (`NewsFeedFilter.all`) + сеть (`forceRefresh: true`) |
+| `FutureBuilder` ждал Future, показывал пустой экран пока идёт загрузка | Прямая запись в `_cachedNews` + `setState()` — кэш отрисовывается мгновенно |
+| Анимация запускалась после прихода сети | Кэш вызывает `forward()`, сеть обновляет список без анимации (если данные те же) |
+
+### Паттерн cache-then-network (контракт v2, ref news.md §2):
+
+1. **Кэш** — `loadNewsFeed(const NewsFeedFilter.all)` → немедленно setState → UI рисует данные из БД
+2. **Сеть** — `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` → параллельно в фоне → при ответе setState обновляет список (если данные изменились)
+
+### Проверки контракта v2
+
+- ✅ Использует только `loadNewsFeed(NewsFeedFilter)` — deprecated `getNewsList()` не используется
+- ✅ Base currency и другие конвенции не затронуты
+- ✅ Нет импорта несуществующих пакетов (убран `unawaited`)
+- ✅ Тест в `test/widget/news_list_page_test.dart` не требует изменений: mock возвращает один и тот же список для любого фильтра, поэтому обе ветки (кэш + сеть) дают одинаковый результат
+
+### Ограничение по проверкам
+
+Flutter SDK недоступен в текущем окружении — команды `flutter analyze` и `flutter test` не могут быть запущены автоматически. Для локальной проверки выполните:
+
+```bash
+flutter analyze
+flutter test test/widget/news_list_page_test.dart
+```

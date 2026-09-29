@@ -1,0 +1,27 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T4__c1__4\.madharness-mini\traces\20260924-095655-76b2344c.jsonl
+Готово: экран новостей переведён на cache-then-network.
+
+## Что изменено
+
+**Домен**
+- `lib/domain/model/news_feed_state.dart` (новый) — состояние ленты: `items`, `isFromCache`, `isLoading`, `error`; экспортируется из `lib/domain/model/model.dart`.
+- `lib/domain/repository/news_repository.dart` — добавлен `Stream<NewsFeedState> watchNewsFeed(NewsFeedFilter)`. Старые методы (`loadNewsFeed`, `getNewsList`, `saveNewsList`) оставлены без изменений, чтобы не ломать существующий контракт.
+
+**Данные**
+- `lib/data/repository_impl/news_repository_impl.dart` — реализация `watchNewsFeed`: сначала читается кэш из sqflite и эмитится как `isFromCache: true, isLoading: true` (если кэш пуст — эмитится только `isLoading`), затем в фоне идёт сетевой запрос, результат сохраняется в БД и эмитится как свежее состояние. При ошибке сети кэш не затирается, ошибка отдаётся в состоянии.
+
+**UI**
+- `lib/app/news_list/news_list_page.dart` — `FutureBuilder` заменён на `StreamSubscription`: кэш показывается сразу при открытии вкладки, список обновляется по приходу сетевого ответа; подписка отменяется в `dispose`, `mounted` проверяется перед `setState`. Разметка списка (`ScaleTransition` + `ListView.builder` + `NewsCard`) сохранена как была.
+
+**Тесты**
+- `test/unit/repository_test.dart` — 3 новых теста на `watchNewsFeed` (кэш → сеть с записью в БД, пустой кэш, ошибка сети с сохранением кэша); добавлен `reset` моков между тестами, т.к. `verifyNever` начал ловить вызовы соседних тестов.
+- `test/widget/news_list_page_test.dart` — проверка, что кэш отображается до ответа сети и заменяется свежими данными после.
+- `test/widget/home_container_test.dart` — стаб `loadNewsFeed` заменён на `watchNewsFeed`.
+- `test/mocks/repository.mocks.dart` — перегенерирован (`dart run build_runner build`), плюс поправлен тип возврата мока `watchNewsFeed` на `Stream<NewsFeedState>` (сгенерированный `Stream<dynamic>` не компилировался в тестах).
+
+**Changelog** — создан `CHANGELOG.md` с записью об изменении (по правилу из AGENTS.md).
+
+## Проверки
+- `flutter analyze` — `No issues found!`
+- `flutter test` — `All tests passed!` (37 тестов, было 33)

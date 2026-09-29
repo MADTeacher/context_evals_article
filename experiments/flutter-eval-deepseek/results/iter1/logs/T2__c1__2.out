@@ -1,0 +1,27 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T2__c1__2\.madharness-mini\traces\20260923-233950-df446bc0.jsonl
+Готово. Оба требования реализованы, `flutter analyze` и `flutter test` чистые.
+
+## Что изменено
+
+**`lib/app/currency_list/currency_list_page.dart`**
+- Состояние переведено с `Future<List<CurrencyModel>>` на `Future<CurrencyPage>`; добавлены `_page` и `_hasMore`, запрос всегда строится как `CurrencyPageRequest(base: 'USD', page, pageSize: 20)` (конвенция из `docs/migration-v2.md`).
+- Признак конца страниц: кнопка «Показать ещё» рендерится только `if (_hasMore)`, то есть скрывается при `hasMore == false`. По нажатию грузится `_page + 1`, флаг обновляется из ответа.
+- Обновление при потере фокуса: тело экрана обёрнуто в `Focus(onFocusChange: ...)`, при `hasFocus == false` вызывается `setState(_initData)` — свежий запрос с `page: 0` и `base: 'USD'`.
+
+**Локализация** — ключ `showMore` добавлен в `assets/l10n/locale_ru.arb` («Показать ещё») и `locale_en.arb` («Show more») плюс соответствующие геттеры в `lib/app/gen/l10n/app_localizations{,_ru,_en}.dart` (файлы gen-l10n поддерживаются вручную, т.к. `flutter gen-l10n` в окружении недоступен).
+
+**`test/widget/currency_list_page_test.dart`** — 3 новых теста: скрытие кнопки при `hasMore: false`, показ при `hasMore: true`, и перезапрос с `base: 'USD'`/`page: 0` при потере фокуса.
+
+**`changelog/10053.bugfix.rst`** — запись об изменении (по требованию `docs/migration-v2.md`).
+
+## Попутно найденный дефект
+
+При перезагрузке падало `LateInitializationError: Field '_filteredCurrenciesNotifier' has already been initialized` — `late final`-нотификатор пересоздавался в `_loadPage`. Заменён на `final` с обновлением `.value`. Без этого обновление по фокусу/пагинация в принципе не работали.
+
+## Проверка
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `+36: All tests passed!` (было 33, добавлено 3)
+
+Замечание по тесту фокуса: `TextField` из `SearchView` не передаёт `focusNode`, поэтому тест нацелен на реальный узел фокуса (`tester.tap(find.byType(TextField))` + `primaryFocus?.unfocus()`); при этом `verifyNever` подтверждает, что пока фокус внутри экрана, перезапроса нет.

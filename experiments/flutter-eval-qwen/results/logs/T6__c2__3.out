@@ -1,0 +1,16 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T6__c2__3\.madharness-mini\traces\20260924-223702-a248abb0.jsonl
+Готово. Изменены 2 файла:
+
+**`lib/app/profile/profile_page.dart`**:
+- Начальное значение читается синхронно через `readThemeMode()` в `initState` (правило I.3)
+- Добавлена подписка на `_settingsRepository.themeModeStream` — при изменении темы из любого места экрана, UI обновляется автоматически через `setState` + `ValueNotifier`
+- При выборе новой темы вызывается `_settingsRepository.setThemeMode(newMode)` для сохранения изменения
+- Подписка корректно отменяется в `dispose()` (`_themeModeSubscription?.cancel()`)
+
+**`test/widget/home_container_test.dart`**:
+- Добавлен стаб `when(mockSettingsRepository.themeModeStream).thenAnswer(...)` — без этого мокал пытался вызвать реальный stream и падал с `MissingStubError`
+
+Верификация:
+- ✅ `flutter.bat analyze` — No issues found!
+- ✅ `flutter.bat test` — All 33 tests passed

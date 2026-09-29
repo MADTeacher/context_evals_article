@@ -1,0 +1,28 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T3__c1__5\.madharness-mini\traces\20260924-200040-b9839b08.jsonl
+Готово! Оба проверочных command прошли успешно (`flutter analyze` — без замечаний, `flutter test` — 33 теста прошли).
+
+## Что изменилось
+
+### 1. Локализация (`assets/l10n/locale_ru.arb`, `assets/l10n/locale_en.arb`)
+Добавлен ключ `"refresh"`:
+- RU: `"Обновить"`
+- EN: `"Refresh"`
+
+### 2. Экран новостей (`lib/app/news_list/news_list_page.dart`)
+
+**AppBar:** добавлена кнопка «Обновить» (иконка `Icons.refresh`) в `actions`:
+```dart
+appBar: AppBar(
+  title: Text(context.loc.news),
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.refresh),
+      tooltip: context.loc.refresh,
+      onPressed: _loadNews,
+    ),
+  ],
+),
+```
+
+**Логика:** метод `_initData` заменён на `_loadNews`, который оборачивает запрос в `setState`. Это позволяет перезагрузить ленту по нажатию кнопки — вызывается `newsRepository.loadNewsFeed(const NewsFeedFilter(forceRefresh: true))`, что читает данные из сети и заново кеширует их. Анимация масштабирования запускается при каждом обновлении.

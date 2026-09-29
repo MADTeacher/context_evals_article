@@ -1,0 +1,320 @@
+# MCP в madharness-mini
+
+`madharness-mini` умеет подключать внешние stdio MCP-серверы в режиме `run`.
+Для модели такие серверы выглядят как обычные инструменты харнесса: они попадают
+в общий список схем, вызываются через `tool_calls` и возвращают привычные ответы
+инструментов (`observations`) с полями `ok`, `tool`, `summary` и дополнительными
+данными.
+
+Реализация намеренно минимальная: только stdio-транспорт, только MCP-инструменты
+и только стандартная библиотека Python. Клиент говорит только на актуальной
+stateless-ревизии протокола [2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28):
+без `initialize`-handshake, с версией протокола и возможностями клиента в
+`_meta` каждого запроса. Серверы, требующие устаревшего `initialize`-handshake
+(ревизии 2025-11-25 и старше), не поддерживаются: запуск такого сервера
+завершается понятной ошибкой на пробе `server/discover`. Основной `config.json`
+не меняется; MCP включается отдельным файлом `.madharness-mini/mcp.json`.
+
+## Быстрый пример
+
+Создайте в проекте файл:
+
+```text
+.madharness-mini/mcp.json
+```
+
+Пример с тремя демонстрационными MCP-серверами:
+
+```json
+{
+  "servers": {
+    "time": {
+      "enabled": true,
+      "command": "uvx",
+      "args": ["mcp-server-time", "--local-timezone=Europe/Moscow"],
+      "cwd": ".",
+      "timeout_seconds": 90
+    },
+    "memory": {
+      "enabled": true,
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "cwd": ".",
+      "timeout_seconds": 90
+    },
+    "fetch": {
+      "enabled": true,
+      "command": "uvx",
+      "args": ["mcp-server-fetch"],
+      "cwd": ".",
+      "timeout_seconds": 90
+    }
+  }
+}
+```
+
+После этого можно запустить:
+
+```bash
+madharness-mini run "Через MCP узнай текущее время, запиши факт в memory и скачай https://example.com"
+```
+
+Если файл `mcp.json` отсутствует, MCP полностью выключен и старые проекты
+работают с прежним набором инструментов.
+
+## Формат mcp.json
+
+Корневое поле `servers` содержит объект, где ключ — локальное имя MCP-сервера.
+Имя должно состоять из ASCII-букв, цифр, `_` или `-`.
+
+| Поле | Обязательность | Смысл |
+| --- | --- | --- |
+| `enabled` | Да | Сервер запускается только при точном значении `true`. |
+| `command` | Да | Исполняемая команда, например `npx`, `uvx`, `python`. |
+| `args` | Нет | Список строковых аргументов команды. По умолчанию пустой список. |
+| `cwd` | Нет | Рабочий каталог сервера внутри `workspace_root`. По умолчанию `"."`. |
+| `env` | Нет | Явные переменные окружения для сервера. Значения должны быть строками. |
+| `timeout_seconds` | Нет | Таймаут одного MCP-запроса. По умолчанию `20`. |
+
+Команда и аргументы не склеиваются в shell-строку. Харнесс запускает процесс как
+`[command, *args]`, поэтому shell-операторы, пайпы и подстановки тут не работают.
+Если серверу нужны сложные действия, лучше вынести их в отдельный скрипт внутри
+workspace и указать этот скрипт как аргумент.
+
+Пример для Playwright MCP:
+
+```json
+{
+  "servers": {
+    "playwright": {
+      "enabled": true,
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest", "--browser=chrome", "--headless"],
+      "cwd": ".",
+      "timeout_seconds": 90
+    }
+  }
+}
+```
+
+Playwright требует установленный браузер и часто нуждается в предварительном
+прогреве окружения. Для простой демонстрации MCP лучше начинать с `time`,
+`memory` и `fetch`.
+
+## Как проходит запуск
+
+В `run_agent()` всегда добавляется `McpToolProvider`. Если `mcp.json` нет, он
+ничего не регистрирует. Если файл есть, поток такой:
+
+1. `madharness_mini.mcp.config` читает `.madharness-mini/mcp.json`.
+2. Для каждого `enabled: true` сервера проверяются `command`, `args`, `cwd`,
+   `env` и `timeout_seconds`.
+3. `cwd` проходит через общую `Policy.safe_path()`, поэтому сервер не может быть
+   запущен из каталога вне workspace.
+4. `StdioMcpClient` запускает subprocess без shell.
+5. Для stdout и stderr создаются отдельные потоки чтения.
+6. Клиент отправляет `server/discover`: проба stateless-протокола и запрос
+   поддерживаемых сервером версий.
+7. Сервер должен вернуть `supportedVersions`, содержащий `2026-07-28`; иначе
+   запуск считается ошибочным. Ошибка или молчание на пробе означают
+   legacy-сервер с `initialize`-handshake, который не поддерживается.
+8. Клиент вызывает `tools/list`.
+9. Каждый MCP-инструмент превращается в локальный `ToolSpec`.
+10. `ToolRegistry` добавляет эти описания рядом со встроенными инструментами.
+11. Модель видит MCP-инструменты в обычном поле `tools` OpenAI-совместимого запроса.
+
+Протокол stateless: handshake `initialize`/`notifications/initialized` в
+ревизии 2026-07-28 отсутствует. Вместо этого каждый запрос несёт в
+`params._meta` версию протокола (`io.modelcontextprotocol/protocolVersion`),
+возможности клиента (`io.modelcontextprotocol/clientCapabilities`) и его имя
+(`io.modelcontextprotocol/clientInfo`); клиент добавляет их автоматически.
+
+Если сервер не стартовал, вернул невалидный JSON, не ответил до таймаута или
+прислал некорректный `tools/list`, запуск `run` завершается понятной ошибкой.
+При ошибке регистрации уже запущенные провайдеры закрываются через
+`ToolRegistry.close()`.
+
+## Имена инструментов
+
+MCP-инструмент получает имя:
+
+```text
+mcp__<server_name>__<tool_name>
+```
+
+Например:
+
+| MCP-сервер | Исходный tool | Имя для модели |
+| --- | --- | --- |
+| `time` | `get_current_time` | `mcp__time__get_current_time` |
+| `memory` | `read_graph` | `mcp__memory__read_graph` |
+| `fetch` | `fetch` | `mcp__fetch__fetch` |
+| `playwright` | `browser_navigate` | `mcp__playwright__browser_navigate` |
+
+Символы в имени инструмента, несовместимые с OpenAI function name, заменяются на
+`_`. Итоговое имя ограничено 64 символами. Оригинальное MCP-имя сохраняется
+внутри обработчика и используется при настоящем `tools/call`.
+
+Описание инструмента получает префикс `[MCP:<server>]`, а параметры берутся из
+`inputSchema`. Если `inputSchema` отсутствует, используется пустая объектная
+схема.
+
+## Вызов MCP-инструмента
+
+Когда модель вызывает `mcp__server__tool`, `ToolRegistry.call()` идёт обычным
+путём:
+
+1. Находит `ToolSpec` по экспортированному имени.
+2. Обработчик отправляет MCP-запрос `tools/call`.
+3. В `params.name` передаётся исходное имя MCP-инструмента.
+4. В `params.arguments` передаются аргументы модели без дополнительной
+   трансформации.
+5. Ответ MCP преобразуется в observation харнесса.
+
+Пример MCP-запроса (обязательный `_meta` клиент добавляет сам):
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "method": "tools/call",
+  "params": {
+    "name": "fetch",
+    "arguments": {
+      "url": "https://example.com",
+      "max_length": 1000
+    },
+    "_meta": {
+      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+      "io.modelcontextprotocol/clientInfo": {
+        "name": "madharness-mini",
+        "version": "0.1.0"
+      },
+      "io.modelcontextprotocol/clientCapabilities": {}
+    }
+  }
+}
+```
+
+## Как MCP-ответ становится observation
+
+`madharness_mini.mcp.results` приводит результат `tools/call` к формату, который
+уже понимает агентский цикл.
+
+| Содержимое MCP | Что получает модель |
+| --- | --- |
+| `text` | Строки объединяются в `content` и обрезаются общим лимитом `clipped()`. |
+| `structuredContent` | Попадает в поле `data`. |
+| `image` и `audio` | Передаются только метаданные: тип, MIME-тип и размер base64-строки. |
+| `resource` и `resource_link` | Передаются короткие метаданные ресурса: `uri`, `name`, MIME-тип, description. |
+| Неизвестный тип content | Попадает в `diagnostics`. |
+
+Если MCP-сервер вернул `isError: true`, observation будет ошибочным
+`ok: false`, даже если JSON-RPC ответ технически успешен. Результат с
+`resultType: "input_required"` (multi round-trip запрос доп. ввода через
+elicitation, sampling или roots) также превращается в `ok: false`: харнесс
+не задаёт вопросов пользователю и не поддерживает эти клиентские возможности,
+поэтому в observation попадает явный отказ со списком запрошенных вводов в
+`requested_inputs`. Если ломается сам транспорт или JSON-RPC,
+`ToolRegistry.call()` ловит исключение и возвращает обычный ошибочный
+observation через `fail()`.
+
+## Окружение и безопасность
+
+MCP-сервер — это внешний процесс, поэтому его запуск должен быть явным и
+локальным для проекта.
+
+Харнесс наследует только небольшой безопасный набор системных переменных:
+`PATH`, `HOME`, `USER`, `TMPDIR`, `TEMP`, `TMP`, `LANG`, `LC_ALL`, `ComSpec`,
+`SystemRoot`, `WINDIR`. Затем добавляется явный `env` из `mcp.json`.
+
+Переменные `MADHARNESS_MINI_*` и ключ LLM API не передаются MCP-серверам
+автоматически. Если конкретному серверу нужен токен, его нужно указать явно в
+`env`, понимая, что это доверенный локальный процесс.
+
+`cwd` обязан быть существующей директорией внутри `workspace_root`. Это не
+запрещает самому MCP-серверу делать сетевые запросы или читать файлы, если его
+собственная логика это позволяет; поэтому подключайте только те серверы, которым
+вы доверяете.
+
+## Трассы
+
+MCP пишет отдельные события в JSONL-трассу:
+
+| Событие | Когда пишется | Поля |
+| --- | --- | --- |
+| `mcp_server_started` | Сервер прошёл `server/discover` и `tools/list`. | `server`, `command`, `tools_count` |
+| `mcp_server_error` | Сервер не смог стартовать или отдать инструменты. | `server`, `error` |
+| `mcp_server_stopped` | Провайдер закрывает subprocess. | `server`, `exit_code` |
+| `tool_observation` | Модель вызвала MCP-инструмент. | `tool`, `args`, `observation` |
+
+Полный stdout/stderr MCP-сервера в трассу не пишется. Для ошибок stderr
+добавляется только коротким фрагментом в текст исключения.
+
+## Закрытие процессов
+
+`ToolRegistry.close()` вызывается в `run_agent()` через `finally`. MCP-провайдер
+закрывает каждый subprocess так:
+
+1. Закрывает stdin сервера.
+2. Ждёт штатного завершения.
+3. Если сервер завис, вызывает `terminate()`.
+4. Если процесс всё ещё жив, вызывает `kill()`.
+5. Закрывает каналы и коротко дожидается потоков чтения.
+
+Поэтому MCP-процессы должны закрываться и при успешном финальном ответе, и при
+ошибке внутри агентского цикла.
+
+## Ограничения текущей версии
+
+Поддерживаются:
+
+- stdio-транспорт;
+- `server/discover`;
+- per-request `_meta` stateless-протокола (версия, возможности и имя клиента);
+- `tools/list`;
+- `tools/call`;
+- `resultType` результатов: `complete` и отказ от `input_required`.
+
+Не поддерживаются:
+
+- legacy-протокол с `initialize`-handshake (ревизии до 2026-07-28);
+- транспорт Streamable HTTP и SSE;
+- MCP resources как отдельная возможность клиента;
+- MCP prompts;
+- sampling;
+- roots;
+- elicitation и multi round-trip retry с `inputResponses`;
+- progress notifications;
+- tasks.
+
+Некоторые серверы могут писать служебные сообщения в stdout. Для stdio MCP stdout
+является каналом протокола, поэтому любой не-JSON текст ломает текущий запрос.
+На практике это чаще всего происходит при первом запуске серверов, которые
+докачивают зависимости. Для демонстраций полезно заранее прогреть такие команды
+или выбрать серверы, которые сразу говорят чистым JSON-RPC.
+
+## Быстрая проверка
+
+После настройки `mcp.json` можно проверить, какие MCP-инструменты увидит registry:
+
+```bash
+python -c "from madharness_mini.config import Config; from madharness_mini.mcp import McpToolProvider; from madharness_mini.tools import ToolRegistry; r=ToolRegistry(Config(), providers=[McpToolProvider()]); print('\n'.join(s['function']['name'] for s in r.schemas() if s['function']['name'].startswith('mcp__'))); r.close()"
+```
+
+Ожидаемый результат для примера `time`, `memory`, `fetch`:
+
+```text
+mcp__time__get_current_time
+mcp__time__convert_time
+mcp__memory__create_entities
+mcp__memory__create_relations
+mcp__memory__add_observations
+mcp__memory__delete_entities
+mcp__memory__delete_observations
+mcp__memory__delete_relations
+mcp__memory__read_graph
+mcp__memory__search_nodes
+mcp__memory__open_nodes
+mcp__fetch__fetch
+```

@@ -1,0 +1,12 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T5__c0__1\.madharness-mini\traces\20260924-102629-62fea496.jsonl
+**Что сделано:** в `test/unit/repository_test.dart` в группу `SettingsRepository` добавлены два теста:
+
+- `readThemeMode returns actual value from datasource` — стаб `mockPreferenceDatasource.themeMode` → `AppThemeMode.dark`, проверка, что `settingsRepository.readThemeMode()` возвращает `dark` и что геттер датасорса вызван один раз.
+- `readThemeMode returns value only after initAsyncData` — сначала стаб `getToken()`, затем `await settingsRepository.initAsyncData()`, и только после этого `readThemeMode()` возвращает `AppThemeMode.system`.
+
+**Замечание по формулировке требования.** `SettingsRepositoryImpl.readThemeMode()` — синхронный геттер-обёртка над `_datasource.themeMode`, никаких проверок «инициализировано ли» в коде нет (`initAsyncData()` сейчас заполняет только `_isAuth`). Поэтому «безопасно вызывать только после `initAsyncData()`» я зафиксировал как порядок использования в тесте, а не как гарантию рантайма: тест проверяет корректное значение именно в поддерживаемом сценарии (после инициализации). Если нужно жёсткое поведение (например, `StateError`/`LateInitializationError` при вызове до `initAsyncData()`), это уже изменение продакшн-кода `lib/data/repository_impl/settings_repository_impl.dart` — скажите, и я добавлю.
+
+**Проверки:**
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `+35: All tests passed!` (все 15 прежних тестов `repository_test.dart` прошли, регрессий нет)

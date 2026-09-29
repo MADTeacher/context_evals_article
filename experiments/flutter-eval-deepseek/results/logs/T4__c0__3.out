@@ -1,0 +1,31 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T4__c0__3\.madharness-mini\traces\20260924-102002-6b7ecee6.jsonl
+Done. The news screen now uses cache-then-network.
+
+## What changed
+
+**Domain** — `lib/domain/repository/news_repository.dart`
+- Added `Stream<List<NewsModel>> watchNewsFeed(NewsFeedFilter filter)` — emits cache first, then fresh network data.
+- Added `Future<List<NewsModel>> refreshNewsFeed(NewsFeedFilter filter)` — network fetch + cache write.
+- Kept `loadNewsFeed` (and its deprecated `getNewsList`) for backward compatibility.
+
+**Data** — `lib/data/repository_impl/news_repository_impl.dart`
+- `watchNewsFeed` is an `async*` generator: `yield await _dbDatasource.getNewsList()` (instant cache), then `yield await refreshNewsFeed(filter)`.
+- `refreshNewsFeed` fetched from `RestDatasource` and persists via `DbDatasource`.
+- `loadNewsFeed` now delegates to `refreshNewsFeed` when `forceRefresh: true`, otherwise reads cache — same semantics as before. Dropped `const` from the constructor (no longer needed once behavior was factored out; `main.dart` already constructs it non-const).
+
+**Presentation** — `lib/app/news_list/news_list_page.dart`
+- Switched from `FutureBuilder` + `loadNewsFeed(forceRefresh: true)` to `StreamBuilder` + `watchNewsFeed(const NewsFeedFilter())`. The cached list renders on the first emission; the list rebuilds automatically when the network emission arrives. Animation trigger preserved via `.map`.
+
+**Tests & generated code**
+- Regenerated `test/mocks/repository.mocks.dart` (build_runner) to include the new interface members.
+- `test/widget/news_list_page_test.dart`: stubbed `watchNewsFeed`; added a test that asserts cache shows first and gets replaced by the network result.
+- `test/widget/home_container_test.dart`: added a `watchNewsFeed` stub (HomePage renders NewsListPage).
+- `test/unit/repository_test.dart`: added unit tests for `refreshNewsFeed` and `watchNewsFeed` emission order.
+- Updated `changelog/10052.feature.rst` to describe the new approach.
+
+## Verification
+- `flutter analyze` → **No issues found!**
+- `flutter test` → **All 36 tests passed** (33 baseline + 3 new).
+
+One note: `watchNewsFeed` emits cache then network sequentially, so if the network fails the error surfaces on the stream after the cached item is already displayed — the cached content stays visible, but the error isn't currently handled in the UI. I left it as-is to keep the change focused; say the word if you want an error/loading indicator added.

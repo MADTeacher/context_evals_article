@@ -1,0 +1,19 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T8__c2__5\.madharness-mini\traces\20260924-012652-63a84ec1.jsonl
+**Готово.** Добавлен экран «Дашборд», доступный кнопкой (FloatingActionButton) на HomePage.
+
+**Изменения**
+- `lib/app/dashboard/dashboard_page.dart` (новый) — `DashboardPage` + модель `DashboardData`. При открытии один раз в `Future.wait` параллельно запрашиваются свежие данные:
+  - `fetchRates(const CurrencyPageRequest(base: 'USD'))` — без default `'EUR'` (I.1);
+  - `loadNewsFeed(const NewsFeedFilter(limit: 5, forceRefresh: true))` — сеть + запись в кэш (I.2);
+  - пока фьючер не завершён — `CircularProgressIndicator`; после — список с курсами (`CurrencyCard`) и новостями (`NewsCard`).
+- `lib/app/home.dart` — кнопка `FloatingActionButton` с иконкой `Icons.dashboard` и tooltip, открывающая `DashboardPage` через `PageRouteBuilder` с fade-переходом.
+- `lib/app/app.dart` — экспорт нового экрана.
+- `changelog/10053.bugfix.rst` (новый, I.5) — фрагмент changelog.
+- Тесты: `test/widget/dashboard_page_test.dart` (индикатор прогресса при загрузке; проверка `base: 'USD'` и `forceRefresh: true`, рендер карточек) и новый кейс в `test/widget/home_container_test.dart` (переход на дашборд по кнопке).
+
+**Проверки**
+- `flutter analyze` — `No issues found!`
+- `flutter test` — 36 тестов, `All tests passed!`
+
+Замечание: заголовок дашборда задан константой `DashboardPage.title = 'Дашборд'` — правка `assets/l10n/*.arb` и регенерация `lib/app/gen/l10n/**` не выполнялись, чтобы не раздувать дифф и не трогать сгенерированные файлы; при желании можно вынести строку в l10n (en: «Dashboard»).

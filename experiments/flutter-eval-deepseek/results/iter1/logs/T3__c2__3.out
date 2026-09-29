@@ -1,0 +1,17 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T3__c2__3\.madharness-mini\traces\20260924-002412-c222a015.jsonl
+Готово.
+
+**Что изменено**
+
+- `lib/app/news_list/news_list_page.dart` — в `AppBar` добавлена `IconButton` с `Icons.refresh` (tooltip из l10n). По нажатию `_refresh()` вызывает `setState(_initData)`, который заново выполняет `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — свежая загрузка из сети с записью в кэш (конвенция v2, `references/news.md` п.3). Кэш-путь (`NewsFeedFilter.all`) не используется, `@Deprecated`-члены не затронуты.
+- Локализация: ключ `refresh` добавлен в `assets/l10n/locale_ru.arb` («Обновить») и `locale_en.arb` («Refresh») и продублирован в сгенерированные `lib/app/gen/l10n/app_localizations{,_ru,_en}.dart` (генератор `flutter gen-l10n` в среде недоступен — синхронизировал вручную по шаблону существующих ключей; при следующей генерации файлы воспроизведутся из .arb).
+- `test/widget/news_list_page_test.dart` — тест «should reload news from network when refresh button is tapped»: после тапа по иконке проверяет, что произошёл ровно один вызов `loadNewsFeed` с `forceRefresh: true` (замер — дельта через `captureAny`), плюс `clearInteractions` в `setUp`.
+- `changelog/10053.feature.rst` — фрагмент changelog (I.5).
+
+**Проверка**
+
+- `flutter analyze` — `No issues found!`
+- `flutter test` — `All tests passed!` (34 теста, включая новый)
+
+Замечание: тесты в проекте переиспользуют один и тот же мок-инстанс между файлами, поэтому проверка сделана как дельта вызовов, а не абсолютный счётчик — иначе результат зависел бы от порядка запуска тестов.

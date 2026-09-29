@@ -1,0 +1,21 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T1__c2__2\.madharness-mini\traces\20260924-091244-a77eb84b.jsonl
+Готово: на экране курса валют появилась подгрузка следующей страницы.
+
+**Что изменено**
+
+- `lib/app/currency_list/currency_list_page.dart`
+  - Первичная загрузка теперь явно по конвенции v2: `fetchRates(const CurrencyPageRequest(base: 'USD'))` (без дефолтного `EUR`).
+  - Хранится состояние пагинации: `_currentPage`, `_hasMore`, `_isLoadingMore`; следующая страница запрашивается как `CurrencyPageRequest(base: 'USD', page: _currentPage + 1)`.
+  - Результат **дописывается** к `_allCurrencies` (`[..._allCurrencies, ...page.items]`), затем переприменяется фильтр — поиск по-прежнему работает по всем загруженным элементам.
+  - `saveCurrencyList(page.items)` вызывается для элементов каждой новой страницы.
+  - Внизу списка кнопка «Показать ещё» (элемент `ListView`, пока `hasMore`): во время загрузки показывает индикатор и блокируется, после последней страницы (`hasMore == false`) исчезает; при активном поиске кнопка скрывается, чтобы не запрашивать невидимые элементы.
+- `assets/l10n/locale_ru.arb`, `locale_en.arb` + сгенерированные `lib/app/gen/l10n/app_localizations{,_ru,_en}.dart` — добавлена строка `showMore` («Показать ещё» / «Show more»).
+- `test/widget/currency_list_page_test.dart` — новый тест: вторая страница дописывается, `JPY` появляется, кнопка исчезает при `hasMore: false`.
+- `changelog/10053.feature.rst` — фрагмент changelog (I.5).
+
+**Проверки**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (34 теста, включая новый).
+- Устаревшие члены (`getCurrencyList`) не использовались.

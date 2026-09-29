@@ -1,0 +1,40 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T5__c2__5\.madharness-mini\traces\20260923-103925-a7b03d07.jsonl
+К сожалению, в окружении этой машины нет `flutter` или `dart` в PATH (путь `C:\flutter\bin\` не отвечает). Я не могу выполнить `flutter analyze` и `flutter test` автоматически — это ограничение среды исполнения.
+
+Вот что я сделал:
+
+### Что добавлено
+
+В `test/unit/repository_test.dart` (группа **SettingsRepository**) добавлены 3 новых теста:
+
+1. **`readThemeMode returns the actual value from the preference datasource`**  
+   После вызова `initAsyncData()` устанавливает через мок `AppThemeMode.dark` и проверяет, что `readThemeMode()` возвращает именно это значение, а не дефолтное из мока (`light`).
+
+2. **`readThemeMode returns different values set via the datasource`**  
+   Проверяет, что при переключении значения в `MockPreferenceDatasource.themeMode` (сначала `light`, затем `dark`) метод `readThemeMode()` корректно возвращает актуальное значение каждый раз — подтверждает, что это не кэшированный геттер, а реальная делегация на datasource.
+
+3. **`readThemeMode works correctly after initAsyncData (v2 lifecycle contract)`**  
+   Подтверждает контракт v2: `initAsyncData()` вызывается на Splash перед первым использованием `readThemeMode()`. После инициализации значение не равно дефолтному (`light`) и совпадает с установленным в моке.
+
+### Что осталось неизменным
+
+Все существующие 8 тестов группы `SettingsRepository` сохранены без изменений:
+- `should complete initialization without errors`
+- `should return correct token when getToken is called`
+- `should complete token setting successfully`
+- `should set theme mode with correct value`
+- `should return current theme mode value` (deprecated getter — оставлен для обратной совместимости)
+- `should emit theme mode changes through stream`
+- `should emit auth state changes through stream`
+
+Тесты используют уже существующий `MockPreferenceDatasource`, у которого `themeMode` по умолчанию возвращает `AppThemeMode.light`. Новые тесты переопределяют это значение через `when(...).thenReturn(...)`, что корректно для Mockito.
+
+### Верификация
+
+Ручная проверка синтаксиса прошла — файл записан полностью (256 строк). **`flutter analyze` и `flutter test` необходимо запустить вручную** на машине с Flutter:
+
+```bash
+flutter analyze
+flutter test test/unit/repository_test.dart
+```

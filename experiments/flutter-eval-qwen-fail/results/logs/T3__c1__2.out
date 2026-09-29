@@ -1,0 +1,39 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T3__c1__2\.madharness-mini\traces\20260923-062759-917c2632.jsonl
+Flutter SDK недоступен в окружении (ошибка `FileNotFoundError: Не удается найти указанный файл`). Я не могу запустить `flutter analyze` и `flutter test`.
+
+Однако изменения внесены корректно. Вот что сделано:
+
+### Что изменилось
+
+**Файл:** `lib/app/news_list/news_list_page.dart`
+
+В `AppBar` добавлена кнопка «Обновить»:
+
+```dart
+appBar: AppBar(
+  title: Text(context.loc.news),
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.refresh),
+      onPressed: () => _initData(),
+      tooltip: 'Обновить',
+    ),
+  ],
+),
+```
+
+### Как это работает
+
+- При нажатии на иконку `Icons.refresh` вызывается `_initData()`.
+- `_initData()` создаёт новый `Future<List<NewsModel>>`, обращаясь к `newsRepository.loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — параметр `forceRefresh: true` гарантирует загрузку из сети, минуя кэш.
+- `FutureBuilder` автоматически подписывается на новый future и перерисовывает список с анимацией масштабирования.
+
+### Для проверки
+
+Запустите вручную в корневой директории проекта:
+
+```bash
+flutter analyze
+flutter test
+```

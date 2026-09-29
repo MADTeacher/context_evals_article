@@ -1,0 +1,26 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c1__5\.madharness-mini\traces\20260924-101245-a1715bdd.jsonl
+Готово.
+
+## Что изменено
+
+**`lib/app/profile/profile_page.dart`**
+- Добавлен `import 'dart:async';`.
+- Начальное значение по-прежнему читается синхронно: `ValueNotifier(_settingsRepository.readThemeMode())` (строка 18).
+- Добавлено поле `StreamSubscription<AppThemeMode>? _themeModeSubscription`.
+- В `initState` вызывается новый метод `_subscribeOnThemeMode()`, который подписывается на `_settingsRepository.themeModeStream` и обновляет `_themeModeNotifier.value` при каждом событии — UI (`ValueListenableBuilder` → `ListTile.subtitle`) теперь перерисовывается автоматически, в т.ч. если режим изменили из другого места приложения.
+- В `dispose` подписка отменяется до `_themeModeNotifier.dispose()`.
+
+**`test/widget/profile_page_test.dart`** (новый, по стилю `login_page_test.dart`)
+- отображение синхронно прочитанного режима при инициализации;
+- обновление подписи после `settingsRepository.setThemeMode(...)` без ручного вмешательства виджета.
+
+**`test/widget/home_container_test.dart`**
+- Добавлен стаб `when(mockSettingsRepository.themeModeStream).thenAnswer((_) => const Stream<AppThemeMode>.empty())`. Без него `MockSettingsRepository` со `throwOnMissingStub` падал в `_subscribeOnThemeMode`, и тест навигации на вкладку «Профиль» не проходил.
+
+## Проверки
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (35 тестов, включая 2 новых)
+
+## Заметка про changelog
+В корне репозитория файла changelog нет (упоминание есть только в `AGENTS.md`). Создавать новый файл без вашего решения не стал — скажите, если нужно завести, например, `CHANGELOG.md` с записью об этом изменении.

@@ -1,0 +1,25 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T8__c2__2\.madharness-mini\traces\20260924-102714-b1413e0d.jsonl
+Everything is green: `flutter analyze` → **No issues found!**, `flutter test` → **36 tests passed** (3 new dashboard tests included).
+
+## What changed
+
+**New screen** — `lib/app/dashboard/dashboard_page.dart` (+ barrel `lib/app/dashboard/dashboard.dart`):
+- On open, `initState` starts one future that calls `Future.wait` over two fresh requests in parallel:
+  - `fetchRates(const CurrencyPageRequest(base: 'USD'))` — v2 base convention (I.1), page defaults to 0/pageSize 20;
+  - `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — network + cache write (I.2);
+- while pending → `CircularProgressIndicator`;
+- on success → sections «Курс Валют» / «Новости» reusing existing `CurrencyCard` / `NewsCard`, plus `RefreshIndicator` + retry button that repeat the same fresh `Future.wait` (no cache-first call, so the parallel fresh-load semantics stay clean);
+- no `@Deprecated` members (`getCurrencyList`/`getNewsList`/`themeMode` never used).
+
+**HomePage entry point** — `lib/app/home.dart`: an `IconButton(Icons.dashboard)` with tooltip «Дашборд» in the top-right of the current tab (SafeArea-wrapped); tapping switches to the full-screen `DashboardPage` (back via AppBar arrow, standard `Navigator` from the root route).
+
+**l10n** — added `dashboard`, `dashboardLoadError`, `retry` to `assets/l10n/locale_ru.arb` / `locale_en.arb` and to the generated `lib/app/gen/l10n/app_localizations*.dart` (kept in sync manually; `flutter gen-l10n` is not runnable in this sandbox).
+
+**Tests** — `test/widget/dashboard_page_test.dart`: progress indicator while loading; verifies the captured `fetchRates` base is `USD` and every `loadNewsFeed` filter has `forceRefresh: true`, then both lists render; error state + retry recovery.
+
+**Changelog (I.5)** — `changelog/10053.feature.rst`.
+
+Two real bugs were caught by the new tests and fixed in the screen: `late final` future couldn't be reassigned on retry, and `setState(() => _dashboardFuture = ...)` returned a Future (now a block body).
+
+Not verified: `integration_test/app_test.dart` (needs a device/emulator; not run here).

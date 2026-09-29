@@ -1,0 +1,29 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T6__c0__3\.madharness-mini\traces\20260924-232524-af0006e5.jsonl
+Отлично, все проверки прошли успешно. Вот итог:
+
+## Что изменилось
+
+### `lib/app/profile/profile_page.dart`
+
+**Было:** `_themeModeNotifier` инициализировался один раз в поле через `ValueNotifier(_settingsRepository.readThemeMode())`, но подписка на поток изменений отсутствовала — внешние изменения темы не отражались в UI.
+
+**Стало:**
+1. `_themeModeNotifier` объявлен как nullable (`ValueNotifier<AppThemeMode>?`) и создаётся в `didChangeDependencies()` после прочтения синхронного начального значения через `readThemeMode()`.
+2. Добавлена подписка на `_settingsRepository.themeModeStream` — каждый раз, когда тема меняется извне (через `setThemeMode()`), `StreamController.broadcast()` отправляет событие, и `ValueNotifier` обновляется внутри `setState()`.
+3. При повторных вызовах `didChangeDependencies()` старая подписка отменяется (`cancel()`), а старый `ValueNotifier` — утилизируется (`dispose()`).
+
+### `test/widget/home_container_test.dart`
+
+Добавлен broadcast-контроллер для `themeModeStream` и стаб в `setUp()`:
+```dart
+final StreamController<AppThemeMode> themeStream = StreamController.broadcast();
+when(mockSettingsRepository.themeModeStream).thenAnswer((_) => themeStream.stream);
+```
+
+## Проверки
+
+| Команда | Результат |
+|---|---|
+| `flutter analyze` | **No issues found!** ✅ |
+| `flutter test` | **All 33 tests passed** ✅ |

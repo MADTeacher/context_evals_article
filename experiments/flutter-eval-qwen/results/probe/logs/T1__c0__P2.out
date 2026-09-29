@@ -1,0 +1,31 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\probe\T1__c0__P2\.madharness-mini\traces\20260924-122429-2dbe6e70.jsonl
+Все **36 тестов** прошли успешно, `flutter analyze` — без замечаний.
+
+## Что изменилось
+
+### `lib/app/currency_list/currency_list_page.dart`
+- Добавлены поля состояния: `_currentPage`, `_hasMore`, `_isLoadingMore`.
+- При первой загрузке (`_initData`) теперь сохраняются `page.hasMore` и устанавливается `_currentPage = page.page + 1` для следующего запроса.
+- Улучшен `_filterCurrencies`: при пустом поиске сразу возвращается весь `_allCurrencies` (без лишнего `where`).
+- Добавлен метод **`_loadNextPage()`** — запрашивает следующую страницу у репозитория и дописывает элементы к `_allCurrencies`, обновляя `ValueNotifier`. Во время загрузки кнопка показывает спиннер, disabled.
+- Под списком появляется кнопка **"Показать ещё"** (`ElevatedButton`), видимая только при `_hasMore == true`. При нажатии загружается следующая страница и дописывается к текущему списку.
+
+### `lib/app/currency_list/widgets/search_view.dart` — не менялся
+Работа поиска по списку сохранена полностью: фильтрация применяется поверх накопленного `_allCurrencies`, включая уже подгруженные страницы.
+
+### `assets/l10n/locale_ru.arb` / `locale_en.arb`
+Добавлен ключ `"showMore"` → `"Показать ещё" / "Show more"`.
+
+### `lib/app/gen/l10n/app_localizations*.dart`
+Обновлены сгенерированные файлы локализаций (добавлен геттер `showMore`).
+
+### `test/widget/currency_list_page_test.dart`
+- Обновлён mock для поддержки пагинации.
+- Добавлены 3 новых теста: проверка появления кнопки "Показать ещё" при `hasMore=true`, загрузка следующей страницы по нажатию, скрытие кнопки при `hasMore=false`.
+
+### Результат проверок
+| Команда | Статус |
+|---|---|
+| `flutter analyze` | ✅ No issues found! |
+| `flutter test` (36 тестов) | ✅ All tests passed! |

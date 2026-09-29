@@ -1,0 +1,1 @@
+В проекте (Flutter, Clean Architecture) на экране новостей (lib/app/news_list/news_list_page.dart) добавь в AppBar кнопку «Обновить»: по нажатию лента перезагружается из сети, минуя кэш. Перед завершением прогони flutter analyze и flutter test — без замечаний и падений.

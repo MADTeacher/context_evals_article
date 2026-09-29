@@ -1,0 +1,29 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T7__c2__1\.madharness-mini\traces\20260924-005453-57fa215b.jsonl
+Done. Here's a summary.
+
+## Что сделано
+
+**Кнопка «Обновить всё» на HomePage** (`lib/app/home.dart`)
+- Добавлен `FloatingActionButton.extended` с иконкой обновления и подписью из l10n.
+- Обработчик `_refreshAll()` одновременно запускает оба запроса из сети по конвенциям v2:
+  - курс: `fetchRates(const CurrencyPageRequest(base: 'USD'))` → `saveCurrencyList(page.items)`;
+  - новости: `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — принудительно сеть + запись в кэш.
+- На время выполнения кнопка блокируется (`_isRefreshing`) и показывает индикатор; есть guard от повторного нажатия и проверка `mounted`.
+- Оба репозитория берутся через `context.read` (провайдеры уже объявлены в `GlobalProviders`).
+
+**Локализация**
+- `assets/l10n/locale_ru.arb` — `"refreshAll": "Обновить всё"`, `locale_en.arb` — `"Refresh all"`.
+- Перегенерированы файлы `lib/app/gen/l10n/*` через `flutter gen-l10n` (новый геттер `refreshAll`).
+
+**Changelog**
+- `changelog/10053.bugfix.rst` с описанием пользовательского изменения.
+
+**Тест**
+- В `test/widget/home_container_test.dart` добавлен кейс «should refresh currency and news from network when refresh all is tapped»: проверяет вызов `fetchRates` с `base: 'USD'`, `page: 0` и `loadNewsFeed` с `forceRefresh: true` после нажатия. Также добавлен стаб `saveCurrencyList` и `clearInteractions` в `setUp`, чтобы общие моки не накапливали вызовы между тестами.
+
+## Проверка
+- `flutter analyze` → **No issues found!**
+- `flutter test` → **All tests passed! (34)**
+
+Замечание: обновление курса/новостей затрагивает состояние, которым владеют `CurrencyListPage`/`NewsListPage`; их локальные `Future` при нажатии кнопки не перезапрашиваются — обновляются данные в репозитории/кэше. Если нужно, чтобы открытый экран визуально перерисовался после «Обновить всё», это потребует дополнительной синхронизации состояния экранов с репозиторием — скажите, и добавлю.

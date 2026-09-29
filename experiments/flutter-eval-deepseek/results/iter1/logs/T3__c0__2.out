@@ -1,0 +1,18 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T3__c0__2\.madharness-mini\traces\20260923-234539-fa26b73a.jsonl
+Готово.
+
+**Изменения**
+
+- `lib/app/news_list/news_list_page.dart`
+  - В `AppBar` добавлен `IconButton` с `Icons.refresh` (tooltip — локализованная строка `refresh`).
+  - Добавлен метод `_refreshNewsFeed()`: внутри `setState` сбрасывает анимацию (`_scaleController.reset()`) и пересоздаёт `_newsListFuture` через `newsRepository.loadNewsFeed(const NewsFeedFilter(forceRefresh: true))`. `forceRefresh: true` в `NewsRepositoryImpl.loadNewsFeed` идёт в `_restDatasource.getNewsList()` и затем сохраняет свежие данные в БД, то есть кэш (`_dbDatasource`) не читается — лента перезагружается из сети. Провайдер читается через `context.read<NewsRepository>()` в обработчике, а не в `build`.
+- `assets/l10n/locale_ru.arb`, `assets/l10n/locale_en.arb` — добавлен ключ `refresh` («Обновить» / «Refresh»).
+- `lib/app/gen/l10n/app_localizations*.dart` — перегенерировано через `flutter gen-l10n` (правки в gen-файлы внесены генератором, не вручную).
+
+**Проверка**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `+33: All tests passed!`
+
+Замечание: существующий тест `test/widget/news_list_page_test.dart` мокает `loadNewsFeed(any)` и не проверяет нажатие кнопки — я не трогал тесты, так как задача этого не требовала. Если нужно, могу добавить widget-тест, проверяющий, что тап по кнопке вызывает `loadNewsFeed` с `forceRefresh: true`.

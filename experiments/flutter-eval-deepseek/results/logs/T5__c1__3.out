@@ -1,0 +1,21 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T5__c1__3\.madharness-mini\traces\20260924-100235-4c99d702.jsonl
+Готово.
+
+**Что добавлено** — `test/unit/repository_test.dart`, группа `SettingsRepository`:
+
+1. `readThemeMode returns actual theme mode after initAsyncData` — после `initAsyncData()` метод возвращает реальное значение из датасорса (`AppThemeMode.dark`), подтверждается `verify(...themeMode).called(1)`.
+2. `readThemeMode reflects the value set after initAsyncData` — после `setThemeMode(...)` чтение возвращает обновлённое значение (`light` → `system`).
+3. `readThemeMode is safe to call only after initAsyncData` — до `initAsyncData()` доступ к `late`-полю `isAuth` падает с `LateInitializationError`, после инициализации `isAuth == false` и `readThemeMode()` работает корректно.
+
+Вспомогательный матчер `throwsLateError` объявлен рядом с импортами (класс `LateInitializationError` не экспортируется из `dart:core`, поэтому проверяется по тексту ошибки — без добавления зависимостей).
+
+**Попутные правки в существующих тестах** (иначе падал прогон):
+- `should return current theme mode value`: добавлен `clearInteractions(mockPreferenceDatasource)` — моки создаются один раз в `main()`, и счётчик вызовов `themeMode` протекал из предыдущих тестов (`Expected: <1>, Actual: <3>`).
+- Новый тест изолирует стаб `getToken()` (`null`), чтобы не влиять на порядок выполнения.
+
+**Changelog**: добавлен `changelog/10053.feature.rst` (требование правил проекта).
+
+**Проверка**:
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (36 тестов, включая 3 новых и все прежние unit/widget-тесты).

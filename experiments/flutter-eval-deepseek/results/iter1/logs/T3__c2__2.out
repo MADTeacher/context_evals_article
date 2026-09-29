@@ -1,0 +1,15 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T3__c2__2\.madharness-mini\traces\20260924-002142-a9719bda.jsonl
+Готово. Кнопка «Обновить» добавлена в AppBar экрана новостей.
+
+**Что изменено**
+- `lib/app/news_list/news_list_page.dart` — в `AppBar.actions` добавлен `IconButton(Icons.refresh)`; обработчик `_refresh()` сбрасывает анимацию и через `setState(_initData)` заново запрашивает ленту. `_initData()` уже использует `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))`, т.е. по конвенции v2 это запрос в сеть с записью в кэш — кэш (БД) не читается, `getNewsList` не вызывается.
+- `assets/l10n/locale_ru.arb` / `locale_en.arb` — добавлен ключ `refresh` («Обновить» / «Refresh»), используется как `tooltip`. Генерация выполнена `flutter gen-l10n` (обновлены `lib/app/gen/l10n/app_localizations{,_ru,_en}.dart`).
+- `test/widget/news_list_page_test.dart` — новый тест: после тапа по `Icons.refresh` `loadNewsFeed(NewsFeedFilter(forceRefresh: true))` вызывается ещё раз, а `NewsFeedFilter.all` (кэш) не вызывается ни на старте, ни при обновлении.
+- `changelog/10053.bugfix.rst` — фрагмент changelog (I.5).
+
+**Проверка**
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (34 теста; +1 новый).
+
+Замечание по конвенции v2 (не менял, вне рамок задачи): экран по-прежнему грузит сразу сеть (`forceRefresh: true`), тогда как `docs/migration-v2.md` §2 и `references/news.md` описывают паттерн cache-then-network (кэш сразу + фоновая загрузка). Если нужно привести экран к этому паттерну — скажите, сделаю отдельным изменением.

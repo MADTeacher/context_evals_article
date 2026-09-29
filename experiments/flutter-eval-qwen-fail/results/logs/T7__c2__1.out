@@ -1,0 +1,31 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T7__c2__1\.madharness-mini\traces\20260923-190648-8d68c0f3.jsonl
+## Результат
+
+### Что изменилось
+
+**Добавлена кнопка «Обновить всё»** на `HomePage` — плавающая кнопка (`FloatingActionButton.extended`) с иконкой refresh, расположенная в правом нижнем углу поверх контента (через Stack).
+
+При нажатии:
+- Инкрементируется общий `ValueNotifier<int> _refreshKey`, который передается в `CurrencyListPage` и `NewsListPage` через замыкания `_pageBuilders`.
+- Каждая активная страница подписана на этот нотифайер и при изменении выполняет обновление **из сети** (`forceRefresh: true`).
+- Курс валют запрашивается через `fetchRates(CurrencyPageRequest(base: 'USD'))`, лента новостей — через `loadNewsFeed(NewsFeedFilter(forceRefresh: true))` — всё по конвенциям v2 (I.1, I.3).
+
+### Файлы
+
+| Файл | Что сделано |
+|---|---|
+| `lib/app/home.dart` | Добавлен `_refreshKey`, FAB «Обновить всё», страницы строятся через замыкания с передачей нотифайера |
+| `lib/app/currency_list/currency_list_page.dart` | Принимает `refreshKey`, слушает изменения → обновляет данные из сети |
+| `lib/app/news_list/news_list_page.dart` | Принимает `refreshKey`, слушает изменения → обновляет данные из сети |
+| `assets/l10n/locale_en.arb` | Добавлен ключ `refreshAll: "Update All"` |
+| `assets/l10n/locale_ru.arb` | Добавлен ключ `refreshAll: "Обновить всё"` |
+| `test/widget/home_container_test.dart` | Без изменений (работает корректно) |
+| `test/widget/currency_list_page_test.dart` | Добавлена передача `refreshKey`, убран лишний импорт `flutter/material.dart` |
+| `test/widget/news_list_page_test.dart` | Добавлена передача `refreshKey`, убран лишний импорт `flutter/material.dart` |
+| `changelog/10053.feature.rst` | Фрагмент changelog по правилу I.5 |
+
+### Верификация
+
+- `flutter.bat analyze` — **No issues found!** (ноль замечаний любого уровня)
+- `flutter.bat test` — **All 33 tests passed!**

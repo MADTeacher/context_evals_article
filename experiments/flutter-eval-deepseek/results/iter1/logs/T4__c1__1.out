@@ -1,0 +1,24 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T4__c1__1\.madharness-mini\traces\20260924-000024-9fb812f3.jsonl
+Done. The news screen now uses cache-then-network.
+
+## Что изменено
+
+**`lib/app/news_list/news_list_page.dart`** — экран переведён с `FutureBuilder` на cache-then-network:
+- При открытии вкладки в `_initData()` параллельно запускаются два запроса:
+  - `loadNewsFeed(NewsFeedFilter.all)` → кэш из БД (сеть не вызывается);
+  - `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` → сеть с записью в кэш.
+- Кэш рендерится сразу, как только пришёл (`_cachedNews`), а когда приходит ответ сети, список заменяется свежими данными (`_freshNews ?? _cachedNews`).
+- Обработчики защищены проверкой `mounted` перед `setState`, анимация `_scaleController.forward()` запускается при первом непустом результате (как и раньше, при загрузке).
+- Пустой результат по-прежнему даёт `SizedBox.shrink()` — поведение прежнего `snapshot.data == null` сохранено, тесты `home_container_test.dart` (пустой мок) не затрагиваются.
+
+**`test/widget/news_list_page_test.dart`** — добавлен тест `should show cache first and replace it with the network feed`: сеть «подвешивается» через `Completer`, проверяется, что сначала показан кэш, а после ответа сети — свежая лента. Существующий тест сохранён.
+
+**`changelog/10053.feature.rst`** — запись о пользовательском изменении.
+
+## Проверка
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (34 теста, включая новый)
+
+Замечание: в widget-тесте я не проверяю количество вызовов `loadNewsFeed` через `verify`, так как `setUp` задаёт широкий стаб `any`, из-за чего счётчики вызовов пересекаются; семантика фильтров (кэш vs сеть) уже покрыта unit-тестами в `test/unit/repository_test.dart`.

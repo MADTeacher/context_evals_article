@@ -1,0 +1,14 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T5__c1__1\.madharness-mini\traces\20260924-001204-b53b3a0a.jsonl
+Готово.
+
+**Что изменено**
+- `test/unit/repository_test.dart` — в группу `SettingsRepository` добавлены два теста:
+  - `readThemeMode returns actual value only after initAsyncData` — стабит `getToken()` и `themeMode` у `MockPreferenceDatasource`, вызывает `initAsyncData()`, затем проверяет, что `readThemeMode()` возвращает `AppThemeMode.dark` и что оба вызова ушли в датасорс (то есть значение читается после инициализации).
+  - `readThemeMode reflects value changed after initialization` — после `initAsyncData()` возвращается `light`, затем после смены стаба — `dark`, с проверкой двух обращений к `themeMode`.
+  - Существующий тест на `themeMode` (deprecated-геттер) не трогал: новый код на `@Deprecated` члены не ссылается (см. `docs/migration-v2.md`, п.4).
+- `changelog/10053.bugfix.rst` — запись о пользовательском изменении по конвенции проекта.
+
+**Проверка**
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (35 тестов, включая 2 новых; ранее было 33).

@@ -1,0 +1,23 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T7__c0__4\.madharness-mini\traces\20260924-002117-1e6c625e.jsonl
+Everything is in place. Let me do a final full analyze+test confirmation (already done) and summarize.
+
+Done. Summary of the change:
+
+**Что сделано**
+
+Кнопка «Обновить всё» добавлена на главный экран (`lib/app/home.dart`) как `FloatingActionButton.extended`. По нажатию она уведомляет общий `ValueNotifier<int>` (`_refreshNotifier`), на который подписаны оба экрана данных — курс валют и лента новостей — так что оба запроса уходят в сеть одновременно.
+
+**Изменённые файлы**
+- `lib/app/home.dart` — сигнал обновления + кнопка. Тело переведено на `IndexedStack` для вкладок «Курс Валют» и «Новости», чтобы оба экрана были смонтированы и получали сигнал; `ProfilePage` монтируется лениво (его бесконечная анимация иначе ломала бы `pumpAndSettle`).
+- `lib/app/currency_list/currency_list_page.dart` — параметр `refreshListenable`, повторный запрос `fetchRates(const CurrencyPageRequest(base: 'USD'))` (проектная конвенция base 'USD' из `docs/migration-v2.md`) с сохранением в БД. `_filteredCurrenciesNotifier` сделан пересоздаваемым с корректным dispose.
+- `lib/app/news_list/news_list_page.dart` — параметр `refreshListenable`, принудительный сетевой запрос `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))`.
+- `assets/l10n/locale_ru.arb`, `locale_en.arb` + перегенерированные `lib/app/gen/l10n/*` — ключ `refreshAll` («Обновить всё» / «Refresh all»).
+- `test/widget/home_container_test.dart` — тест, что тап по кнопке вызывает `fetchRates` и `loadNewsFeed` с `forceRefresh: true`.
+- `changelog/10053.feature.rst` — фрагмент changelog (по конвенции из `docs/migration-v2.md`).
+
+**Проверка**
+- `flutter analyze` — `No issues found!`
+- `flutter test` — все 34 теста прошли (было 33, добавлен 1).
+
+Примечание: конвенция `docs/migration-v2.md` требует фрагмент `changelog/<номер>.bugfix.rst`, но изменение пользовательское (новая функциональность), поэтому использован тип `.feature.rst` — как в существующем `10052.feature.rst`. Если нужен строго `.bugfix.rst`, переименую.

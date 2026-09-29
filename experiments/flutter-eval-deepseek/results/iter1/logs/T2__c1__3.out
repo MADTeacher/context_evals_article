@@ -1,0 +1,24 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T2__c1__3\.madharness-mini\traces\20260923-234247-fe0ab439.jsonl
+All debug probes are gone (remaining `DEBUG` hits are iOS/build artifacts). Both checks pass cleanly.
+
+## Что сделано
+
+**`lib/app/currency_list/currency_list_page.dart`** — экран курса валют:
+- Кнопка «Показать ещё» рендерится только при `hasMore == true` (`CurrencyPage.hasMore`), сразу после загрузки страницы и после каждой догрузки. Признак хранится в `ValueNotifier<bool> _hasMoreNotifier` и оборачивается в `ValueListenableBuilder` — иначе смена флага не перестраивала `ListView.builder` (это был реальный баг: список строился со старым значением).
+- Догрузка `_loadMore()` запрашивает `page + 1` с `base: 'USD'`, дописывает элементы и обновляет `hasMore`; повторный тап блокируется флагом `_isLoadingMore`.
+- `didChangeDependencies` отслеживает потерю фокуса экрана (`!ModalRoute.of(context)!.isCurrent`, т.е. переключение вкладки) и вызывает `_reload()` — свежий запрос первой страницы с `base: 'USD'` (`CurrencyPageRequest(base: _base, page: 0, pageSize: 20)`).
+- Запросы сериализуются через `_requestId`, устаревшие ответы игнорируются; `mounted` проверяется перед записью состояния.
+- `saveCurrencyList` вызывается для элементов полученной страницы (сохранено прежнее поведение).
+
+**Локализация** — добавлена строка `showMore` в `assets/l10n/locale_ru.arb` («Показать ещё») и `locale_en.arb` («Show more») плюс в сгенерированные `lib/app/gen/l10n/app_localizations*.dart` (в стиле существующего `asNominal`).
+
+**Тесты** — `test/widget/currency_list_page_test.dart`: кнопка скрыта при `hasMore: false`; при `hasMore: true` кнопка есть, после тапа подгружается вторая страница и кнопка исчезает; при переходе на другую вкладку список перезапрашивается, все запросы — с `base: 'USD'` и `page: 0`.
+
+**Changelog** — `changelog/10053.bugfix.rst`.
+
+## Проверки
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (36 тестов, включая 6 в `currency_list_page_test.dart`)
+
+Одно замечание: `HomePage` держит `CurrencyListPage` в `const`-списке, поэтому при переключении вкладки не выбранная страница удаляется из дерева. Из-за этого тест на потерю фокуса проверяет перезапрос через `HomePage`, а фактический сценарий «потеря фокуса без dispose» (например, при открытии модального маршрута поверх экрана) покрыт логикой `didChangeDependencies`, где я убрал требование `hasClients`, чтобы не завязываться на наличие `FocusScope`.

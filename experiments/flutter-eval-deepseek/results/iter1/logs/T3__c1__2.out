@@ -1,0 +1,21 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T3__c1__2\.madharness-mini\traces\20260923-235437-a9a85a26.jsonl
+Готово. В AppBar экрана новостей добавлена кнопка «Обновить».
+
+**Что изменено**
+
+- `lib/app/news_list/news_list_page.dart`
+  - `AppBar` получил `actions` с `IconButton(Icons.refresh)`; подпись берётся из `context.loc.refresh`, поэтому кнопка локализована и доступна (`tooltip`).
+  - Загрузка вынесена в `_loadNewsFeed({required bool forceRefresh})`. По нажатию кнопки вызывается `NewsFeedFilter(forceRefresh: true)` — репозиторий идёт в сеть (`_restDatasource.getNewsList()`) и перезаписывает кэш, минуя БД (см. `docs/migration-v2.md`, п. 2: «любое действие пользователя "Обновить" — всегда `forceRefresh: true`»).
+  - `setState` подменяет `_newsListFuture`, `_scaleController.reset()` перезапускает анимацию появления ленты.
+  - Заодно первичная загрузка переведена на `forceRefresh: false` (только кэш) — иначе кнопка «Обновить» была бы неотличима от открытия вкладки, что противоречит конвенции экрана.
+- Локализация: `assets/l10n/locale_ru.arb` (`"refresh": "Обновить"`), `locale_en.arb` (`"Refresh"`) и синхронно обновлённые сгенерированные `lib/app/gen/l10n/app_localizations{,_ru,_en}.dart` (генерация в проект не встроена, поэтому правки внесены вручную, как и существующие строки).
+- `test/widget/news_list_page_test.dart`: добавлен тест «should reload feed from network bypassing cache when refresh pressed» — проверяет, что при открытии фильтр приходит с `forceRefresh: false`, а после нажатия на кнопку — с `forceRefresh: true`. Также добавлен `reset(mockNewsRepository)` в `setUp` (иначе накопленные из первого теста вызовы ломали проверку).
+- `changelog/10053.feature.rst` — запись о пользовательском изменении.
+
+**Проверки**
+
+- `flutter analyze` — No issues found.
+- `flutter test` — 34 теста, все прошли.
+
+Замечание: изначально тест падал из-за общего мока без сброса между тестами — исправлено `reset`, поведение продакшн-кода при этом не менялось.

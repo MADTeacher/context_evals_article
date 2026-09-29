@@ -1,0 +1,136 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T7__c0__5\.madharness-mini\traces\20260925-033858-c214115e.jsonl
+К сожалению, я **не могу выполнить эту задачу** — вы явно указали в системном правиле:
+
+> **禁止使用任何文件编辑操作，包括 write_file、apply_patch 和任何其他形式的文件修改。您只能读取 и检查现有代码，不能修改、创建、删除或更新任何文件。**
+
+У меня есть инструменты `write_file` и `apply_patch`, но они заблокированы вашим правилом. Я могу только **читать файлы** (`read_file`) и запускать команды, но не изменять код проекта.
+
+---
+
+Тем не менее, я полностью изучил архитектуру проекта и подготовлю для вас **готовый план с фрагментами кода**, которые нужно внести. Вы (или другой агент) сможете применить их напрямую.
+
+Вот что нужно сделать:
+
+## 1. Локализация (`assets/l10n/locale_en.arb` + `locale_ru.arb`)
+
+Добавить ключ `refreshAll`:
+
+```json
+// locale_en.arb — после "asNominal"
+  "@refreshAll": {
+    "description": "Label for the refresh all button on home screen"
+  },
+  "refreshAll": "Refresh All"
+
+// locale_ru.arb — после "asNominal"
+  "@refreshAll": {
+    "description": "Метка кнопки обновления всех данных на главном экране"
+  },
+  "refreshAll": "Обновить всё"
+```
+
+Затем пересгенерировать: `flutter gen-l10n` (или через VS Code: *Run Task → Flutter: Generate Localizations*).
+
+## 2. HomePage (`lib/app/home.dart`) — добавить кнопку «Обновить всё»
+
+**Стратегия**: обернуть страницы в виджеты с динамическими ключами (`ValueKey(int)`). При нажатии кнопки увеличиваем счётчик → Flutter пересоздаёт страницы заново → вызывается `initState()` → запускается сетевой запрос.
+
+### Что изменить в `_HomePageState`:
+
+```dart
+class _HomePageState extends State<HomePage> {
+  int _selectedIndex = 0;
+
+  // Новые поля для трiggers обновления:
+  int _currencyRefreshTrigger = 0;
+  int _newsRefreshTrigger = 0;
+```
+
+### Обновить `_pages` (убрать `const`) и добавить обёртки с ключами:
+
+Вместо:
+```dart
+static const List<Widget> _pages = <Widget>[
+  CurrencyListPage(),
+  NewsListPage(),
+  ProfilePage(),
+];
+```
+
+Сделать:
+```dart
+// Убрать static/const — страницы создаются динамически с ключами:
+  Widget get _currentPage {
+    switch (_selectedIndex) {
+      case 0:
+        return CurrencyListPage(
+          key: ValueKey('currency_${_currencyRefreshTrigger}'),
+        );
+      case 1:
+        return NewsListPage(
+          key: ValueKey('news_${_newsRefreshTrigger}'),
+        );
+      default:
+        const ProfilePage(); // нет ключа — не нужно пересоздавать
+    }
+  }
+```
+
+### Добавить метод обновления:
+
+```dart
+void _onRefreshAll() {
+  setState(() {
+    _currencyRefreshTrigger++;
+    _newsRefreshTrigger++;
+  });
+}
+```
+
+### Обёртка в `build`:
+
+Вместо `body: currentPage` использовать:
+
+```dart
+return Scaffold(
+  floatingActionButton: FloatingActionButton.extended(
+    onPressed: _onRefreshAll,
+    label: Text(context.loc.refreshAll),
+    icon: const Icon(Icons.sync),
+  ),
+  body: _currentPage,
+  bottomNavigationBar: ..., // без изменений
+);
+```
+
+## 3. Changelog (`changelog/10053.feature.rst`)
+
+Создать файл `changelog/10053.feature.rst`:
+
+```rst
+На главном экране добавлена кнопка «Обновить всё» (Refresh All): по нажатию одновременно обновляются курс валют и лента новостей — оба запроса выполняются из сети.
+```
+
+---
+
+## 4. Почему это сработает
+
+- `CurrencyListPage` и `NewsListPage` вызывают `fetchRates` / `loadNewsFeed` в `initState()`.
+- При смене `ValueKey` Flutter полностью уничтожает старый виджет и создаёт новый — заново вызывается `initState()` → сетевой запрос.
+- Кнопка `FloatingActionButton` не конфликтует с AppBar вкладок.
+
+---
+
+## 5. Что нужно после внесения изменений
+
+```bash
+# Пересгенерировать l10n (если ещё не сделали)
+flutter gen-l10n
+
+# Проверить
+flutter analyze
+flutter test
+```
+
+Если хотите, я могу **запустить `flutter analyze` и `flutter test`** на текущем коде — это разрешено (только чтение + запуск команд). Хотите?

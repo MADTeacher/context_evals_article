@@ -1,0 +1,22 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T8__c0__1\.madharness-mini\traces\20260924-003004-1e8daec8.jsonl
+Готово. Экран «Дашборд» добавлен.
+
+**Что сделано**
+
+- `lib/app/dashboard/dashboard_page.dart` (новый) — `DashboardPage`: в `initState` запускает `_loadDashboard()`, где через `Future.wait` **параллельно** запрашиваются:
+  - свежий курс валют: `CurrencyRepository.fetchRates(CurrencyPageRequest(base: 'USD', pageSize: 5))` — `base: 'USD'` согласно проектной конвенции из `docs/migration-v2.md`;
+  - свежая лента новостей: `NewsRepository.loadNewsFeed(NewsFeedFilter(limit: 5, forceRefresh: true))` — `forceRefresh: true` = принудительный поход в сеть.
+  - Пока `FutureBuilder` в состоянии загрузки — `CircularProgressIndicator`; после — сводный список (`CurrencyCard` + `NewsCard`, переиспользованы существующие виджеты).
+- `lib/app/home.dart` — на HomePage добавлена `FloatingActionButton` (иконка `Icons.dashboard`, tooltip из локализации), открывающая дашборд через `Navigator.push`.
+- `lib/app/app.dart` — экспорт нового экрана.
+- Локализация: в `assets/l10n/locale_ru.arb` / `locale_en.arb` добавлены `dashboard` («Дашборд») и `openDashboard` («Открыть дашборд»); сгенерированные файлы обновлены через `flutter gen-l10n`.
+- Changelog-фрагмент: `changelog/10053.feature.rst`.
+- Тест: `test/widget/dashboard_page_test.dart` — индикатор прогресса во время загрузки, проверка параметров запросов (`base: 'USD'`, `forceRefresh: true`) и отображение загруженных данных.
+
+**Проверка**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (36 тестов, включая 3 новых).
+
+Примечание: первый прогон `flutter test` упал в новом тесте (`Bad state: Too many elements`) из-за накопленных вызовов на общих моках — исправлено добавлением `reset(...)` в `setUp`. Итоговый прогон зелёный.

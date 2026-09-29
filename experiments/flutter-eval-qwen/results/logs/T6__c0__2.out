@@ -1,0 +1,18 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T6__c0__2\.madharness-mini\traces\20260924-232210-513e0a43.jsonl
+Задача выполнена. Вот что изменилось:
+
+## Изменения в `lib/app/profile/profile_page.dart`
+
+1. **Синхронное чтение начального значения** — `_themeModeNotifier` теперь инициализируется в `initState()` через `readThemeMode()`, а не при объявлении поля (когда `context.read` ещё недоступен).
+
+2. **Подписка на поток настроек** — добавлен `StreamSubscription<AppThemeMode>? _themeModeSub`, который слушает `_settingsRepository.themeModeStream`. При любом изменении темы в другом месте экрана профиль автоматически обновляется через `.value`.
+
+3. **Передача изменения в репозиторий** — вместо локального `_themeModeNotifier.value = newMode` теперь вызывается `_settingsRepository.setThemeMode(newMode)`, что гарантирует сохранение и рассылку события подписчикам.
+
+4. **Корректная очистка** — `dispose()` отменяет подписку на поток.
+
+## Верификация
+
+- ✅ `flutter analyze` — замечаний нет
+- ✅ `flutter test` — все 120 тестов пройдены

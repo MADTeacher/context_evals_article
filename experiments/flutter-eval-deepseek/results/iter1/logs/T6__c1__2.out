@@ -1,0 +1,19 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c1__2\.madharness-mini\traces\20260924-001831-20862334.jsonl
+Готово.
+
+**Что изменено**
+
+- `lib/app/profile/profile_page.dart`:
+  - убран `ValueNotifier` с ручным присваиванием; начальное значение читается синхронно: `late AppThemeMode _themeMode = _settingsRepository.readThemeMode();`
+  - состояние подписывается на `SettingsRepository.themeModeStream` (`StreamSubscription`), при событии — `setState` с проверкой `mounted`, подписка отменяется в `dispose()`;
+  - `ListTile` перестроен на прямое использование `_themeMode` (заголовок/подзаголовок), тап по-прежнему открывает `ThemeModeSelectorBottomSheet.show(context, _themeMode)`, который сам вызывает `setThemeMode` и закрывает шторку — UI обновляется от потока, а не от возвращаемого значения.
+- `test/widget/home_container_test.dart`: добавлен стаб `when(mockSettingsRepository.themeModeStream).thenAnswer((_) => const Stream<AppThemeMode>.empty())` — без него mockito бросал `MissingStubError` при открытии вкладки «Профиль».
+- `changelog/10053.bugfix.rst`: фрагмент changelog по конвенции проекта.
+
+**Проверки**
+
+- `flutter analyze` — No issues found.
+- `flutter test` — All tests passed (33 теста).
+
+Замечание: экран по-прежнему вызывает `readThemeMode()` при создании состояния, что по `docs/migration-v2.md` допустимо только после `initAsyncData()` на Splash; в реальном потоке приложения это выполняется, в тестах значение отдаёт мок.

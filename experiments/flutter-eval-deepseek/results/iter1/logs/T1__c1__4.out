@@ -1,0 +1,25 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T1__c1__4\.madharness-mini\traces\20260923-233033-f2caa156.jsonl
+Both checks pass. Here's what I changed.
+
+## What changed
+
+**`lib/app/currency_list/currency_list_page.dart`** — pagination state added:
+- Stores the repository, current `_page`, `_hasMore`, `_isLoadingMore`, and the active `_searchQuery`.
+- The first page now records `page.page` / `page.hasMore` from the response (still built with `base: 'USD'` per the v2 convention).
+- New `_loadNextPage()` requests `CurrencyPageRequest(base: 'USD', page: _page + 1)`, appends the items to `_allCurrencies`, updates `_page`/`_hasMore`, and guards against re-entry and `!mounted`.
+- Search refactored into `_filterCurrencies` (stores query) + `_applyFilter` (filters `_allCurrencies`). After appending a page, `_applyFilter()` re-runs, so the active search stays applied to the newly loaded items.
+- A full-width «Показать ещё» button is rendered below the list only while `_hasMore`, disabled during loading.
+
+**Localization** — added a `showMore` key to `assets/l10n/locale_en.arb`, `locale_ru.arb`, the abstract `AppLocalizations`, and the generated `en`/`ru` subclasses (manual update, since the generated files are checked in and `flutter gen-l10n` isn't part of the workflow here).
+
+**`test/widget/currency_list_page_test.dart`** — two new widget tests: appending the next page on tap (verifies the new card appears, count grows, and the button disappears when `hasMore == false`), and that an active search filter still applies to the appended page.
+
+**`changelog/10053.feature.rst`** — changelog entry, per project rules.
+
+## Verification
+
+- `flutter analyze` → **No issues found!**
+- `flutter test` → **All tests passed!** (35 tests, including the 2 new ones)
+
+One note: if you ever regenerate localization with `flutter gen-l10n`, it should reproduce the same `showMore` getters I added by hand.

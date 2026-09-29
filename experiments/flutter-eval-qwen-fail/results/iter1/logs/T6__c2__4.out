@@ -1,0 +1,35 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T6__c2__4\.madharness-mini\traces\20260923-111924-4e1d7013.jsonl
+Flutter SDK недоступен в данной среде — команда `flutter` не найдена (`FileNotFoundError`). Поэтому я не могу выполнить `flutter analyze` и `flutter test`.
+
+Однако код проверен вручную:
+
+## Что изменено в `lib/app/profile/profile_page.dart`
+
+1. **Добавлен импорт** `dart:async` (необходим для типа `StreamSubscription<AppThemeMode>`).
+
+2. **Объявлена подписка**:
+   ```dart
+   StreamSubscription<AppThemeMode>? _themeModeSubscription;
+   ```
+
+3. **Подписка в `initState`** — слушатель на `_settingsRepository.themeModeStream`, который обновляет `_themeModeNotifier.value` при каждом изменении режима темы (с проверкой `mounted && mode != ...` для защиты от перерисовок).
+
+4. **Отписка в `dispose`**:
+   ```dart
+   _themeModeSubscription?.cancel();
+   ```
+
+## Как это работает по контракту v2
+
+- Начальное значение: синхронно через `_settingsRepository.readThemeMode()` (конвенция I.1 settings.md).
+- Обновление при смене: подписка на `themeModeStream` — broadcast-поток, который публикует новое значение после `setThemeMode()`.
+- При выборе темы через bottom-sheet (`_themeModeNotifier.value = newMode`) — это вызывает `SettingsRepository.setThemeMode()`, что и записывает в preference, и публикует в поток.
+
+## Ограничение по проверке
+
+Пожалуйста, запустите локально:
+```bash
+flutter analyze
+flutter test
+```

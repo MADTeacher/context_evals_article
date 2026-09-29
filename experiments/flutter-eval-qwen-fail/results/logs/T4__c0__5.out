@@ -1,0 +1,47 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T4__c0__5\.madharness-mini\traces\20260923-083838-7e7288b0.jsonl
+## Готово! Экран новостей переведён на паттерн Cache-Then-Network ✅
+
+### Что изменилось (4 файла)
+
+**1. `lib/domain/repository/news_repository.dart`** — добавлен новый метод:
+```dart
+Future<List<NewsModel>> loadCachedAndRefreshInBackground();
+```
+
+**2. `lib/data/repository_impl/news_repository_impl.dart`** — реализация паттерна:
+- Сначала читает кэш из БД (`_dbDatasource.getNewsList()`) и **мгновенно возвращает** его
+- Параллельно, через `unawaited`, запускает фоновое обновление `_refreshFromNetwork()`
+- Если сетевой запрос упадёт — ошибка глотается (кэш остаётся валидным)
+
+**3. `lib/app/news_list/news_list_page.dart`** — UI:
+- Убран `FutureBuilder` → список хранится как `List<NewsModel> _newsList = []`
+- В `initState` вызывается `_loadCachedAndRefresh()` — получает кэш сразу, потом обновляет через `setState`, когда придут данные из сети
+
+**4. Тесты (`test/widget/news_list_page_test.dart`, `test/widget/home_container_test.dart`) и моки** — добавлен мок для нового метода
+
+### Как это работает
+
+```
+Открытие вкладки
+       │
+       ▼
+┌──────────────┐     ┌──────────────┐
+│  Чтение кэша  │────▶│  Показ списка │ ← мгновенно (0ms)
+│   (SQLite)    │     │   из _newsList │
+└──────────────┘     └──────────────┘
+       │
+       │ параллельно:
+       ▼
+┌──────────────┐     ┌──────────────┐
+│  Запрос сети  │────▶│ setState()   │ ← обновляет список
+│ (REST API)    │     │ _newsList = │
+└──────────────┘     └──────────────┘
+```
+
+### Результаты проверок
+
+| Команда | Результат |
+|---------|-----------|
+| `flutter analyze` | **No issues found!** |
+| `flutter test` | **33 passed** ✅ |

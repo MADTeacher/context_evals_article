@@ -1,0 +1,40 @@
+T1,c0,1,1,convention-missing-USD,"задача выполнена (fetchRates+пагинация, analyze/тесты зелёные), упал только grep 'USD' — конвенция не сообщена контекстом"
+T1,c1,1,1,convention-missing-USD,"задача выполнена (fetchRates+пагинация, analyze/тесты зелёные), упал только grep 'USD' — конвенция не сообщена контекстом"
+T1,c0,2,1,convention-missing-USD,"задача выполнена (fetchRates+пагинация, analyze/тесты зелёные), упал только grep 'USD' — конвенция не сообщена контекстом"
+T1,c1,2,1,convention-missing-USD,"задача выполнена (fetchRates+пагинация, analyze/тесты зелёные), упал только grep 'USD' — конвенция не сообщена контекстом"
+T1,c0,3,1,convention-missing-USD,"задача выполнена (fetchRates+пагинация, analyze/тесты зелёные), упал только grep 'USD' — конвенция не сообщена контекстом"
+T1,c1,3,1,convention-missing-USD,"задача выполнена (fetchRates+пагинация, analyze/тесты зелёные), упал только grep 'USD' — конвенция не сообщена контекстом"
+T1,c0,4,1,convention-missing-USD,"задача выполнена (fetchRates+пагинация, analyze/тесты зелёные), упал только grep 'USD' — конвенция не сообщена контекстом"
+T1,c1,4,1,convention-missing-USD,"задача выполнена (fetchRates+пагинация, analyze/тесты зелёные), упал только grep 'USD' — конвенция не сообщена контекстом"
+T1,c0,5,1,convention-missing-USD,"задача выполнена (fetchRates+пагинация, analyze/тесты зелёные), упал только grep 'USD' — конвенция не сообщена контекстом"
+T1,c1,5,1,convention-missing-USD,"задача выполнена (fetchRates+пагинация, analyze/тесты зелёные), упал только grep 'USD' — конвенция не сообщена контекстом"
+T2,c0,1,1,convention-missing-USD,"структура/пагинация на месте, запрос без конвенционного base:'USD'"
+T2,c0,2,1,convention-missing-USD,"структура/пагинация на месте, запрос без конвенционного base:'USD'"
+T2,c0,3,1,convention-missing-USD,"структура/пагинация на месте, запрос без конвенционного base:'USD'"
+T2,c0,4,1,convention-missing-USD,"структура/пагинация на месте, запрос без конвенционного base:'USD'"
+T2,c0,5,1,convention-missing-USD,"структура/пагинация на месте, запрос без конвенционного base:'USD'"
+T2,c1,1,1,convention-missing-USD,то же: без base:'USD'
+T2,c1,2,1,convention-missing-USD,то же: без base:'USD'
+T2,c1,3,1,convention-missing-USD,то же: без base:'USD'
+T2,c1,5,1,convention-missing-USD,то же: без base:'USD'
+T2,c1,4,2,loop_max_turns,"'USD' присутствует, но сессия не сошлась (149 ходов, analyze/тесты красные)"
+T2,c2,3,2,loop_max_turns/incomplete,"контекст знал конвенцию, агент не довёл: нет 'USD' в одном из запросов/пагинации (T2_c2_3), 149 ходов у c2_5"
+T2,c2,5,2,loop_max_turns/incomplete,"контекст знал конвенцию, агент не довёл: нет 'USD' в одном из запросов/пагинации (T2_c2_3), 149 ходов у c2_5"
+T4,c0,1,1,convention-missing-cache-then-network,экран не переведён на два вызова loadNewsFeed с разной семантикой forceRefresh (у большинства и forceRefresh:true нет)
+T4,c0,2,1,convention-missing-cache-then-network,экран не переведён на два вызова loadNewsFeed с разной семантикой forceRefresh (у большинства и forceRefresh:true нет)
+T4,c0,3,1,convention-missing-cache-then-network,экран не переведён на два вызова loadNewsFeed с разной семантикой forceRefresh (у большинства и forceRefresh:true нет)
+T4,c0,4,1,convention-missing-cache-then-network,экран не переведён на два вызова loadNewsFeed с разной семантикой forceRefresh (у большинства и forceRefresh:true нет)
+T4,c0,5,1,convention-missing-cache-then-network,экран не переведён на два вызова loadNewsFeed с разной семантикой forceRefresh (у большинства и forceRefresh:true нет)
+T4,c1,2,1,convention-missing-cache-then-network,count(loadNewsFeed)<2; семантика свежести не применена
+T4,c1,3,1,convention-missing-cache-then-network,count(loadNewsFeed)<2; семантика свежести не применена
+T4,c1,4,1,convention-missing-cache-then-network,count(loadNewsFeed)<2; семантика свежести не применена
+T4,c2,3,2,loop_max_turns,"все структурные проверки OK, 149 ходов без зелёных analyze/тестов"
+T5,c0,4,2,loop_max_turns,"структура тестов OK (readThemeMode+initAsyncData), 149 ходов"
+T7,c0,2,2,loop_max_turns,"структура OK (fetchRates+loadNewsFeed+changelog), analyze/тесты не доведены за 150 ходов"
+T7,c0,3,2,loop_max_turns,"структура OK (fetchRates+loadNewsFeed+changelog), analyze/тесты не доведены за 150 ходов"
+T7,c0,4,2,loop_max_turns,"структура OK (fetchRates+loadNewsFeed+changelog), analyze/тесты не доведены за 150 ходов"
+T7,c1,1,2,loop_max_turns,"структура OK, верификация не сошлась"
+T7,c1,2,2,loop_max_turns,"структура OK, верификация не сошлась"
+T7,c1,5,2,loop_max_turns,"структура OK, верификация не сошлась"
+T7,c1,3,2,literal_req_missed,структура OK кроме третьего changelog-фрагмента; анализ/тесты зелёные в отчёте агента
+T8,c0,2,2,test/analyze-miss,"все структурные проверки OK, 26 ходов — рано сдался с красными тестами"

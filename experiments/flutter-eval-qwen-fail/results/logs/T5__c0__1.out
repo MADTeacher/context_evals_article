@@ -1,0 +1,34 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T5__c0__1\.madharness-mini\traces\20260923-085315-1ce122c1.jsonl
+## Что сделано
+
+### Добавлены тесты в `test/unit/repository_test.dart` (группа `readThemeMode`, строки 163–198):
+
+| № | Тест | Что проверяет |
+|---|------|---------------|
+| 1 | **returns the actual value from datasource (light)** | `readThemeMode()` → `AppThemeMode.light` |
+| 2 | **returns the actual value from datasource (dark)** | `readThemeMode()` → `AppThemeMode.dark` |
+| 3 | **returns the actual value from datasource (system)** | `readThemeMode()` → `AppThemeMode.system` |
+| 4 | **returns correct value after initAsyncData** | Корректное значение после вызова `initAsyncData()` |
+
+Все тесты мокают `mockPreferenceDatasource.themeMode` и проверяют, что `SettingsRepositoryImpl.readThemeMode()` корректно делегирует значение из дата-сорса. Тест №4 также подтверждает, что `readThemeMode()` безопасно вызывать после инициализации — возвращает актуальное значение.
+
+### Существующие тесты не затронуты
+Новая группа добавлена внутри блока `SettingsRepository` (после теста инициализации), все 20 существующих тестов для Currency, News и Settings остались без изменений.
+
+---
+
+### ⚠️ Не удалось запустить проверки
+
+Flutter/Dart SDK не найден в PATH на этой машине:
+
+```
+flutter --version → FileNotFoundError
+dart analyze      → FileNotFoundError
+```
+
+**Пожалуйста, выполните вручную:**
+```bash
+flutter analyze --no-fatal-infos
+flutter test test/unit/repository_test.dart
+```

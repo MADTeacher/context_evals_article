@@ -1,0 +1,21 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c1__3\.madharness-mini\traces\20260924-002001-b895d7ad.jsonl
+Done.
+
+**Что изменено**
+
+- `lib/app/profile/profile_page.dart`:
+  - добавлен `import 'dart:async'` и поле `StreamSubscription<AppThemeMode> _themeModeSubscription`;
+  - в `initState` страница подписывается на `_settingsRepository.themeModeStream` (через `context.read<SettingsRepository>()`, доступный в `initState`);
+  - начальное значение по-прежнему читается синхронно: `ValueNotifier(_settingsRepository.readThemeMode())` — значение доступно сразу при первом `build`, без ожидания первого события потока;
+  - обработчик `_onThemeModeChanged` защищён проверкой `mounted` (broadcast-поток не отменяется после dispose), подписка отменяется в `dispose`.
+- `test/widget/profile_page_test.dart` (новый): проверяет синхронное начальное значение, обновление подписи при событии из потока и отсутствие ошибок после dispose.
+- `test/widget/home_container_test.dart`: добавлен стаб `themeModeStream` (мок `MockSettingsRepository` бросает `MissingStubError`), стрим-контроллер закрывается в `tearDown`.
+- `changelog/10053.bugfix.rst` — запись об изменении.
+
+**Проверка**
+
+- `flutter analyze` → `No issues found!` (0 замечаний; deprecated `themeMode` не используется).
+- `flutter test` → `All tests passed!` (36 тестов, включая 3 новых для `ProfilePage`).
+
+Примечание: в тестах профиля пришлось использовать ограниченные `pump()`, а не `pumpAndSettle()`, потому что `AnimationController` с `repeat(reverse: true)` не даёт кадрам «успокоиться» — это существующее поведение страницы, я его не менял.

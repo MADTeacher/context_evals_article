@@ -1,0 +1,25 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T4__c1__3\.madharness-mini\traces\20260924-000323-8dcd49a9.jsonl
+Готово. Экран новостей переведён на cache-then-network.
+
+**Что изменено**
+
+- `lib/app/news_list/news_list_page.dart`
+  - Убран `FutureBuilder` + единственный запрос с `forceRefresh: true`.
+  - В `_initData()` теперь параллельно стартуют два независимых запроса:
+    - `_loadFromCache` → `loadNewsFeed(NewsFeedFilter.all)` (`forceRefresh: false`, только БД, без сети) — при непустом кэше список показывается сразу;
+    - `_refreshFromNetwork` → `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — ответ перезаписывает кэш (это делает репозиторий) и обновляет список.
+  - Состояние хранится в `List<NewsModel> _news`; запись через `_showNews` → `setState` + `_scaleController.forward()`. Пустой ответ не затирает уже показанные данные, есть проверка `mounted`. Разметка списка (`ListView.builder`, `NewsCard`, отступы, `ValueKey(link)`) не изменилась.
+
+- `test/widget/news_list_page_test.dart`
+  - Мок различает запросы кэша и сети через `argThat(... forceRefresh ...)`; хелперы `cacheRequest()`/`networkRequest()` возвращают `NewsFeedFilter?` (требование типизированного `argThat` из mockito).
+  - Добавлены тесты: «should display cached news before network response arrives» (кэш виден до завершения сети через `Completer`, после ответа список заменяется) и «should request cache and network in parallel» (ровно по одному вызову кэша и сети; перед `verify` — `reset`, т.к. мок общий для группы).
+
+- `changelog/10053.bugfix.rst` — запись об изменении (по правилу проекта о changelog).
+
+**Проверки**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (35 тестов, было 33; +2 новых)
+
+Замечание: `NewsFeedFilter.all` имеет `limit = 30`, но ни `NewsRepositoryImpl`, ни датасорсы этот `limit` не применяют — поведение кэша/сети осталось прежним; если лимит нужно реально соблюдать, это отдельная задача.

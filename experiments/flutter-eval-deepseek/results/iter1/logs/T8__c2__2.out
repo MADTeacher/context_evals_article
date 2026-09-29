@@ -1,0 +1,26 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T8__c2__2\.madharness-mini\traces\20260924-011857-cd8c2b52.jsonl
+Done. Both checks are green.
+
+## Что сделано
+
+**Новый экран «Дашборд»** — `lib/app/dashboard/dashboard_page.dart`:
+- В `initState` параллельно через `Future.wait` запрашивает **свежий** курс валют и **свежую** ленту новостей:
+  - `currencyRepository.fetchRates(const CurrencyPageRequest(base: 'USD'))` — конвенция v2 (I.1, base `USD`, дефолт `EUR` не используется);
+  - `newsRepository.loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — сеть + запись в кэш (I.2);
+  - после загрузки страницы вызывается `saveCurrencyList` для её элементов.
+- Пока грузится — `CircularProgressIndicator`; по готовности рендерятся `CurrencyCard` и `NewsCard`.
+
+**Кнопка на HomePage** — `lib/app/home.dart`: `FloatingActionButton` (иконка `Icons.dashboard`, tooltip из l10n) открывает `DashboardPage` через `Navigator.push`. FAB выбран, т.к. у вложенных экранов свои `AppBar`.
+
+**Прочее:**
+- Экспорт `dashboard/dashboard_page.dart` из `lib/app/app.dart`.
+- l10n: ключ `dashboard` («Dashboard» / «Дашборд») в `assets/l10n/locale_en.arb` и `locale_ru.arb`, перегенерация `flutter gen-l10n` (`lib/app/gen/l10n/*`).
+- Changelog-фрагмент: `changelog/10053.bugfix.rst` (I.5).
+- Тест: `test/widget/dashboard_page_test.dart` — проверяет индикатор загрузки, рендер карточек и что вызваны именно свежие запросы (`base: 'USD'`, `forceRefresh: true`) + сохранение курса.
+
+## Проверка
+- `flutter analyze` → **No issues found!**
+- `flutter test` → **All tests passed!** (35 тестов, включая новый)
+
+Конвенции v2 соблюдены: `@Deprecated`-члены (`getCurrencyList`/`getNewsList`) не используются.

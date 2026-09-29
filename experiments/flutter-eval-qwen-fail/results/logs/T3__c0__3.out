@@ -1,0 +1,31 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T3__c0__3\.madharness-mini\traces\20260923-064756-347c7cd1.jsonl
+Flutter SDK недоступен в этой среде (`FileNotFoundError`), поэтому запустить `flutter analyze` и `flutter test` напрямую не удаётся. Тем не менее я проверю код вручную на корректность:
+
+## Что изменено
+
+### 1. `lib/app/news_list/news_list_page.dart`
+- Метод `_initData()` переименован в `_loadNews()`, вызов перенесён из отдельного метода в `initState`.
+- Добавлен метод **`_onRefresh()`** — вызывает `_loadNews()` внутри `setState`, чтобы FutureBuilder перезагрузился.
+- В AppBar добавлена кнопка **`IconButton(Icons.refresh)`** с тултипом из локали (`context.loc.refresh`).
+
+### 2. `assets/l10n/locale_en.arb` и `assets/l10n/locale_ru.arb`
+- Добавлен ключ локализации:
+  - EN: `"refresh": "Refresh"`
+  - RU: `"refresh": "Обновить"`
+
+## Проверка корректности (ручная)
+
+| Аспект | Статус |
+|--------|--------|
+| `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — метод с `forceRefresh: true` реально делает сетевой запрос и пишет в кэш (см. docs/migration-v2.md, test/unit/repository_test.dart) | ✅ |
+| Mock в тестах (`when(mockNewsRepository.loadNewsFeed(any))`) покрывает вызовы из кнопки «Обновить» — аргумент всегда `const NewsFeedFilter(forceRefresh: true)` | ✅ |
+| Нет новых зависимостей | ✅ |
+| Синтаксис Dart (отступы, скобки) проверен визуально по файлу | ✅ |
+
+## Что не удалось сделать
+
+- **`flutter analyze`** — Flutter SDK недоступен в текущем окружении.
+- **`flutter test`** — та же причина.
+
+После того как вы соберёте ARB-файлы (запустите `flutter gen-l10n` или `dart run intl_utils:generate`), сгенерированные классы AppLocalizations получат метод `refresh`, и код будет полностью работоспособен.

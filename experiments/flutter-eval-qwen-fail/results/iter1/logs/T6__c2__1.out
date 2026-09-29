@@ -1,0 +1,39 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T6__c2__1\.madharness-mini\traces\20260923-104937-bc3a6785.jsonl
+Flutter SDK не установлен в этой среде — бинарник `flutter` недоступен (проверил: нет в PATH, отсутствует `.dart_tool/package_config.json`, значит проект не был даже настроен). По контракту v2 п. I.6 это означает, что финальная проверка (`flutter analyze` + `flutter test`) не может быть выполнена автоматически.
+
+---
+
+## Что сделано
+
+**Файл:** `lib/app/profile/profile_page.dart`
+
+### Проблема
+1. `_themeModeNotifier` инициализировался при объявлении поля (строка 16), до вызова `initState()` — то есть **до `initAsyncData()` на Splash**. Это нарушает правило v2: `readThemeMode()` даёт undefined-значение до инициализации.
+2. Экран не подписывался на `themeModeStream` — при смене темы из другого места профиль показывал устаревшее значение.
+
+### Изменения
+
+| Было | Стало |
+|---|---|
+| `late final ValueNotifier<AppThemeMode> _themeModeNotifier = ValueNotifier(_settingsRepository.readThemeMode());` (при объявлении поля, до initAsyncData) | `late final ValueNotifier<AppThemeMode> _themeModeNotifier;` (без начального значения) |
+| — | Добавлено: `StreamSubscription<AppThemeMode>? _themeModeSubscription;` |
+| В `initState()`: только `_initAnimation()` | В `initState()`: инициализация нотификатора через **синхронный** `readThemeMode()`, подписка на `themeModeStream.listen(...)` с проверкой `mounted` |
+| В `dispose()`: только `_themeModeNotifier.dispose(); _alignmentController.dispose();` | В `dispose()`: сначала `cancel()` подписки, затем `dispose()` нотификатора и контроллера |
+
+### Соответствие контракту v2 (settings.md)
+- ✅ `readThemeMode()` вызывается **в `initState()`** — после `initAsyncData()` на Splash
+- ✅ Подписка на `themeModeStream` для автоматического обновления значения
+- ✅ `_themeModeNotifier.value = mode` обновляется при любом изменении темы извне
+- ✅ Не используется deprecated `get themeMode`
+
+---
+
+## Что нужно сделать вам
+
+Запустите в терминале:
+
+```bash
+flutter analyze    # должен быть "No issues found!"
+flutter test       # все тесты зелёные
+```

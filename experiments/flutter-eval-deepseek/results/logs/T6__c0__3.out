@@ -1,0 +1,18 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c0__3\.madharness-mini\traces\20260924-103950-5473b236.jsonl
+Готово.
+
+**Что изменилось**
+
+`lib/app/profile/profile_page.dart`:
+- Убран `ValueNotifier` + `ValueListenableBuilder`: состояние режима темы теперь хранится в поле `_themeMode`.
+- В `initState` начальное значение читается синхронно — `_themeMode = _settingsRepository.readThemeMode()` (как и требовалось), а сразу после этого оформлена подписка: `_settingsRepository.themeModeStream.listen(_onThemeModeChanged)`.
+- `_onThemeModeChanged` делает `setState` только при реальном изменении и с проверкой `mounted`; подписка отменяется в `dispose`.
+- `ListTile` рендерится напрямую (`title`/`subtitle`), `onTap` по-прежнему открывает `ThemeModeSelectorBottomSheet`, который сам вызывает `setThemeMode`; после этого UI обновится из потока (дублирующее ручное присваивание значения убрано).
+
+`test/widget/home_container_test.dart`:
+- Добавлен стаб `when(mockSettingsRepository.themeModeStream).thenAnswer((_) => const Stream<AppThemeMode>.empty())` — без него мок падал с `MissingStubError`, так как теперь `ProfilePage` обращается к потоку в `initState`.
+
+**Проверки**
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (33 теста)

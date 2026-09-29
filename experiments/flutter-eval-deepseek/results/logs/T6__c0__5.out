@@ -1,0 +1,16 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c0__5\.madharness-mini\traces\20260924-104200-3fac8cc1.jsonl
+Готово.
+
+**Что изменено — `lib/app/profile/profile_page.dart`:**
+- Убран `ValueNotifier<AppThemeMode>`, который обновлялся только вручную из `onTap`.
+- Добавлено поле `late final Stream<AppThemeMode> _themeModeStream = _settingsRepository.themeModeStream;` — подписка на поток настроек.
+- Начальное значение читается синхронно в `initState`: `_themeMode = _settingsRepository.readThemeMode();` (в `build`/`late`-инициализаторе `context.read` был бы небезопасен).
+- `ValueListenableBuilder` заменён на `StreamBuilder<AppThemeMode>` с `initialData: _themeMode` и фолбэком `snapshot.data ?? _themeMode`, поэтому UI обновляется и при внешнем изменении режима (`SettingsRepository.setThemeMode`), и сразу после выбора в боттомшите.
+- `onTap` теперь только `setState(() => _themeMode = newMode)` — подстраховка, если поток не отдаст значение (например, стрим мока без событий); `dispose` больше не требует ручного освобождения notifier.
+
+**Тест:** `test/widget/home_container_test.dart` — добавлен стаб `when(mockSettingsRepository.themeModeStream).thenAnswer((_) => const Stream<AppThemeMode>.empty());`. Без него `MockSettingsRepository` (сгенерирован с `throwOnMissingStub`) падал с `MissingStubError` при построении `ProfilePage`. Генерация моков не требуется — `themeModeStream` уже есть в `repository.mocks.dart`.
+
+**Проверки:**
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (33 теста)

@@ -1,0 +1,32 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T8__c1__1\.madharness-mini\traces\20260924-104238-47214a2f.jsonl
+Done. Both `flutter analyze` and `flutter test` are clean.
+
+## What changed
+
+**New feature — экран «Дашборд»**
+- `lib/app/dashboard/dashboard_page.dart` (new) — `DashboardPage` + `DashboardData`. `DashboardPage.load()` запускает оба запроса до любого `await` и объединяет их через `Future.wait`, поэтому сетевые вызовы идут параллельно:
+  - `currencyRepository.fetchRates(const CurrencyPageRequest())` — свежий курс;
+  - `newsRepository.loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — свежая лента (сеть + запись в кэш).
+  - Пока грузится — `CircularProgressIndicator`; затем секции «Курс Валют» и «Новости» переиспользуют существующие `CurrencyCard`/`NewsCard`. В AppBar добавлена кнопка обновления.
+- `lib/app/home.dart` — `FloatingActionButton` на HomePage открывает дашборд через `Navigator.push`.
+- `lib/app/app.dart` — экспорт новой страницы.
+
+**Локализация** (по скиллу gen-l10n, без `synthetic-package`)
+- `assets/l10n/locale_ru.arb` / `locale_en.arb` — ключи `dashboard` («Дашборд»/«Dashboard») и `refresh` («Обновить»/«Refresh»), затем `flutter gen-l10n` перегенерировал `lib/app/gen/l10n/*`.
+
+**Changelog**
+- `changelog/10053.feature.rst` (new) — фрагмент в стиле существующих `10051`/`10052`.
+
+**Тесты**
+- `test/widget/dashboard_page_test.dart` (new) — 4 теста: индикатор во время загрузки, параллельность запросов + `forceRefresh: true`, отображение данных, повторная загрузка по кнопке.
+- `test/widget/home_container_test.dart` — тест на открытие `DashboardPage` кнопкой.
+
+## Замечание по ходу работы
+
+Первый вариант страницы показывал индикатор только по `snapshot.data == null` в `FutureBuilder`. Тест на повторную загрузку это вскрыл: после тапа по `IconButton` индикатор не появлялся ни на одном кадре. Диагностика (временные принты, затем удалены) показала `fetchCalls=2`, `completer.isCompleted=false`, но `progress=0` — то есть принудительный `setState` тоже не давал ветку загрузки, потому что `FutureBuilder` не пересобирал поддерево, пока новый future не завершится. Поэтому состояние загрузки вынесено в явный флаг `_isLoading`, выставляемый в `_load()` и снимаемый в `whenComplete` с проверкой `mounted`. Это и есть корректная реализация требования «пока грузится — индикатор прогресса».
+
+## Проверка
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (38 тестов, включая 4 новых dashboard и 1 новый home)

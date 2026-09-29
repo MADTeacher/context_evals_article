@@ -1,0 +1,19 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T7__c0__1\.madharness-mini\traces\20260924-104257-ad656e80.jsonl
+Both checks pass. Let me summarize the change.
+
+**Что сделано**
+
+1. `lib/app/home.dart` — на `HomePage` добавлена кнопка «Обновить всё» (`FloatingActionButton.extended` в `Scaffold`). По нажатию `_refreshAll()` запускает **параллельно** два сетевых запроса: `CurrencyListPage.refresh(context)` и `NewsListPage.refresh(context)`, ждёт их через `Future.wait`, на время выполнения показывает индикатор и блокирует повторное нажатие.
+
+2. `lib/app/currency_list/currency_list_page.dart` — состояние сделано публичным (`CurrencyListPageState`), добавлены `static CurrencyListPage.refresh(BuildContext)` и `refresh()`: перезапрос `fetchRates(const CurrencyPageRequest())` (сеть) с обновлением `_currencyListFuture`, списка и кэша в БД. Загрузка вынесена в `_loadRates()`, чтобы не дублировать логику.
+
+3. `lib/app/news_list/news_list_page.dart` — аналогично: `NewsListPageState`, `static NewsListPage.refresh(BuildContext)` и `refresh()` с `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` (сеть + кэш), логика в `_loadNews()`.
+
+4. Локализация: ключ `refreshAll` добавлен в `assets/l10n/locale_ru.arb` («Обновить всё») и `locale_en.arb` («Refresh all») и в сгенерированные `lib/app/gen/l10n/app_localizations{,_ru,_en}.dart` (генератор `flutter gen-l10n` локально не запускался, поэтому правки внесены вручную в том же формате).
+
+5. `changelog/10053.feature.rst` — фрагмент changelog (номер следующий после существующих 10051/10052).
+
+**Детали реализации**: `refresh()` в страницах подменяет future и сразу возвращает управление (не блокирует UI), а наружу отдаёт future, который завершится при получении ответа; ошибки по-прежнему обрабатывает `FutureBuilder` страницы (`catchError` нужен только чтобы `Future.wait` на HomePage не падал). Поскольку вкладки живут в `IndexedStack`-подобном списке (`_pages`), обе страницы смонтированы, и `findAncestorStateOfType` находит их состояние независимо от активной вкладки.
+
+**Проверки**: `flutter analyze` — No issues found; `flutter test` — All tests passed (33). `flutter gen-l10n` не запускал, чтобы не перегенерировать существующие файлы локализации (в проекте они закоммичены как есть).

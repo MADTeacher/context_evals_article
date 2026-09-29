@@ -1,0 +1,23 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T2__c0__4\.madharness-mini\traces\20260923-233857-bcf6e894.jsonl
+Both checks pass. Here's the summary.
+
+## What changed
+
+**`lib/app/currency_list/currency_list_page.dart`** — the screen now tracks pagination state (`_page`, `_hasMore`) from `CurrencyPage` and renders a `«Показать ещё»` `ElevatedButton` only when `hasMore == true` (i.e. it disappears on the last page). Tapping it loads `page + 1` with `base: 'USD'`, appends items, and hides the button via the returned `hasMore`. Added:
+- `WidgetsBindingObserver`: on `AppLifecycleState.resumed` the list is re-fetched.
+- `didChangeDependencies`: when the page's `ModalRoute` is no longer current (focus lost — e.g. the currency detail card opened on top), the list is refreshed with a fresh `fetchRates(const CurrencyPageRequest(base: 'USD'))` request. A `_isRefreshing`/`_refreshRequested` guard coalesces re-entrant notifications into one extra refresh instead of stacking requests.
+- The notifier is now created eagerly (empty list) so the first frame is safe and `dispose()` can't hit an uninitialized `late` field.
+
+**Localization** — added `showMore` to `assets/l10n/locale_ru.arb` / `locale_en.arb` and the generated `lib/app/gen/l10n/*.dart` (ru: «Показать ещё», en: "Show more").
+
+**`test/widget/currency_list_page_test.dart`** — 3 new tests: button hidden when `hasMore: false`; button shown while `hasMore: true` and hidden after the last page loads; list re-requested with `base: 'USD'` after losing focus (via `HomePage` tab switch).
+
+**`changelog/10053.bugfix.rst`** — changelog entry per `docs/migration-v2.md` §4.
+
+## Verification
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (36 tests, including the 3 new ones)
+
+Note: the first attempt at the refactor broke existing tests (notifier initialized too late, `setState` returning a `Future`); both were fixed and the full suite is green.

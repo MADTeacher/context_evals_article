@@ -1,0 +1,13 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T5__c0__1\.madharness-mini\traces\20260924-000116-2829c3bf.jsonl
+Готово. Добавил в `test\unit\repository_test.dart` в группу `SettingsRepository` три теста:
+
+- `readThemeMode returns actual theme mode value after initAsyncData` — после `await settingsRepository.initAsyncData()` метод возвращает актуальное значение из datasource (`AppThemeMode.dark`) и обращается к нему один раз.
+- `readThemeMode is safe to call only after initAsyncData` — вызов строго после успешной инициализации (в т.ч. сценарий `getToken() == null`, `isAuth == false`) не бросает и возвращает значение.
+- `readThemeMode reflects the mode set after initAsyncData` — после инициализации `setThemeMode` уходит в datasource и чтение остаётся согласованным.
+
+Заметки по конвенциям проекта: тесты написаны в стиле существующих (mockito + `MockPreferenceDatasource`, стабы через `when(...).thenReturn(...)`), без использования deprecated-члена `themeMode` (см. `docs\migration-v2.md`: `readThemeMode()` — только после `initAsyncData()`). Прод-код и сгенерированные моки не менял.
+
+Проверки (до и после правки):
+- `flutter analyze` — `No issues found!`
+- `flutter test` — `All tests passed!` (36 тестов; ранее было 33, все прежние тесты прошли).

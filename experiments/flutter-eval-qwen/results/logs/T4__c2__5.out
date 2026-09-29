@@ -1,0 +1,23 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T4__c2__5\.madharness-mini\traces\20260924-204850-2e6353d6.jsonl
+## Результат
+
+Экран новостей переведён на паттерн **cache-then-network**. Вот что изменилось:
+
+### Что изменено — `lib/app/news_list/news_list_page.dart`
+
+**До:** единичный вызов с `forceRefresh: true` через `FutureBuilder` — экран ждал сеть и показывал пустой вид, пока данные не загрузятся.
+
+**После (паттерн cache-then-network):**
+1. **Мгновенный кэш** — при открытии страницы первым делом загружаются данные из БД (`NewsFeedFilter.all`, `forceRefresh: false`). Список рендерится сразу.
+2. **Фоновое обновление** — параллельно в фоне запрашивается сеть с записью в кэш (`const NewsFeedFilter(forceRefresh: true)`). По приходу ответа состояние обновляется через `setState`.
+
+### Удалено (мёртвый код)
+- Анимация `ScaleTransition` / `AnimationController` — теперь не нужна, так как список рендерится напрямую без `FutureBuilder`, и анимация была привязана к загрузке данных.
+- Миксин `SingleTickerProviderStateMixin` — больше не нужен.
+
+### Верификация
+| Команда | Результат |
+|---|---|
+| `flutter.bat analyze` | **No issues found!** (0 замечаний) |
+| `flutter.bat test` | **33/33 passed** ✅ (все зелёные, включая `news_list_page_test`) |

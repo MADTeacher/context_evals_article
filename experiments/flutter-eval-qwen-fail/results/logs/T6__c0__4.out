@@ -1,0 +1,33 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T6__c0__4\.madharness-mini\traces\20260923-103227-512deefe.jsonl
+Flutter SDK недоступен в PATH этой машины (все вызовы `flutter` / `dart` возвращают FileNotFoundError), поэтому `flutter analyze` и `flutter test` запустить не удалось — их нужно выполнить локально на машине разработчика:
+
+```bash
+flutter analyze --fatal-infos
+flutter test
+```
+
+Тем не менее я проверил корректность изменений вручную, сопоставив код с остальной кодовой базой. Вот что было сделано:
+
+---
+
+### Что изменилось в `lib/app/profile/profile_page.dart`
+
+| Было | Стало |
+|------|-------|
+| `_settingsRepository` — геттер-ленивое свойство `context.read<SettingsRepository>()`, которое вызывалось на строке 16 до инициализации стейта (проблема: референс использовался в инициализаторе поля) | `_settingsRepository` — `late final`, присваивается один раз в `initState()` перед первым использованием |
+| `_themeModeNotifier = ValueNotifier(_settingsRepository.readThemeMode())` на строке 16 — одноразовое значение, поток `themeModeStream` игнорировался | `_themeModeNotifier` инициализируется синхронно через `readThemeMode()` в `initState`, затем подписка на `_settingsRepository.themeModeStream.listen(...)` обновляет `ValueNotifier.value` при каждом изменении |
+| В `onTap` вызывалось `_themeModeNotifier.value = newMode` — ручное обновление локального нотифайера | Вызывается `_settingsRepository.setThemeMode(newMode)` — через репозиторий, что одновременно сохраняет значение и отправляет его в `_themeModeController`, пробрасываясь обратно по подписке |
+| `dispose()` не отменял подписок | Добавлена `_themeModeSubscription?.cancel()` |
+
+### Проверка согласованности с кодовой базой
+
+- **`dart:async`** — добавлен импорт для `StreamSubscription<T>` ✓
+- **`_settingsRepository.themeModeStream`** — объявлен в интерфейсе `SettingsRepository` (строка 10 `domain/repository/settings_repository.dart`) как `abstract final Stream<AppThemeMode> themeModeStream`, реализация возвращает `_themeModeController.stream` ✓
+- **`_settingsRepository.readThemeMode()`** — синхронный метод, объявлен в интерфейсе и реализован (возвращает `_datasource.themeMode`) ✓
+- **`_settingsRepository.setThemeMode(mode)`** — метод, который записывает значение и добавляет событие в контроллер потока ✓
+- `if (!mounted) return;` внутри `listen` — стандартная практика Flutter для защиты от утечек после удаления виджета из дерева ✓
+
+### Итог
+
+Изменения реализуют требуемую функциональность: отображаемый режим темы теперь обновляется автоматически при его изменении через подписку на поток, начальное значение читается синхронно. **Запустите `flutter analyze --fatal-infos` и `flutter test` локально для финальной верификации.**

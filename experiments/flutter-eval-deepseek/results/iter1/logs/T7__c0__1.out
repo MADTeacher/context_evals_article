@@ -1,0 +1,25 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T7__c0__1\.madharness-mini\traces\20260924-001345-3074defe.jsonl
+Готово. Кнопка «Обновить всё» добавлена на главный экран.
+
+## Что изменено
+
+**`lib/app/home.dart`** — основное изменение:
+- Добавлен `FloatingActionButton` с ключом `HomePage.refreshAllButtonKey`, иконкой `Icons.refresh` и тултипом из локализации. Кнопка лежит в `Stack` поверх текущей вкладки (снизу справа, отступ 22), поэтому доступна на любой вкладке главного экрана.
+- `_refreshAll()` запускает оба запроса **одновременно** через `Future.wait`, оба идут в сеть:
+  - курс валют — `CurrencyRepository.fetchRates(const CurrencyPageRequest(base: 'USD'))` (проектная конвенция из `docs/migration-v2.md`: везде `base: 'USD'`) + запись в кэш `saveCurrencyList`;
+  - лента новостей — `NewsRepository.loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` (сеть + запись в БД).
+- Устаревшие `getCurrencyList`/`getNewsList` не используются, поэтому `flutter analyze` чист.
+- `_pages` больше не `static const` (иначе экземпляры вкладок жили бы вне State и не пересоздавались). Страницы получили ключи, а после завершения загрузки каждого запроса `setState` пересоздаёт вкладку — данные на экране обновляются сразу, без перезапуска приложения. Состояние фильтра поиска при этом сбрасывается — ожидаемо для «обновить всё».
+
+**Локализация** — строка `refreshAll` в `assets/l10n/locale_ru.arb` («Обновить всё») и `locale_en.arb` («Refresh all»), плюс синхронизированные вручную генерируемые файлы `lib/app/gen/l10n/app_localizations{,_ru,_en}.dart`.
+
+**Тесты** — `test/widget/home_container_test.dart`: добавлены две проверки — кнопка отображается, и по тапу вызываются `fetchRates(CurrencyPageRequest(base: 'USD'))` и `loadNewsFeed(NewsFeedFilter(forceRefresh: true))` ровно по одному разу.
+
+**Changelog** — фрагмент `changelog/10053.feature.rst`.
+
+## Проверка
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (35 тестов)
+
+Отмечу: первый прогон тестов поймал реальную ошибку (`late final _pages` нельзя переинициализировать) — исправлено на `late List<Widget>`, после чего тесты зелёные. `flutter analyze` и `flutter test` прогонялись только для `test/`; `integration_test/app_test.dart` требует устройства и не запускался.

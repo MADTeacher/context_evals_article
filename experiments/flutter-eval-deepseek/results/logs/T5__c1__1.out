@@ -1,0 +1,15 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T5__c1__1\.madharness-mini\traces\20260924-100052-f45e63df.jsonl
+Готово.
+
+**Что добавлено** — `test/unit/repository_test.dart`, группа `SettingsRepository`:
+- `readThemeMode returns actual theme mode value` — после `initAsyncData()` метод возвращает актуальное значение из датасорса (`AppThemeMode.dark`) и обращается к нему ровно один раз.
+- `readThemeMode is safe to call only after initAsyncData` — после `initAsyncData()` `readThemeMode()` отрабатывает без ошибок и возвращает значение; дополнительно проверяется, что инициализированное состояние репозитория (`isAuth`) доступно без `LateInitializationError`.
+
+**Changelog** — `changelog/10053.test.rst`.
+
+**Проверки**
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (35 тестов, ранее было 33; существующие тесты не сломались)
+
+Одно уточнение по формулировке задачи: сам `SettingsRepositoryImpl.readThemeMode()` не бросает исключение до `initAsyncData()` — он просто проксирует геттер датасорса и не зависит от инициализации (от неё зависит `isAuth`/`isAuthStream`). Поэтому «безопасность вызова только после `initAsyncData()`» я проверил как инвариант корректного порядка инициализации, а не как ожидание исключения. Если требуется именно жёсткий контракт (например, бросать `StateError` при вызове до `initAsyncData()`), это уже изменение продакшн-кода — скажите, и я внесу его с соответствующими тестами.

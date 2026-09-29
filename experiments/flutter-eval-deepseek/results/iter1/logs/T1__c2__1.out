@@ -1,0 +1,23 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T1__c2__1\.madharness-mini\traces\20260923-232525-115ce8cb.jsonl
+Готово. Подгрузка реализована и проверена.
+
+**Что изменено**
+
+- `lib/app/currency_list/currency_list_page.dart` — пагинация по контракту v2:
+  - запросы только через `fetchRates(CurrencyPageRequest(base: 'USD', page: N, pageSize: 20))` (default `'EUR'` не используется);
+  - первая страница (`page: 0`) грузится как раньше, `saveCurrencyList` вызывается для элементов текущей страницы;
+  - `_loadMore()` запрашивает `page: currentPage + 1`, **дописывает** элементы к `_allCurrencies`, обновляет `_currentPage`/`_hasMore` (конец — `hasMore == false`) и сохраняет элементы новой страницы;
+  - guard от повторного нажатия/запроса за пределами (`_isLoadingMore`, `_hasMore`), `mounted`-проверки;
+  - поиск сохранён: фильтр вынесен в `_filter(...)`, текущий запрос хранится в `_query` и применяется и к первой странице, и к добавленным.
+- `lib/app/currency_list/widgets/show_more_button.dart` (новый) + экспорт в `widgets.dart` — кнопка «Показать ещё» со спиннером и `onPressed: null` на время загрузки; элемент списка добавляется только при `_hasMore`, поэтому в конце пагинации кнопка исчезает.
+- l10n: `showMore` добавлен в `assets/l10n/locale_ru.arb` («Показать ещё») и `locale_en.arb` («Show more»), файлы `lib/app/gen/l10n/*` перегенерированы (`flutter gen-l10n`).
+- `test/widget/currency_list_page_test.dart` — 3 новых теста: кнопки нет при `hasMore == false`; нажатие запрашивает `page: 1`, дописывает карточки, скрывает кнопку и сохраняет новую страницу; активный поиск применяется к добавленной странице.
+- `changelog/10053.bugfix.rst` — фрагмент changelog (правило I.5).
+
+**Проверка**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (36 тестов, включая 3 новых)
+
+Одно решение принято по умолчанию: `pageSize: 20` (значение по умолчанию v2, зафиксировано константой). Если у проекта другой ожидаемый размер страницы — скажите, поменяю константу.

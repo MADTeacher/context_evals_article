@@ -1,0 +1,31 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T7__c1__5\.madharness-mini\traces\20260923-121356-f648a2a7.jsonl
+Готово. Оба проверочных command'а пройдены: **анализ без замечаний**, **все 33 теста прошли**.
+
+## Что изменилось
+
+### `lib/app/home.dart` — главный экран
+- Добавлен `AppBar` с кнопкой обновления (иконка `Icons.refresh`) в правом верхнем углу.
+- Кнопка использует строку локализации `loc.refreshAll` → `"Обновить всё"` / `"Refresh all"`.
+- Используются `GlobalKey<CurrencyListPageState>` и `GlobalKey<NewsListPageState>` для доступа к состояниям подстраниц.
+- Метод `_refreshAll()` вызывает `refresh()` одновременно у обеих страниц — оба запроса выполняются из сети (`forceRefresh: true`).
+
+### `lib/app/currency_list/currency_list_page.dart`
+- Класс состояния переименован в публичный `CurrencyListPageState`.
+- Добавлен метод `void refresh()`, который перезапускает `_initData()` и обновляет список валют через сеть.
+- Убран собственный `AppBar` (теперь заголовок на уровне HomePage).
+
+### `lib/app/news_list/news_list_page.dart`
+- Класс состояния переименован в публичный `NewsListPageState`.
+- Добавлен метод `void refresh()`, который перезапускает `_initData()` и обновляет ленту новостей через сеть (`forceRefresh: true`).
+- Убран собственный `AppBar`.
+
+### Локализация (l10n)
+- **ARB**: добавлено `"refreshAll"` в `locale_en.arb` (`"Refresh all"`) и `locale_ru.arb` (`"Обновить всё"`).
+- Перезаписаны сгенерированные файлы локализаций, чтобы проект компилировался без Flutter CLI:
+  - `app_localizations.dart` — добавлен абстрактный метод `String get refreshAll;`
+  - `app_localizations_en.dart` — реализация `"Refresh all"`
+  - `app_localizations_ru.dart` — реализация `"Обновить всё"`
+
+### Changelog
+- Создан файл **`changelog/10053.feature.rst`** с описанием добавленной функции.

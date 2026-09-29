@@ -1,0 +1,24 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T2__c1__5\.madharness-mini\traces\20260924-094319-53d366c2.jsonl
+Both clean: `flutter analyze` → "No issues found!", `flutter test` → 37/37 passed.
+
+## Что сделано
+
+**`lib/app/currency_list/currency_list_page.dart`** — экран курса валют:
+- Добавлено состояние `_page` / `_hasMore` / `_isLoadingMore`, заполняемое из `CurrencyPage.hasMore` в `_loadPage()`.
+- Кнопка «Показать ещё» рендерится только при `_hasMore == true` → когда следующих страниц нет, она скрывается. По нажатию догружается `_page + 1` и элементы добавляются к списку; после последней страницы кнопка исчезает.
+- Экран обёрнут в `Focus` c `autofocus: true` и `onFocusChange`: при потере фокуса вызывается `_refresh()`, который делает свежий запрос `fetchRates(CurrencyPageRequest(base: AppConstants.baseCurrency, page: 0))`, заменяет список и сохраняет его в БД. Используется один `FocusNode`, освобождаемый в `dispose`.
+
+**`lib/app/constants.dart`** — добавлена константа `AppConstants.baseCurrency = 'EUR'` (базовая валюта проекта; то же значение было дефолтом `CurrencyPageRequest`).
+
+**Локализация** — новый ключ `showMore` в `assets/l10n/locale_ru.arb` («Показать ещё») и `locale_en.arb` («Show more»), сгенерированы `lib/app/gen/l10n/*` через `flutter gen-l10n`.
+
+**`test/widget/currency_list_page_test.dart`** — 4 новых теста: скрытие кнопки при `hasMore: false`, показ + догрузка следующей страницы с последующим скрытием, использование базовой валюты проекта в запросе, обновление списка при потере фокуса.
+
+**`changelog/10053.feature.rst`** — запись об изменении.
+
+## Проверка
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (37 тестов)
+
+Одно замечание по трактовке: «потеря фокуса экрана» реализована как потеря фокуса `Focus`-узла страницы (например, при уходе фокуса с поля поиска). Если под этим имелся в виду возврат на вкладку — в текущем `HomePage` страница пересоздаётся при переключении таба, поэтому `initState` и так делает свежий запрос; отдельная логика там не требуется.

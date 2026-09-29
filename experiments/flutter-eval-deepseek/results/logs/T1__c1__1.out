@@ -1,0 +1,25 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T1__c1__1\.madharness-mini\traces\20260924-091106-dbd386b1.jsonl
+Done. Pagination with a "Показать ещё" button is implemented and verified.
+
+## What changed
+
+**`lib/app/currency_list/currency_list_page.dart`**
+- Added pagination state: `_nextPage`, `_hasMore`, `_isLoadingMore`, and `_query` (current search text).
+- `_initData()` now reads `page.page`/`page.hasMore` from the initial `CurrencyPage`, so the next page index comes from the repository instead of being hardcoded.
+- New `_loadMore()`: guards against concurrent taps and calls when `hasMore` is false, fetches `CurrencyPageRequest(page: _nextPage)` via the existing `CurrencyRepository` (no new domain/data API needed), appends `page.items` to `_allCurrencies`, re-applies the filter, and shows a spinner in the button while loading. It also checks `mounted` before touching state after the await.
+- Search extraction: `_filterCurrencies` now stores the query and delegates to `_filterCurrenciesByQuery()`, which is reused after each page load — so the active filter applies to newly appended items too.
+- UI: a full-width `ElevatedButton` under the list, rendered only while `_hasMore` is true.
+
+**Localization** — added `showMore` to `assets/l10n/locale_ru.arb` / `locale_en.arb` and hand-mirrored it into the checked-in generated files (`lib/app/gen/l10n/app_localizations.dart`, `..._en.dart`, `..._ru.dart`), since `lib/app/gen/` is committed to the repo.
+
+**Tests** — `test/widget/currency_list_page_test.dart`: two new widget tests (append next page + hide button when exhausted; filter preserved across load-more). The mock stub is now page-aware, and assertions read the list's actual item symbols rather than on-screen `Text` widgets, because the list scrolls after loading more.
+
+**`changelog/10053.feature.rst`** — new entry, per the repo's changelog rule.
+
+## Verification
+
+- `flutter analyze` → **No issues found!**
+- `flutter test` → **All tests passed!** (35 tests, up from 33)
+
+One judgment call worth flagging: I put the button in a fixed footer below the `ListView` rather than as a trailing list item, so it stays reachable without scrolling. It's hidden entirely when `hasMore` is false. If you'd prefer it to scroll away with the content (i.e. as the last list element), that's a small change.

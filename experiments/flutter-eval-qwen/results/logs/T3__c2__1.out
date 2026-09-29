@@ -1,0 +1,16 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T3__c2__1\.madharness-mini\traces\20260924-182320-80e7d085.jsonl
+## Выполнено
+
+**Что изменилось:**
+
+В экран новостей (`lib/app/news_list/news_list_page.dart`) добавлена кнопка «Обновить» в правой части AppBar:
+
+- Кнопка использует `IconButton` с иконкой `Icons.refresh`.
+- По нажатию вызывается `_refreshList()` — делает `loadNewsFeed(NewsFeedFilter(forceRefresh: true))`, что перезагружает ленту из сети с записью в кэш (соответствует контракту v2, news.md §3).
+
+**Локализация:** добавлен ключ `refresh` / `@refresh` в оба ARB-файла (`locale_en.arb`, `locale_ru.arb`) и выполнена регенерация l10n через `flutter.bat gen-l10n`.
+
+**Верификация:**
+- ✅ `flutter.bat analyze` — «No issues found!»
+- ✅ `flutter.bat test` — все 33 теста прошли успешно

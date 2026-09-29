@@ -1,0 +1,29 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T7__c0__5\.madharness-mini\traces\20260924-002322-50a533a5.jsonl
+Both checks are green. Here's a summary of the change.
+
+## What changed
+
+Added a «Обновить всё» button on `HomePage` that refreshes **both** the exchange rates and the news feed from the network in one action.
+
+**New files**
+- `lib/domain/model/refresh_result.dart` — `RefreshResult { currencies, news }` (v2 model).
+- `lib/domain/repository/refresh_repository.dart` — `RefreshRepository.refreshAll()` contract.
+- `lib/data/repository_impl/refresh_repository_impl.dart` — implementation using `Future.wait`, calling `fetchRates(CurrencyPageRequest(base: 'USD'))` (project convention) and `loadNewsFeed(NewsFeedFilter(forceRefresh: true))` (network per migration guide), then caching the rates.
+- `lib/app/widgets/refresh_all_button.dart` — reusable button (shows a spinner while loading, tooltip = localized «Обновить всё»).
+- `changelog/10053.bugfix.rst` — changelog fragment per the project convention.
+
+**Modified**
+- `lib/app/home.dart` — FAB wired to `_refreshAll()`, `RefreshRepository` injected, refreshed data passed to both tabs, top progress bar while loading; also passes `onRefreshAll` down to the currency page.
+- `lib/app/currency_list/currency_list_page.dart` — accepts `refreshedCurrencies` + `onRefreshAll`, refreshes in place, exposes the `CurrencyListPageRefresh` contract.
+- `lib/app/news_list/news_list_page.dart` — accepts `refreshedNews` and shows it immediately.
+- `lib/main.dart` — `RefreshRepository` provider.
+- `assets/l10n/locale_ru.arb` / `locale_en.arb` + generated `lib/app/gen/l10n/*` — `refreshAll` string.
+- Barrel files (`domain/model/model.dart`, `domain/repository/repository.dart`, `data/repository_impl/repository_impl.dart`, `app/app.dart`).
+- Tests: `test/mocks/repository.dart`/`.mocks.dart` (new `MockRefreshRepository`), `test/widget/home_container_test.dart` (2 new cases), `test/unit/repository_test.dart` (1 new case).
+
+## Verification
+- `flutter analyze` → **No issues found!**
+- `flutter test` → **All 36 tests passed** (was 33).
+
+One note: during testing I found and fixed a wiring bug — the FAB had been initially bound to a rates-only handler instead of `_refreshAll`; the new widget test now asserts the single `refreshAll()` call covers both sources.

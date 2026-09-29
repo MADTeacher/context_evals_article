@@ -1,0 +1,20 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T1__c2__5\.madharness-mini\traces\20260923-233222-aa863e30.jsonl
+Both checks pass. Summary:
+
+**Что изменено**
+
+- `lib/app/currency_list/currency_list_page.dart`
+  - Состояние пагинации: `_currentPage`, `_hasMore`, `_isLoadingMore`; запоминается текущий поисковый запрос `_query`.
+  - `_loadNextPage()`: запрашивает `fetchRates(CurrencyPageRequest(base: 'USD', page: _currentPage + 1))` (пагинация с 0, base 'USD' по конвенции), **дописывает** элементы к `_allCurrencies` (не заменяет), обновляет `hasMore`/`currentPage`, повторно применяет активный поиск и сохраняет через `saveCurrencyList` только элементы новой страницы. Защита от повторного нажатия и от запроса за пределами (`!hasMore`), `mounted`-guard.
+  - Кнопка «Показать ещё» рендерится последним элементом `ListView` только при `hasMore`; во время загрузки — disabled со спиннером.
+  - Поиск: `_filterCurrencies` теперь сохраняет запрос и фильтрует объединённый список, поэтому фильтр не теряется после подгрузки страницы.
+- Локализация: ключ `showMore` в `assets/l10n/locale_ru.arb` («Показать ещё») и `locale_en.arb` («Show more») + соответствующие геттеры в сгенерированных `lib/app/gen/l10n/app_localizations*.dart` (генератор не запускался, правки внесены вручную 1:1 к формату gen-l10n).
+- `test/widget/currency_list_page_test.dart`: добавлены два теста — кнопка отсутствует при `hasMore == false`; при тапе запрашивается `page: 1` с `base: 'USD'`, карточки дописываются, кнопка исчезает.
+- `changelog/10053.bugfix.rst` — фрагмент changelog (I.5).
+
+**Проверка**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (35 тестов, включая 2 новых).
+- Запрещённые v2-члены (`getCurrencyList`, `getNewsList`, `.themeMode`) в изменениях не использованы.

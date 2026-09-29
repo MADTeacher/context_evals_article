@@ -1,0 +1,22 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T8__c2__4\.madharness-mini\traces\20260924-103051-7df35d3d.jsonl
+Done. Both checks pass: `flutter analyze` — "No issues found!", `flutter test` — 35/35 green.
+
+## Что сделано
+
+**Новый экран** `lib/app/dashboard/dashboard_page.dart`:
+- При открытии `_load()` запускает **параллельно** (`Future.wait`) две свежие загрузки:
+  - `fetchRates(const CurrencyPageRequest(base: 'USD'))` — base `'USD'` (конвенция I.1, default `'EUR'` не используется), затем `saveCurrencyList` для текущей страницы;
+  - `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — сеть + запись в кэш (I.2).
+- Пока грузится — `CircularProgressIndicator` (через `FutureBuilder`), затем список карточек валют и новостей.
+- Устаревшие `getCurrencyList`/`getNewsList`/`themeMode` не используются.
+
+**Точка входа**: на `HomePage` добавлена кнопка (`FloatingActionButton` с иконкой dashboard и tooltip `loc.dashboard`), открывающая экран через `MaterialPageRoute`.
+
+**Прочее**:
+- l10n: ключ `dashboard` («Дашборд» / «Dashboard») в `assets/l10n/locale_ru.arb`, `locale_en.arb` и в сгенерированных `lib/app/gen/l10n/*`. Проверил `flutter gen-l10n` — вывод генератора совпадает с ручными правками (diff пустой).
+- `lib/app/app.dart` — экспорт нового экрана.
+- `changelog/10053.feature.rst` — фрагмент пользовательского изменения (I.5).
+- `test/widget/dashboard_page_test.dart` — 2 теста: индикатор прогресса при загрузке; параллельная загрузка свежих данных с проверкой `base == 'USD'` и `forceRefresh == true`.
+
+Одно замечание: тест ловил «Too many elements» из-за общего мока между тестами — добавил `reset(...)` в `setUp`, чтобы проверки `verify(...).captured` были детерминированными.

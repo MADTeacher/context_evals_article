@@ -1,0 +1,18 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T1__c0__4\.madharness-mini\traces\20260924-091515-154c8b51.jsonl
+Готово: на экране курса валют появилась подгрузка следующей страницы.
+
+**Что изменено**
+
+- `lib/app/currency_list/currency_list_page.dart`
+  - Первый запрос теперь явный: `CurrencyPageRequest(pageSize: _pageSize)` (page = 0), из ответа запоминаются `_nextPage` и `_hasMore`.
+  - Добавлен `_loadMore()`: запрашивает следующую страницу (`CurrencyPageRequest(page: _nextPage, pageSize: _pageSize)`), дописывает `page.items` к `_allCurrencies`, обновляет `_nextPage`/`_hasMore`, сохраняет объединённый список через `saveCurrencyList` и повторно применяет текущий поисковый запрос. Есть защита от повторного нажатия (`_isLoadingMore`) и проверка `mounted` после `await`.
+  - Под списком — кнопка `TextButton` с локализованным текстом «Показать ещё»; показывается только при `_hasMore`, на время загрузки блокируется и показывает `CircularProgressIndicator`.
+  - Поиск сохранён: те же условия фильтрации, но вынесены в `_applyFilter`, который применяется и к новым порциям данных — фильтр не сбрасывается при подгрузке. Логика и вид списка/карточек не менялись.
+- Локализация: ключ `showMore` добавлен в `assets/l10n/locale_ru.arb` («Показать ещё») и `assets/l10n/locale_en.arb` («Show more»), а также в сгенерированные `lib/app/gen/l10n/app_localizations.dart`, `app_localizations_ru.dart`, `app_localizations_en.dart` (генератор не запускался, файлы обновлены в формате gen-l10n).
+- `test/widget/currency_list_page_test.dart`: добавлены `tearDown(reset(...))` и 3 теста — кнопка скрыта при `hasMore: false`; по тапу запрашивается вторая страница (проверяется, что запросы шли со `page` 0 и 1) и элементы дописываются; фильтр поиска продолжает действовать на подгруженной странице.
+
+**Проверка**
+
+- `flutter analyze` — No issues found.
+- `flutter test` — все 36 тестов прошли (в т.ч. 5 тестов `CurrencyListPage`).

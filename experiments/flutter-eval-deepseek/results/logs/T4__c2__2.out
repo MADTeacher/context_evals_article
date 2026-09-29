@@ -1,0 +1,26 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T4__c2__2\.madharness-mini\traces\20260924-094846-deabf515.jsonl
+Everything is in place. Final state:
+
+## Что сделано
+
+**`lib/app/news_list/news_list_page.dart`** — экран переведён на cache-then-network:
+- `FutureBuilder` заменён на явное состояние `_newsList` + `setState`.
+- При открытии параллельно стартуют два запроса: `loadNewsFeed(NewsFeedFilter.all)` (только кэш, БД) и `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` (сеть + запись в кэш).
+- Кэш показывается сразу, как только приходит; свежие данные заменяют список по приходу ответа.
+- Добавлен флаг `_cacheApplied`/буфер `_freshNews`: если сеть ответит **раньше** кэша, свежие данные не затираются и не «теряются» — они применяются сразу после отрисовки кэша. Это устраняет гонку, из-за которой при быстрой сети кэш вообще не был виден (проверено обоими перекосами порядка).
+
+**`test/widget/news_list_page_test.dart`** — тест переписан под новую семантику: проверяет пустой список до кэша, показ кэша до сети, затем замену на свежие данные и что оба запроса (cache-only и forceRefresh) были сделаны.
+
+**`changelog/10053.feature.rst`** — фрагмент changelog (правило I.5).
+
+## Замечание по ходу работы
+
+`NewsModel` и `NewsFeedFilter` не имеют value-равенства, а сгенерированный мок `loadNewsFeed` принимает позиционный `NewsFeedFilter`. Поэтому в тесте стаб один (`any`) с ветвлением по `filter.forceRefresh` — иначе `verify`/стабы по конкретному объекту фильтра не матчатся. Это не потребовало правок в `lib/domain`.
+
+## Проверка
+
+- `flutter analyze` → **No issues found!**
+- `flutter test` → **33 теста, все зелёные** (включая обновлённый `news_list_page_test.dart`).
+
+Затронуты только `lib/app/news_list/news_list_page.dart`, `test/widget/news_list_page_test.dart` и новый `changelog/10053.feature.rst`; конвенции v2 (I.1–I.4) соблюдены, deprecated-члены не используются.

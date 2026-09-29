@@ -1,0 +1,2 @@
+Добавлена пагинация курса валют: CurrencyRepository.fetchRates(CurrencyPageRequest)
+возвращает страницу CurrencyPage; getCurrencyList помечен @Deprecated.

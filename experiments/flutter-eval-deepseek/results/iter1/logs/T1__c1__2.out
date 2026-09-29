@@ -1,0 +1,23 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T1__c1__2\.madharness-mini\traces\20260923-232729-e80f3bb7.jsonl
+Готово. Подгрузка страниц добавлена на экран курса валют.
+
+**Изменения**
+
+`lib/app/currency_list/currency_list_page.dart`
+- Первый запрос: `fetchRates(CurrencyPageRequest(base: 'USD', pageSize: 20))` — конвенция `base: 'USD'` из `docs/migration-v2.md` сохранена, `getCurrencyList` не используется.
+- Хранится состояние пагинации: `_nextPage`, `_hasMore`, `_isLoadingMore`, `_allCurrencies` (весь загруженный объём).
+- `_loadNextPage()` запрашивает следующую страницу, дописывает `page.items` к текущему списку, обновляет `_hasMore`/`_nextPage`, сохраняет в кэш только новую страницу (`saveCurrencyList(page.items)`) и защищён от повторных нажатий и от `setState` после `dispose` (`mounted`).
+- Под списком кнопка «Показать ещё» (показывается только при `_hasMore`, на время загрузки — индикатор и `onPressed: null`).
+- Поиск сохранён: запрос хранится в `_query`, а `_applyQuery(...)` применяется и к первоначальной странице, и к объединённому списку — фильтр не сбрасывается при подгрузке.
+
+Локализация: добавлен ключ `showMore` («Показать ещё» / «Show more») в `assets/l10n/locale_ru.arb`, `locale_en.arb` и в сгенерированные `lib/app/gen/l10n/app_localizations*.dart` (вручную, по образцу существующих ключей — `gen-l10n` в этом окружении не запускался).
+
+Changelog: `changelog/10053.feature.rst`.
+
+**Тесты** (`test/widget/currency_list_page_test.dart`)
+- кнопки нет, если `hasMore == false`;
+- тап по «Показать ещё» дописывает вторую страницу, кнопка исчезает, проверены `fetchRates` с `page == 1` и `saveCurrencyList` новой страницы;
+- поиск работает по объединённому списку после подгрузки.
+
+**Проверка**: `flutter analyze` — No issues found; `flutter test` — 36 тестов, все прошли.

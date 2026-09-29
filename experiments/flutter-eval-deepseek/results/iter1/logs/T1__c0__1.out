@@ -1,0 +1,21 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T1__c0__1\.madharness-mini\traces\20260923-232525-1c9f6ac0.jsonl
+Готово: на экране курса валют добавлена постраничная подгрузка.
+
+**Что изменено**
+
+- `lib/app/currency_list/currency_list_page.dart`
+  - Первая загрузка теперь идёт через `fetchRates(CurrencyPageRequest(base: 'USD', pageSize: 20))`, из ответа запоминаются `page` и `hasMore` (`_currentPage`, `_hasMore`).
+  - `_loadNextPage()` запрашивает `page + 1`, дописывает `page.items` к накопленному `_allCurrencies`, обновляет `hasMore`; защита от параллельных нажатий (`_isLoadingMore`) и от `setState` после dispose (`mounted`).
+  - Под списком появляется кнопка «Показать ещё» только при `hasMore`; во время загрузки она в состоянии спиннера и заблокирована. Список и кнопка живут в `Column` с `Expanded(ListView)`, нижний отступ списка сохранён по высоте кнопки.
+  - Поиск сохранён: `_filterCurrencies` фильтрует по `_allCurrencies` (накопленный список), а запрос поиска запоминается в `_searchQuery`, поэтому после подгрузки фильтр переприменяется — новые элементы сразу попадают в отфильтрованный список.
+- `lib/app/currency_list/widgets/load_more_button.dart` (новый) + экспорт в `widgets.dart` — кнопка в стиле темы (`OutlinedButton`, цвета/шрифты из `context.colors`/`context.fonts`).
+- Локализация: ключ `showMore` в `assets/l10n/locale_ru.arb` («Показать ещё») и `locale_en.arb` («Show more»), продублирован в сгенерированных `lib/app/gen/l10n/app_localizations*.dart` (генерация вручную, т.к. `flutter analyze`/`test` не запускают gen-l10n).
+- `test/widget/currency_list_page_test.dart` — 3 новых теста: кнопки нет при `hasMore: false`; тап по кнопке дописывает следующую страницу (`page == 1`, карточек стало больше, кнопка исчезла); поиск продолжает работать по элементам из подгруженной страницы.
+
+**Проверка**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (36 тестов, включая 6 тестов `CurrencyListPage`)
+
+Замечание: при поиске кнопка «Показать ещё» остаётся видимой (она не часть фильтруемого списка) — если нужно её скрывать во время активного поиска, скажите, добавлю.

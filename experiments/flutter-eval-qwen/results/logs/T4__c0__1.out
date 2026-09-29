@@ -1,0 +1,22 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T4__c0__1\.madharness-mini\traces\20260924-172827-dd5767d3.jsonl
+## Готово ✅
+
+### Что изменилось
+
+Реализован паттерн **cache-then-network** для экрана новостей: при открытии вкладки мгновенно показывается кэш, параллельно подгружается сеть, список обновляется когда ответ придёт.
+
+#### Изменённые файлы (6 файлов):
+
+| Файл | Что изменилось |
+|---|---|
+| **`lib/domain/repository/news_repository.dart`** | `loadNewsFeed` теперь возвращает `Stream<List<NewsModel>>` вместо `Future` |
+| **`lib/data/repository_impl/news_repository_impl.dart`** | `async*` генератор: первый `yield` — кэш (мгновенно), второй — после загрузки из сети + сохранение |
+| **`lib/app/news_list/news_list_page.dart`** | `FutureBuilder` → `StreamBuilder`, анимация запускается при первом появлении данных (кэше) |
+| **`test/widget/news_list_page_test.dart`** | Mock возвращает `async* yield` вместо `await =>` |
+| **`test/widget/home_container_test.dart`** | Mock для `loadNewsFeed` обновлён на Stream |
+| **`test/unit/repository_test.dart`** | Тесты для `loadNewsFeed` переписаны на работу со Stream; перегенерированы моки |
+
+#### Результат проверок:
+- `flutter analyze` — ✅ No issues found!
+- `flutter test` — ✅ 29 passed, 0 failed

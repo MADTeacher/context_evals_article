@@ -1,0 +1,21 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c2__1\.madharness-mini\traces\20260924-004916-a9a1b60c.jsonl
+Готово.
+
+## Что изменено
+
+**`lib/app/profile/profile_page.dart`**
+- Режим темы теперь хранится в состоянии страницы и читается синхронно через `readThemeMode()` (v2-конвенция, без `@Deprecated` геттера `themeMode`).
+- В `initState` добавлена подписка на `SettingsRepository.themeModeStream`; при изменении режима вызывается `setState`, поэтому подпись `ListTile` обновляется автоматически (в т.ч. если режим сменили в другом месте приложения).
+- Подписка отменяется в `dispose`.
+- `ValueNotifier`/`ValueListenableBuilder` убраны — поток настроек стал единственным источником обновлений; `onTap` боттом-шита по-прежнему вызывает `setThemeMode`, а UI обновляется через поток.
+- Анимация кнопки logout оставлена на прежней `AnimationController` (в `State`), т.к. в проекте нет extension-а `context.vsync`.
+
+**`test/widget/home_container_test.dart`**
+- Добавлен стаб `themeModeStream` (пустой поток) для `MockSettingsRepository` — без него страница профиля падала с `MissingStubError` при открытии вкладки.
+
+**`changelog/10053.bugfix.rst`** — фрагмент changelog по правилу I.5.
+
+## Проверка
+- `flutter analyze` → **No issues found!**
+- `flutter test` → **All tests passed!** (33 теста).

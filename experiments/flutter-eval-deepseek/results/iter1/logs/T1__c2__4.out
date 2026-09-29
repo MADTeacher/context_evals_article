@@ -1,0 +1,20 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T1__c2__4\.madharness-mini\traces\20260923-233101-a782c6e7.jsonl
+Готово: на экране курса валют появилась подгрузка следующей страницы.
+
+**Что изменено**
+
+- `lib/app/currency_list/currency_list_page.dart` — состояние экрана теперь хранит `_currentPage`, `_hasMore`, `_isLoadingMore` и текущий поисковый запрос `_query`. Первая загрузка по-прежнему `fetchRates(const CurrencyPageRequest(base: 'USD'))` (v2-конвенция, без `getCurrencyList`), из ответа берутся `page`/`hasMore`.
+  - `_loadNextPage()` запрашивает `CurrencyPageRequest(base: 'USD', page: _currentPage + 1)`, **добавляет** элементы к `_allCurrencies` (не заменяет), обновляет `page`/`hasMore`, заново применяет текущий фильтр и вызывает `saveCurrencyList(page.items)` для элементов новой страницы. Повторные нажатия блокируются, при размонтировании — guard `mounted`.
+  - Под списком добавлена кнопка «Показать ещё» (`TextButton`), видимая только при `_hasMore`; во время загрузки — `CircularProgressIndicator` и `onPressed: null`.
+  - Поиск сохранён: `_filterCurrencies` запоминает запрос, а `_applyFilter()` фильтрует по всем уже загруженным страницам, поэтому после подгрузки фильтр пересчитывается автоматически.
+- Локализация: ключ `showMore` добавлен в `assets/l10n/locale_ru.arb` («Показать ещё») и `locale_en.arb` («Show more»), а также в генерённые `lib/app/gen/l10n/app_localizations.dart`, `app_localizations_ru.dart`, `app_localizations_en.dart` (актуальная версия gen-l10n в окружении, по стилю файлов).
+- `test/widget/currency_list_page_test.dart` — два новых теста: подгрузка второй страницы по нажатию (проверяет, что запросы идут с `page: 0` → `page: 1`, `base: 'USD'`, карточки дописываются, кнопка исчезает при `hasMore: false`) и сохранение работы поиска по загруженным страницам.
+- `changelog/10053.feature.rst` — фрагмент changelog (I.5).
+
+**Проверки**
+
+- `flutter analyze` → «No issues found!»
+- `flutter test` → все 35 тестов зелёные (включая 5 тестов `CurrencyListPage`).
+
+Примечание: тест «should append next page» в первой версии падал из-за того, что mockito повторно отдаёт одну и ту же запись `Invocation` для всех обращений (в `captured` оказались дубликаты `page: 0`); проверку скорректировал на `requests.first.page == 0` / `requests.last.page == 1` — фактическое поведение кода при этом корректно.

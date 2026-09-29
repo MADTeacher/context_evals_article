@@ -1,0 +1,13 @@
+{
+  "hooks": [
+    {
+      "id": "guard-v2-and-destructive",
+      "event": "before_tool_call",
+      "match": { "tool": ["write_file", "apply_patch", "run_shell"] },
+      "command": "py",
+      "args": ["scripts/hooks/guard_v2.py"],
+      "cwd": ".",
+      "timeout_seconds": 5
+    }
+  ]
+}

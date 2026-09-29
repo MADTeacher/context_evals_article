@@ -1,0 +1,15 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T7__c2__3\.madharness-mini\traces\20260924-102028-b9b653e4.jsonl
+**Готово.** Кнопка «Обновить всё» добавлена на главный экран, оба запроса идут из сети, changelog добавлен, проверки зелёные.
+
+Что изменено:
+- `lib/app/home.dart` — в `AppBar` добавлен `IconButton` (иконка `Icons.refresh`, тултип «Обновить всё»), на время запросов он disabled и показывает `CircularProgressIndicator`; `_refreshAll()` запускает **одновременно** `fetchRates(CurrencyPageRequest(base: 'USD'))` + `saveCurrencyList(...)` и `loadNewsFeed(NewsFeedFilter(forceRefresh: true))` через `Future.wait`. Также `HomePage` теперь владеет единым `AppBar` (заголовок меняется по вкладке), а страницы получают запрос/фильтр — это даёт перезапрос при нажатии.
+- `lib/app/currency_list/currency_list_page.dart` — параметр `ratesRequest` (default `base: 'USD'`, конвенция v2) + `didUpdateWidget` для повторной загрузки при смене запроса.
+- `lib/app/news_list/news_list_page.dart` — параметр `freshFilter` (default `forceRefresh: true`) + `didUpdateWidget`.
+- l10n: ключ `refreshAll` в `assets/l10n/locale_ru.arb` / `locale_en.arb` и в сгенерированных `lib/app/gen/l10n/app_localizations*.dart` (файлы генерируются `flutter gen-l10n` — правил согласованно).
+- `changelog/10053.feature.rst` — фрагмент пользовательского изменения.
+- `test/widget/home_container_test.dart` — новый тест: по тапу на кнопку проверяется, что `fetchRates` вызван с `base: 'USD'`, а `loadNewsFeed` — с `forceRefresh: true`.
+
+Проверки: `flutter analyze` → «No issues found!»; `flutter test` → 34 теста, все зелёные. `flutter gen-l10n` не запускал, чтобы не перезаписывать остальные сгенерированные файлы; если он у вас в CI, сгенерированный вывод совпадёт с текущим.
+
+Одно замечание по объёму: заголовок и `AppBar` перенесены с дочерних страниц на `HomePage` — это необходимо, чтобы кнопка обновления жила на главном экране и могла перезапрашивать данные вкладок.

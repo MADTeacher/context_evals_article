@@ -1,0 +1,209 @@
+"""Публичные режимы ask (один ответ) и run (цикл с инструментами)."""
+
+from __future__ import annotations
+
+from typing import Any
+
+from .config import Config
+from .context import ContextProvider
+from .context.bootstrap import base_context
+from .hooks import HookManager
+from .model import ModelClient
+from .model_loop import (
+    apply_hidden_observation_effects,
+    call_model_with_rate_limit_retry,
+    emit_session_error,
+    model_message_summary,
+    run_model_loop,
+    safe_context_report,
+)
+from .mcp import McpToolProvider
+from .skills import (
+    SkillCatalogProvider,
+    SkillRuntime,
+    SkillToolProvider,
+    discover_skills,
+    find_explicit_skill_selection,
+)
+from .subagents import OrchestratorToolProvider, discover_subagents
+from .subagents.orchestration import (
+    parent_allowed_tools,
+    required_orchestration_fragment,
+    resolve_orchestration_mode,
+)
+from .subagents.runner import run_subagent
+from .tools import ToolRegistry
+from .trace import Trace
+
+
+def ask(task: str, cfg: Config) -> tuple[str, Any]:
+    """Один запрос к модели без инструментов; пишем трассу в JSONL.
+
+    Возвращаем текст ответа и путь к файлу трассы.
+    """
+
+    trace = Trace(cfg, "ask")
+    hooks = HookManager.from_config(cfg, trace)
+    hooks.emit(
+        "session_start",
+        kind="ask",
+        data={"task_preview": task[:1000], "cwd": str(cfg.cwd)},
+    )
+    context = base_context(cfg, task)
+    try:
+        messages = context.messages()
+    except RuntimeError as exc:
+        trace.write(
+            "context_error",
+            error=str(exc),
+            context_report=safe_context_report(context),
+        )
+        trace.write("session_end", result=f"error: {exc}")
+        emit_session_error(hooks, "ask", exc)
+        raise
+    context_report = context.report()
+    trace.write("model_call_started", tools_count=0, context_report=context_report)
+    hooks.emit(
+        "before_model_call",
+        kind="ask",
+        data={"tools_count": 0, "context_report": context_report},
+    )
+    try:
+        raw = call_model_with_rate_limit_retry(ModelClient(cfg), trace, messages)
+    except RuntimeError as exc:
+        trace.write("model_error", error=str(exc))
+        trace.write("session_end", result=f"error: {exc}")
+        emit_session_error(hooks, "ask", exc)
+        raise
+    trace.write("model_call_finished", raw=raw)
+    message = raw["choices"][0]["message"]
+    hooks.emit(
+        "after_model_call",
+        kind="ask",
+        data={"message": model_message_summary(message)},
+    )
+    content = message.get("content") or ""
+    trace.write("session_end", result=content)
+    hooks.emit(
+        "session_end",
+        kind="ask",
+        data={"status": "done", "turns": 1, "result_preview": content[:1000]},
+    )
+    return content, trace.path
+
+
+def run_agent(
+    task: str,
+    cfg: Config,
+    *,
+    orchestration_mode: str | None = None,
+) -> tuple[str, Any]:
+    """Агентский цикл до финального текста или исчерпания max_turns.
+
+    Здесь остаётся сборка запуска: discovery расширений, registry инструментов
+    и стартовый контекст. Сам turn loop и делегация вынесены в профильные модули.
+    """
+
+    trace = Trace(cfg, "run")
+    hooks = HookManager.from_config(cfg, trace)
+    hooks.emit(
+        "session_start",
+        kind="run",
+        data={"task_preview": task[:1000], "cwd": str(cfg.cwd)},
+    )
+    client = ModelClient(cfg)
+    skill_index = discover_skills(cfg)
+    subagent_index = discover_subagents(cfg)
+    orchestration = resolve_orchestration_mode(
+        cfg,
+        task,
+        override=orchestration_mode,
+    )
+    trace.write(
+        "orchestration_mode",
+        configured=orchestration["configured"],
+        effective=orchestration["effective"],
+        source=orchestration["source"],
+        requested_by_task=orchestration["requested_by_task"],
+        legacy_enabled=bool(cfg.data.get("orchestration_enabled", True)),
+    )
+    trace.write(
+        "skills_discovered",
+        count=len(skill_index.skills),
+        names=skill_index.names(),
+        diagnostics=[
+            diagnostic.as_dict(cfg.root) for diagnostic in skill_index.diagnostics
+        ],
+    )
+    trace.write(
+        "subagents_discovered",
+        count=len(subagent_index.subagents),
+        names=subagent_index.names(),
+        diagnostics=[diagnostic.as_dict() for diagnostic in subagent_index.diagnostics],
+    )
+    explicit_skills = find_explicit_skill_selection(task, set(skill_index.skills))
+    if explicit_skills.unknown:
+        names = ", ".join(explicit_skills.unknown)
+        result = f"error: unknown skill: {names}"
+        trace.write("session_end", result=result)
+        exc = RuntimeError(f"unknown skill: {names}")
+        emit_session_error(hooks, "run", exc)
+        raise exc
+
+    skill_runtime = SkillRuntime(cfg, skill_index)
+    context_providers: list[ContextProvider] = []
+    tool_providers = []
+    if explicit_skills.names:
+        trace.write("skills_auto_selection_disabled", reason="explicit skill marker")
+    else:
+        context_providers.append(SkillCatalogProvider(skill_index, cfg.root))
+        tool_providers.append(SkillToolProvider(skill_runtime))
+    if orchestration["effective"] != "off":
+        tool_providers.append(
+            OrchestratorToolProvider(
+                subagent_index,
+                lambda _tool_ctx, subagent, args: run_subagent(
+                    cfg,
+                    client,
+                    trace,
+                    subagent,
+                    args,
+                    hooks,
+                ),
+            )
+        )
+    tool_providers.append(McpToolProvider())
+
+    tools_registry = ToolRegistry(
+        cfg,
+        providers=tool_providers,
+        trace=trace,
+        skill_runtime=skill_runtime,
+        allowed_tools=parent_allowed_tools(orchestration["effective"]),
+    )
+    try:
+        context = base_context(cfg, task, providers=context_providers)
+        if orchestration["effective"] == "required":
+            context.add_fragment(required_orchestration_fragment())
+        for name in explicit_skills.names:
+            obs = skill_runtime.activate(name, "explicit")
+            if not obs.get("ok"):
+                result = f"error: {obs.get('summary')}"
+                trace.write("session_end", result=result)
+                exc = RuntimeError(str(obs.get("summary")))
+                emit_session_error(hooks, "run", exc)
+                raise exc
+            apply_hidden_observation_effects(context, trace, obs)
+
+        loop_result = run_model_loop(
+            client,
+            trace,
+            context,
+            tools_registry,
+            int(cfg.data["max_turns"]),
+            hooks=hooks,
+            kind="run",
+        )
+        return str(loop_result["result"]), trace.path
+    finally:
+        tools_registry.close()

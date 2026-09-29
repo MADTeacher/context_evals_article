@@ -1,0 +1,25 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T6__c2__3\.madharness-mini\traces\20260923-185347-889e24b4.jsonl
+Готово! Вот что изменилось:
+
+## Изменения
+
+### `lib/app/profile/profile_page.dart`
+1. Добавлен импорт `dart:async` для `StreamSubscription`.
+2. `_settingsRepository` теперь инициализируется в `initState` через `context.read<SettingsRepository>()`, а не как getter — это корректнее по времени жизненного цикла.
+3. Подписка на `_settingsRepository.themeModeStream` с автоматическим обновлением `_themeModeNotifier.value` при каждом изменении режима (с проверкой `mounted`).
+4. В `dispose()` подписка отменяется через `.cancel()`.
+
+Начальное значение читается синхронно через `readThemeMode()`, а дальнейшие обновления приходят по потоку — соответствует контракту v2.
+
+### `test/widget/home_container_test.dart`
+Добавлен стаб для мок-репозитория:
+```dart
+when(mockSettingsRepository.themeModeStream).thenAnswer((_) => Stream<AppThemeMode>.empty());
+```
+Это необходимое дополнение — без стаба тест падал с `MissingStubError`, потому что новый код вызывает `themeModeStream` в `initState`.
+
+## Верификация
+
+- **`flutter.bat analyze`** — ✅ No issues found!
+- **`flutter.bat test`** — ✅ 37 тестов, все зелёные.

@@ -1,0 +1,25 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T8__c1__5\.madharness-mini\traces\20260924-105246-16f0dbde.jsonl
+Готово. Экран «Дашборд» добавлен и проверен.
+
+## Что сделано
+
+**Новый экран** — `lib/app/dashboard/dashboard_page.dart`:
+- `DashboardPage` (StatefulWidget) в `initState` запускает `Future.wait<Object>([...])` с двумя запросами одновременно: `CurrencyRepository.fetchRates(const CurrencyPageRequest())` (свежий курс) и `NewsRepository.loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` (свежая лента, cache-then-network с форсом сети).
+- Пока оба запроса не завершены, `FutureBuilder` показывает `CircularProgressIndicator` (центрированный); после загрузки — `ListView` с секциями «Курс Валют» (до 3 `CurrencyCard`) и «Новости» (до 3 `NewsCard`).
+- `DashboardData` — простая модель-агрегат результата.
+- `lib/app/dashboard/widgets/dashboard_section_header.dart` + `widgets.dart` — заголовки секций в стиле остальных виджетов (`context.fonts.semiBold6`→`semiBold12`).
+
+**Доступ кнопкой на HomePage** — `lib/app/home.dart`: в `AppBar` добавлена `IconButton` (`Icons.dashboard`, tooltip `loc.dashboard`), которая делает `Navigator.push` на `DashboardPage`. Заодно `AppBar` с заголовком текущего таба вынесен в `HomePage`, а из трёх вкладок (`CurrencyListPage`, `NewsListPage`, `ProfilePage`) удалены собственные `AppBar`, чтобы заголовок не дублировался (поведение и тексты те же).
+
+**Локализация**: ключ `dashboard` добавлен в `assets/l10n/locale_ru.arb` («Дашборд») и `locale_en.arb` («Dashboard»), плюс вручную синхронизированы сгенерированные `lib/app/gen/l10n/app_localizations*.dart` (в окружении нет `flutter gen-l10n`/ARB-тулинга в виде отдельного шага сборки, поэтому файлы обновлены в формате генератора).
+
+**Changelog**: `changelog/10053.feature.rst` (стиль и нумерация как у существующих `10051`/`10052`).
+
+**Тесты**: `test/widget/dashboard_page_test.dart` — индикатор прогресса до завершения обоих запросов (через `Completer`), проверка что запросы идут с `pageSize = 20` и `forceRefresh = true`, и отображение обеих секций; в `test/widget/home_container_test.dart` — наличие кнопки дашборда и переход на `DashboardPage`.
+
+## Проверка
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (37 тестов, было 33)
+
+Одно замечание: тесты `curl`-независимы (моки), но реальный `DashboardPage` использует `context.read` в `initState` — это работает, т.к. `provider` читается из родительского контекста (тот же паттерн, что в `CurrencyListPage`/`NewsListPage`).

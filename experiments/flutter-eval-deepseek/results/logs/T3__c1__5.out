@@ -1,0 +1,15 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T3__c1__5\.madharness-mini\traces\20260924-094950-6e72faf8.jsonl
+Готово. Кнопка «Обновить» добавлена в AppBar экрана новостей и перезагружает ленту из сети, минуя кэш.
+
+**Изменения**
+- `lib/app/news_list/news_list_page.dart` — в `AppBar.actions` добавлен `IconButton` с `Icons.refresh` (tooltip из локализации); обработчик `_refreshData()` вызывает `setState(_initData)`, который заново дёргает `newsRepository.loadNewsFeed(const NewsFeedFilter(forceRefresh: true))`. Репозиторий при `forceRefresh: true` идёт в REST и обновляет кэш БД (`NewsRepositoryImpl.loadNewsFeed`), то есть кэш не читается.
+- Локализация: ключ `refresh` добавлен в `assets/l10n/locale_ru.arb` («Обновить») и `locale_en.arb` («Refresh»), и в сгенерированные `lib/app/gen/l10n/app_localizations.dart`, `app_localizations_ru.dart`, `app_localizations_en.dart` (ручная правка, т.к. `flutter gen-l10n` в окружении доступен — файлы синхронизированы с ARB; можно перегенерировать командой `flutter gen-l10n`).
+- `test/widget/news_list_page_test.dart` — новый тест: после тапа по иконке `loadNewsFeed` вызывается повторно, и все вызовы (первичная загрузка + обновление) имеют `forceRefresh: true`. В `setUp` добавлен `reset(mockNewsRepository)`, чтобы счётчик вызовов не протекал между тестами.
+- `changelog/10053.feature.rst` — запись о пользовательском изменении.
+
+**Проверки**
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (34 теста). Первый прогон теста падал из-за накопленных вызовов мока между тестами — исправлено через `reset`.
+
+Примечания: `flutter gen-l10n` выводит предупреждение о устаревшем `synthetic-package` в `l10n.yaml` (не связано с правкой, на анализ/тесты не влияет). Кнопка во время загрузки не блокируется — повторные тапы просто запускают новую загрузку; если нужно дизейблить её на время запроса, скажите, добавлю.

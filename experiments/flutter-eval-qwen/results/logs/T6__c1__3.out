@@ -1,0 +1,15 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T6__c1__3\.madharness-mini\traces\20260925-002619-b2053680.jsonl
+Готово. Вот что изменилось:
+
+**`lib/app/profile/profile_page.dart`** — добавлена подписка на поток изменений темы:
+- Импортирован `dart:async`.
+- В `initState()` теперь слушается `_settingsRepository.themeModeStream`, и каждое новое значение записывается в `_themeModeNotifier` через `ValueListenableBuilder`.
+- Начальное значение по-прежнему читается синхронно через `readThemeMode()`.
+- В `dispose()` подписка корректно отменяется (`_themeModeSubscription?.cancel()`).
+
+**`test/widget/home_container_test.dart`** — добавлен stub для `themeModeStream` в моке, чтобы тесты на навигацию не падали при создании `ProfilePage`.
+
+**Результаты проверок:**
+- `flutter analyze` — **No issues found!**
+- `flutter test` — **33 passed**, 0 failed.

@@ -1,0 +1,28 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T2__c0__3\.madharness-mini\traces\20260924-152303-aa717dcd.jsonl
+Отлично! Все 33 теста пройдены, `flutter analyze` — без замечаний. Вот итог изменений:
+
+## Что изменилось
+
+### `lib/app/currency_list/currency_list_page.dart` — полная переработка State-класса
+
+1. **Пагинация с кнопкой «Показать ещё»**
+   - `_allCurrencies` — все загруженные элементы (источник для поиска)
+   - `_displayedCurrencies` — отображаемые в списке (текущая страница)
+   - `_hasMore` / `_currentPage` — контроль наличия следующих страниц
+   - Метод `_loadNextPage()` делает `fetchRates(page + 1)` и аппендит новые элементы
+
+2. **Кнопка скрывается при конце страниц**
+   ```dart
+   if (_searchQuery.isEmpty && _hasMore)
+     ElevatedButton(onPressed: _loadNextPage, child: Text(context.loc.loadMore))
+   ```
+   Кнопка видна **только** когда нет поискового запроса И `hasMore == true`.
+
+3. **Обновление при потере фокуса экрана**
+   - Реализовано через `WidgetsBindingObserver` + отслеживание `ModalRoute.isCurrent`
+   - При уходе с экрана (`!isCurrent`, `inactive`, `paused`) — счётчик `_focusLossCount++`
+   - При возврате (`resumed && _focusLossCount > 0`) — вызывается `_loadInitialPage()` с базовой валютой `'EUR'`
+
+### Локализация (2 файла)
+- **`assets/l10n/locale_en.arb`** + **`locale_ru.arb`** — добавлено `"loadMore"` → «Show more» / «Показать ещё»

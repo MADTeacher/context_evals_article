@@ -1,0 +1,39 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T6__c2__2\.madharness-mini\traces\20260923-105805-a0c4425f.jsonl
+Готово. Вот итог изменений:
+
+---
+
+## Что изменилось
+
+### `lib/app/profile/profile_page.dart`
+
+1. **Импорт `dart:async`** — для типа `StreamSubscription<AppThemeMode>`.
+2. **`_settingsRepository` из геттера в late-поле**, инициализируемое в `initState()` — корректный порядок доступа к `context.read`.
+3. **Подписка на поток настроек:**
+   ```dart
+   _themeSub = _settingsRepository.themeModeStream.listen((mode) {
+     if (mounted) {
+       _themeModeNotifier.value = mode;
+     }
+   });
+   ```
+   Теперь при вызове `setThemeMode` из любого экрана профильный экран **автоматически обновляется** через broadcast-поток.
+4. **Очистка в `dispose()`:** добавлено `_themeSub.cancel()` для отписки, чтобы не было утечки памяти.
+5. **Смена API при сохранении:** вместо `_themeModeNotifier.value = newMode` теперь вызывается `_settingsRepository.setThemeMode(newMode)` — через v2-метод, который пишет в preference и публикует изменение в `themeModeStream`.
+
+### `test/widget/home_container_test.dart`
+
+Добавлен стуб для мока:
+```dart
+when(mockSettingsRepository.themeModeStream).thenAnswer((_) => Stream<AppThemeMode>.empty());
+```
+
+---
+
+## Результаты проверок
+
+| Проверка | Результат |
+|---|---|
+| `flutter analyze` | ✅ No issues found! |
+| `flutter test` | ✅ Все 33 теста прошли |

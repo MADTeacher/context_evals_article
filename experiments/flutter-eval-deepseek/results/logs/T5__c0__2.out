@@ -1,0 +1,23 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T5__c0__2\.madharness-mini\traces\20260924-102722-0fe7fb30.jsonl
+Готово. Изменён только `test/unit/repository_test.dart`.
+
+## Что добавлено
+
+В группе `SettingsRepository` — 4 новых теста:
+
+1. **`readThemeMode returns the actual value from the datasource`** — `readThemeMode()` возвращает актуальное значение из `PreferenceDatasource` (`AppThemeMode.dark`) и читает его ровно один раз.
+2. **`readThemeMode returns the value updated by setThemeMode`** — после `setThemeMode(...)` последующий `readThemeMode()` возвращает новое значение (проверка актуальности, а не кэша).
+3. **`readThemeMode is safe to call after initAsyncData`** — на моке: после `await initAsyncData()` вызов `readThemeMode()` не бросает и возвращает значение.
+4. **`readThemeMode returns the persisted value after initAsyncData with a real datasource`** — интеграционная проверка на реальном `PreferenceDatasourceImpl` + `SharedPreferences.setMockInitialValues({'theme_key': 'dark'})`: после `initAsyncData()` режим читается из хранилища (`AppThemeMode.dark`).
+
+Плюс вспомогательный класс `MockSecureStorage` (локальный мок `FlutterSecureStorage` с `read(...) → Future<String?>.value()`), нужный, чтобы реальный `PreferenceDatasourceImpl` не падал на платформенном канале.
+
+## Замечание по формулировке требования
+
+В коде нет контракта «`readThemeMode()` безопасен только после `initAsyncData()`»: `initAsyncData()` (`lib/data/repository_impl/settings_repository_impl.dart:18-22`) инициализирует только auth (`_isAuth`), а `readThemeMode()` синхронно читает `SharedPreferences` и не зависит от инициализации. Поэтому тесты написаны как «безопасно и корректно после `initAsyncData()`», а не как проверка исключения при вызове до неё — иначе пришлось бы менять продовый код, чего задача не просила. Если нужен именно жёсткий контракт (бросать `StateError` до `initAsyncData()`), скажите — добавлю в `SettingsRepositoryImpl` и тест на исключение.
+
+## Проверка
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (37 тестов, включая 4 новых; существующие тесты не сломались)

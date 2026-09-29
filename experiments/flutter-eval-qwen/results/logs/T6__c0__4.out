@@ -1,0 +1,15 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T6__c0__4\.madharness-mini\traces\20260924-234124-5d1be676.jsonl
+Готово! 
+
+**Что изменилось:**
+
+- **`lib/app/profile/profile_page.dart`**: добавлена подписка на `themeModeStream` из `SettingsRepository` — теперь при смене темы (даже с другого экрана) профиль автоматически обновляет отображаемый режим. Начальное значение по-прежнему читается синхронно через `readThemeMode()`.
+- **`test/widget/home_container_test.dart`**: добавлен стаб `themeModeStream` для мокa, чтобы тесты не падали при вызове подписки в `initState`.
+
+**Результаты проверок:**
+
+```
+flutter analyze — ✅ No issues found!
+flutter test    — ✅ 31/31 passed (1 skipped)
+```

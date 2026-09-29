@@ -1,0 +1,34 @@
+Exception in thread Thread-6 (_readerthread):
+Traceback (most recent call last):
+  File "C:\Users\MADTeacher\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\MADTeacher\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MADTeacher\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\subprocess.py", line 1614, in _readerthread
+    buffer.append(fh.read())
+                  ~~~~~~~^^
+  File "<frozen codecs>", line 325, in decode
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xad in position 26: invalid start byte
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T5__c0__3\.madharness-mini\traces\20260923-092325-96a1065f.jsonl
+Все проверки пройдены успешно! Вот итог:
+
+## Что изменено
+
+**Файл:** `test/unit/repository_test.dart`  
+Добавлены 3 новых теста в группу `SettingsRepository`:
+
+| # | Тест | Что проверяет |
+|---|------|---------------|
+| 1 | **readThemeMode returns the current theme mode from datasource** (строка 193) | Метод возвращает актуальное значение из `PreferenceDatasource.themeMode` и вызывает геттер ровно один раз |
+| 2 | **readThemeMode reflects the latest setThemeMode value** (строка 202) | После `setThemeMode()` чтение через `readThemeMode()` отдаёт свежее значение из мока дата-сорса (проверяет, что метод всегда читает актуальное состояние) |
+| 3 | **readThemeMode is safe to call after initAsyncData** (строка 213) | Вызов `initAsyncData()` затем `readThemeMode()` проходит без ошибок — метод корректно работает после инициализации асинхронных данных |
+
+## Результаты проверок
+
+- **`flutter analyze --no-pub`**: ✅ No issues found!
+- **`flutter test`**: ✅ All 36 tests passed (включая все существующие + 3 новых)
+
+Существующие тесты не сломаны — группа `SettingsRepository` полностью стабильна, все stream-тесты, token и deprecated `themeMode` работают как раньше.

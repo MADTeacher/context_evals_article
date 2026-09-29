@@ -1,0 +1,23 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T2__c2__5\.madharness-mini\traces\20260924-001701-66bb5df2.jsonl
+Done. Both features are implemented, verified, and documented.
+
+## Что изменено
+
+**`lib/app/currency_list/currency_list_page.dart`** (основная правка)
+- Добавлено состояние пагинации: `_page`, `_hasMore`, `_isLoadingMore`; значения берутся из `CurrencyPage` (`hasMore` — признак конца страниц по v2-конвенции).
+- Кнопка «Показать ещё» (`TextButton` под списком) рендерится только `if (_hasMore)`; при `hasMore == false` она полностью скрыта. Нажатие подгружает `page: _page + 1`, элементы **добавляются** к списку (не заменяют), `saveCurrencyList` вызывается для элементов новой страницы; повторное нажатие блокируется флагом загрузки.
+- Потеря фокуса экраном: в `didChangeDependencies` через `ModalRoute.of(context)` (зависимость от `_ModalScopeStatus`) отслеживается `isCurrent`; при переходе `true → false` (уход на вкладку «Новости»/«Профиль», пуш деталей) вызывается `_initData()` — свежий запрос `fetchRates(CurrencyPageRequest(base: 'USD', page: 0, pageSize: 20))`, который перезаписывает список и сбрасывает пагинацию. Так как смена вкладки в `HomePage` заменяет поддерево, обновление происходит до `dispose()`.
+- `_filteredCurrenciesNotifier` теперь создаётся один раз в `initState` (раньше пересоздавался в future-колбэке), значение обновляется через `.value` — это нужно для повторных загрузок.
+
+**l10n**: добавлен ключ `showMore` в `assets/l10n/locale_ru.arb` («Показать ещё») и `locale_en.arb` («Show more») + регенерированные вручную `lib/app/gen/l10n/app_localizations*.dart` (генератор недоступен офлайн).
+
+**`test/widget/currency_list_page_test.dart`**: 3 новых теста — скрытие кнопки при `hasMore == false`, показ/подгрузка следующей страницы при `hasMore == true`, и обновление при потере фокуса (проверяется, что после открытия деталей ушёл запрос с `base: 'USD'`, `page: 0`); добавлен `reset` мока в `setUp` для изоляции.
+
+**`changelog/10053.bugfix.rst`** — фрагмент по требованию I.5.
+
+## Проверка
+- `flutter analyze` → **No issues found!**
+- `flutter test` → **36 тестов, все зелёные** (было 33, добавлено 3).
+
+Замечание: «потеря фокуса» трактована как уход экрана с вершины навигатора (смена вкладки или пуш деталей) — это единственная наблюдаемая в проекте потеря фокуса; при возврате на вкладку экран пересоздаётся `HomePage` и данные и так загружаются заново.

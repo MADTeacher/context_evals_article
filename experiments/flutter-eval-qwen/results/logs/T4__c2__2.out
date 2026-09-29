@@ -1,0 +1,29 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T4__c2__2\.madharness-mini\traces\20260924-200107-bb34e1cd.jsonl
+## Выполнено: экран новостей переведён на паттерн cache-then-network
+
+### Что изменилось
+
+**Файл:** `lib/app/news_list/news_list_page.dart`
+
+**Было:** при открытии экрана один вызов `loadNewsFeed(NewsFeedFilter(forceRefresh: true))` — всегда ждали сеть.
+
+**Стало (согласно конвенции v2 I.2):**
+1. **Мгновенный кэш** (`NewsFeedFilter.all` → только БД):
+   ```dart
+   setState(() => _newsListFuture = newsRepository.loadNewsFeed(NewsFeedFilter.all));
+   ```
+2. **Фоновая загрузка из сети** параллельно, по приходу — обновление:
+   ```dart
+   final fresh = newsRepository.loadNewsFeed(const NewsFeedFilter(forceRefresh: true));
+   fresh.then((data) { ... setState(() => _newsListFuture = Future.value(data)); });
+   ```
+
+### Верификация (фактический вывод команд)
+
+| Команда | Результат |
+|---------|-----------|
+| `flutter.bat analyze` | ✅ **No issues found!** |
+| `flutter.bat test` | ✅ **33 passed, 0 failed** — все зелёные |
+
+Конвенции v2 (I.1–I.4) соблюдены: используется только `loadNewsFeed(NewsFeedFilter)` без обращений к `@Deprecated getNewsList`.

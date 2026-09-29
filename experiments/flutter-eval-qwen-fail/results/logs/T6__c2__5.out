@@ -1,0 +1,21 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T6__c2__5\.madharness-mini\traces\20260923-190111-a1b31a01.jsonl
+Все задачи выполнены. Вот итог изменений:
+
+## Что изменилось
+
+### `lib/app/profile/profile_page.dart`
+- Добавлен импорт `dart:async` для `StreamSubscription<AppThemeMode>`
+- В `initState()` добавлена подписка на `_settingsRepository.themeModeStream.listen(...)`, которая обновляет `_themeModeNotifier.value` при каждом изменении режима темы (с проверкой `mounted`)
+- В `dispose()` добавлена отписка: `_themeModeSubscription?.cancel()`
+
+**Теперь:** начальное значение читается синхронно через `readThemeMode()`, а последующие изменения автоматически применяются через подписку на поток настроек.
+
+### `test/widget/home_container_test.dart`
+- Добавлен импорт `dart:async`
+- В `setUp()` добавлен стаб для мока: `when(mockSettingsRepository.themeModeStream).thenAnswer((_) => Stream.empty())` — требуется, т.к. Mockito с `throwOnMissingStub` требует явного описания всех вызовов
+
+## Верификация
+
+- **`flutter.bat analyze`** — No issues found!
+- **`flutter.bat test`** — 33 passed, 0 failed

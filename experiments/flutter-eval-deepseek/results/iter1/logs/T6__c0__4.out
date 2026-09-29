@@ -1,0 +1,16 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c0__4\.madharness-mini\traces\20260924-001137-cfe8e98f.jsonl
+**Что изменено**
+
+- `lib/app/profile/profile_page.dart`:
+  - Убран `ValueNotifier` с ручной синхронизацией (`_themeModeNotifier` и его `dispose`/присваивание в `onTap`).
+  - Список темы обёрнут в `StreamBuilder<AppThemeMode>` с `stream: _settingsRepository.themeModeStream` и `initialData: _themeMode`, где `_themeMode` — синхронное чтение `_settingsRepository.readThemeMode()` (конвенция из `docs/migration-v2.md`: read после `initAsyncData()` на Splash). Fallback `snapshot.data ?? _themeMode` — как в `lib/app/app.dart`.
+  - Выбор режима в шторке по-прежнему идёт через `ThemeModeSelectorBottomSheet`, но теперь только вызывает `_settingsRepository.setThemeMode(newMode)` — отображение обновляется из потока; добавлена проверка `context.mounted` после `await`.
+  - `title` вынесен в `Text(loc.theme, ...)` (child у `StreamBuilder` больше нет).
+- `test/widget/home_container_test.dart`: добавлен стаб `when(mockSettingsRepository.themeModeStream).thenAnswer((_) => const Stream<AppThemeMode>.empty())` — без него строгий мок падал с `MissingStubError` при построении `ProfilePage`.
+- `changelog/10053.bugfix.rst`: фрагмент changelog (конвенция из `docs/migration-v2.md`).
+
+**Проверки**
+
+- `flutter analyze` — `No issues found!`
+- `flutter test` — `All tests passed!` (33 теста)

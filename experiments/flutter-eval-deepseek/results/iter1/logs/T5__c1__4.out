@@ -1,0 +1,24 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T5__c1__4\.madharness-mini\traces\20260924-001429-7f12e2f4.jsonl
+Готово.
+
+**Что сделано**
+
+1. `test/unit/repository_test.dart` — в группе `SettingsRepository` добавлены 4 теста:
+   - `readThemeMode returns actual theme mode value after initAsyncData` — после `initAsyncData()` возвращается актуальное значение (`dark`), датасорс опрошен один раз;
+   - `readThemeMode reflects theme mode change made after initAsyncData` — после `setThemeMode(dark)` чтение отдаёт новое значение (не кэш), датасорс опрошен дважды;
+   - `readThemeMode throws StateError when called before initAsyncData` — до `initAsyncData()` бросается `StateError`, а датасорс не опрашивается (`verifyNever`) — это и есть проверка «безопасно вызывать только после init»;
+   - `readThemeMode is safe to call after initAsyncData` — тот же вызов после инициализации проходит без исключений.
+
+2. `lib/data/repository_impl/settings_repository_impl.dart` — добавлен флаг `_isInitialized` (устанавливается в `initAsyncData()`), и `readThemeMode()` теперь бросает `StateError`, если вызван до инициализации. Без этой правки требование «только после `initAsyncData()`» ничем не обеспечивалось: метод просто читал датасорс, и тест на преждевременный вызов падал.
+
+3. Существующий тест `should return current theme mode value` (проверял deprecated-геттер `themeMode`) теперь сначала вызывает `initAsyncData()` — его смысл сохранён (геттер возвращает значение датасорса), но он больше не нарушает конвенцию v2.
+
+4. `changelog/10053.bugfix.rst` — запись о пользовательском изменении, как требует `docs/migration-v2.md`.
+
+**Проверки**
+
+- `flutter test` — 37 тестов, все прошли (остальные тесты не сломаны; исходный прогон `test/unit/repository_test.dart` до правок тоже был зелёным — 15 тестов).
+- `flutter analyze` — `No issues found!`.
+
+Замечание: `readThemeMode()` вызывается в `profile_page.dart` через `late final` инициализатор, то есть только при построении страницы — это происходит после Splash/`initAsyncData()`, поэтому в рантайме поведение не меняется.

@@ -1,0 +1,14 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T5__c2__4\.madharness-mini\traces\20260923-102535-af023d29.jsonl
+## Итоги
+
+**Изменения:** В `test/unit/repository_test.dart` добавлены два новых теста в группу `SettingsRepository`:
+
+1. **`readThemeMode returns the actual value from datasource`** — проверяет, что метод `readThemeMode()` возвращает реальное значение из datasource (`AppThemeMode.dark`)
+2. **`readThemeMode is safe to call after initAsyncData`** — подтверждает безопасный вызов после `initAsyncData()`, возвращая ожидаемое значение (`AppThemeMode.light`)
+
+Также добавлен `tearDown(() => reset(mockPreferenceDatasource))` для корректного сброса моков между тестами.
+
+**Результаты проверки:**
+- ✅ `flutter analyze` — **No issues found!**
+- ✅ `flutter test` — **35 passed, 0 failed** (все существующие тесты не сломались)

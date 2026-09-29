@@ -1,0 +1,22 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T2__c0__5\.madharness-mini\traces\20260924-093506-4137c91d.jsonl
+Готово. Изменения внесены, анализ и тесты чистые.
+
+## Что сделано
+
+**`lib/app/currency_list/currency_list_page.dart`** — основной экран переписан:
+- **Кнопка «Показать ещё»** добавлена под списком и привязана к `ValueNotifier<bool>` с признаком `CurrencyPage.hasMore`. Когда следующих страниц нет (`hasMore == false`), кнопка полностью скрывается (`SizedBox.shrink()`), а не просто дизейблится. При нажатии догружается следующая страница (`page + 1`) и список дополняется.
+- **Обновление при потере/возврате фокуса**: состояние подписано на `WidgetsBindingObserver`, и при `AppLifecycleState.resumed` (приложение снова активно) вызывается `_reload()` — свежий запрос первой страницы с базовой валютой проекта, сброс пагинации. Observer снимается в `dispose`.
+- Запросы теперь идут через `fetchRates(CurrencyPageRequest(base: AppConstants.baseCurrency, ...))` вместо дефолтного `EUR`; убрана `FutureBuilder`-обвязка (данные приходят и обновляются императивно), поиск/фильтр сохранён.
+
+**`lib/app/constants.dart`** — добавлена константа `AppConstants.baseCurrency = 'RUB'` (базовая валюта проекта).
+
+**`assets/l10n/locale_ru.arb` / `locale_en.arb`** — добавлена строка `showMore` («Показать ещё» / «Show more»); сгенерированные `lib/app/gen/l10n/*` пересозданы командой `flutter gen-l10n`.
+
+**`changelog/10053.feature.rst`** — запись в формате существующих changelog-файлов.
+
+## Проверка
+- `flutter analyze` — `No issues found!`
+- `flutter test` — `All tests passed!` (33 теста)
+
+Примечание: «потеря фокуса экрана» реализована как жизненный цикл приложения (`resumed`), потому что вкладки `HomePage` не пересоздают страницу и не шлют уведомлений о фокусе — только переход в фон/возврат реально означает потерю/возврат фокуса экрана. Если под этим имелся в виду переключатель вкладок bottom-nav, скажите — добавлю уведомление от `HomePage`.

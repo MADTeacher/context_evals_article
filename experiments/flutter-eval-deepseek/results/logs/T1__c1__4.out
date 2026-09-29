@@ -1,0 +1,24 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T1__c1__4\.madharness-mini\traces\20260924-091548-d0e4256c.jsonl
+Готово. Реализована подгрузка следующей страницы курса валют по кнопке «Показать ещё».
+
+## Что изменено
+
+**`lib/app/currency_list/currency_list_page.dart`**
+- Добавлено состояние пагинации: `_currentPage`, `_hasMore`, `_isLoadingMore`, `_query` и константа `_pageSize = 20`.
+- `_initData` теперь сохраняет `page.page` и `page.hasMore` первой страницы.
+- Новый метод `_loadMore()`: защищён от повторного запуска (`_isLoadingMore`/`_hasMore`), запрашивает `CurrencyPageRequest(page: _currentPage + 1, pageSize: _pageSize)`, дописывает `page.items` к `_allCurrencies` и повторно применяет текущий поисковый запрос через `_filterCurrencies(_query)`.
+- `_filterCurrencies` теперь запоминает запрос в `_query`, чтобы фильтр сохранялся после подгрузки.
+- Под списком добавлена кнопка «Показать ещё» (показывается только при `_hasMore`), во время загрузки — заблокирована со спиннером.
+
+**Локализация**: ключ `showMore` добавлен в `assets/l10n/locale_ru.arb` («Показать ещё») и `locale_en.arb` («Show more»), файлы `lib/app/gen/l10n/*` перегенерированы через `flutter gen-l10n`.
+
+**`test/widget/currency_list_page_test.dart`**: новый тест — первая страница с `hasMore: true`, тап по кнопке, проверка что элементы дописались (2 карточки, появился EUR) и кнопка исчезла.
+
+**`CHANGELOG.md`**: добавлена запись (файла ранее не было).
+
+## Проверка
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (34 теста: 33 прежних + новый на пагинацию)
+
+Поиск по списку сохранён: фильтрация идёт по `_allCurrencies`, поэтому после подгрузки новые элементы тоже участвуют в поиске.

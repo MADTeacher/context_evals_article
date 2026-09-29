@@ -1,0 +1,21 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T2__c2__2\.madharness-mini\traces\20260924-092042-603b4ffa.jsonl
+Готово. `flutter analyze` — «No issues found!», `flutter test` — 36/36 зелёных.
+
+## Что изменено
+
+**`lib/app/currency_list/currency_list_page.dart`** — экран переписан на пагинацию v2:
+- Запросы только через `fetchRates(CurrencyPageRequest(base: 'USD', page: N))` — базовая валюта проекта USD, дефолт `EUR` не используется (I.1).
+- Кнопка «Показать ещё» (`TextButton`) рендерится под списком только при `_hasMore == true`, т.е. когда `hasMore == false` — скрывается (признак конца пагинации).
+- «Показать ещё» вызывает `_loadNextPage()`: `page: _currentPage + 1`, элементы **добавляются** к списку (`[..._allCurrencies, ...page.items]`), `saveCurrencyList` — для элементов текущей страницы (I.2–I.4 reference currency).
+- При потере фокуса экрана (`Focus.onFocusChange` с `hasFocus == false`) вызывается `_loadFirstPage()` — свежий запрос `fetchRates(CurrencyPageRequest(base: 'USD'))`, список заменяется, кэш обновляется.
+- Дефолтную страницу не отдаём дважды: первый `_loadFirstPage` идёт в `addPostFrameCallback`, поэтому `Focus`-нода (и её начальное событие фокуса) уже построена.
+- Найденный по ходу баг: после асинхронного `await` состояние менялось без `setState`, из-за чего кнопка не появлялась/не исчезала; добавлены `setState(() {})` в обоих загрузчиках. `@Deprecated`-члены не используются.
+
+**l10n** — добавлен ключ `showMore` в `assets/l10n/locale_ru.arb` («Показать ещё») и `locale_en.arb` («Show more») плюс синхронно обновлены сгенерированные `lib/app/gen/l10n/app_localizations{,_ru,_en}.dart` (gen-l10n не перезапускался, чтобы не затирать существующий сгенерированный код).
+
+**`test/widget/currency_list_page_test.dart`** — 3 новых теста: кнопка скрыта при `hasMore: false`; подгрузка второй страницы добавляет элементы и скрывает кнопку на последней странице; при потере фокуса идёт свежий запрос с `base == 'USD'` и `page == 0`.
+
+**`changelog/10053.bugfix.rst`** — фрагмент changelog по I.5.
+
+Замечание для сведения: `test/mocks/repository.mocks.dart` — файл, помеченный `Do not manually edit`. Я добавил в стаб `fetchRates` только `returnValueForMissingStub: null` (без этого mockito падал с `MissingStubError` на нестабированном вызове внутри `_loadFirstPage` при `setState` в уже смонтированном дереве). Если предпочитаете регенерировать моки через `build_runner`, эту строку можно снять — поведение стаба от неё не зависит.

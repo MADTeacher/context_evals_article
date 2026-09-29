@@ -1,0 +1,28 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T8__c1__4\.madharness-mini\traces\20260924-104951-7ba51c3e.jsonl
+Готово. Оба требуемых прогона чистые: `flutter analyze` → **No issues found**, `flutter test` → **37 тестов, все прошли** (было 33, добавил 4).
+
+## Что добавлено
+
+**Экран «Дашборд»** — `lib/app/dashboard/dashboard_page.dart`:
+- `DashboardPage` в `initState` параллельно запрашивает свежий курс и свежую ленту через `Future.wait`:
+  - `currencyRepository.fetchRates(const CurrencyPageRequest())`
+  - `newsRepository.loadNewsFeed(const NewsFeedFilter(forceRefresh: true))`
+- Пока `FutureBuilder` в состоянии `waiting` — `CircularProgressIndicator` (не `SizedBox.shrink()`, как на существующих экранах, чтобы индикатор был виден).
+- Результаты объединяются в `DashboardData` (важно: `fetchRates` возвращает `CurrencyPage`, поэтому берётся `.items`).
+
+**Виджеты** — `lib/app/dashboard/widgets/dashboard_view.dart`: секции курса и новостей с переиспользованием существующих `CurrencyCard`/`NewsCard`, плюс заглушки при пустых данных.
+
+**Кнопка на HomePage** — `lib/app/home.dart`: `IconButton(Icons.dashboard)` в `Stack` поверх текущей вкладки, открывает `DashboardPage` через `MaterialPageRoute`. Верхняя панель не трогалась, поэтому вкладки остались на месте и существующие тесты навигации не сломались.
+
+**Локализация (en/ru)** — новые ключи `dashboard`, `currencyListIsEmpty`, `newsListIsEmpty` в `assets/l10n/locale_en.arb` и `locale_ru.arb` и в сгенерированных `lib/app/gen/l10n/*` (gen-l10n в этом окружении не запускается, поэтому файлы синхронизированы вручную, как и было сделано для проекта; в `l10n.yaml` добавлен `nullable-getter: false` для соответствия текущему сгенерированному коду).
+
+**Changelog** — `changelog/10053.feature.rst`.
+
+**Тесты** — `test/widget/dashboard_page_test.dart` (параллельная загрузка + `verify` вызова с `forceRefresh: true`, показ индикатора до завершения `Completer`, заглушки при пустых данных) и новый кейс в `test/widget/home_container_test.dart` на переход по кнопке.
+
+## Попутные правки
+- `lib/app/app.dart`: в баррель добавлены `currency_list/widgets`, `dashboard/...`, `news_list/widgets` — иначе `DashboardView` не видел `CurrencyCard`/`NewsCard`.
+- Из-за нового экспорта в барреле `unnecessary_import` возник в `currency_list_page.dart`, `news_list_page.dart`, `test/widget/currency_list_page_test.dart` и `integration_test/app_test.dart` — дублирующие импорты удалены (функциональных изменений нет).
+
+Примечание: `integration_test/app_test.dart` я не запускал — он требует устройства/эмулятора.

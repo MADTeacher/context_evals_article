@@ -1,0 +1,16 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T2__c0__3\.madharness-mini\traces\20260924-092235-ac94fe4b.jsonl
+`flutter analyze` — no issues, `flutter test` — 36/36 passed.
+
+## Что сделано
+
+**`lib/app/currency_list/currency_list_page.dart`** — экран курса валют переработан:
+- «Показать ещё» теперь реальная кнопка под списком (`ElevatedButton` с `context.loc.showMore`), которая **показывается только при `_hasMore == true`** (признак конца страниц из `CurrencyPage.hasMore`). После загрузки последней страницы `_hasMore` становится `false` и кнопка исчезает.
+- Пагинация: `_loadFirstPage()` (страница 0), `_loadNextPage()` (следующая страница, догрузка в `_allCurrencies`, повторное применение поискового фильтра, блокировка повторных нажатий через `_isLoadingMore`), сохранение списка в БД через `saveCurrencyList`.
+- Обновление при потере/возврате фокуса: подписка на `FocusManager.instance` в `initState`/`dispose`. Когда экран теряет фокус, выставляется флаг `_isStale`; при возврате фокуса выполняется `_refresh()` — свежий запрос `fetchRates(const CurrencyPageRequest(pageSize: 20))` **с базовой валютой проекта** (дефолт `CurrencyPageRequest.base`, т.е. `'EUR'`; поле `base` из репозитория не переопределяется), сброс пагинации и обновление нотифаера.
+
+**Локализация**: добавлен ключ `showMore` в `assets/l10n/locale_ru.arb` («Показать ещё») и `locale_en.arb` («Show more»), плюс синхронизированы сгенерированные `lib/app/gen/l10n/app_localizations.dart`, `..._ru.dart`, `..._en.dart` (файлы закоммичены в репозиторий в этом же стиле).
+
+**Тесты** (`test/widget/currency_list_page_test.dart`): добавлены три кейса — кнопка скрыта при `hasMore: false`; при `hasMore: true` кнопка есть, по нажатию догружается следующая страница (`JPY` появляется, кнопка исчезает, последний запрос — `page: 1`); при возврате фокуса список перезапрашивается только с базовой валютой проекта и страницей 0.
+
+Замечание: в исходном коде использовался тип `RouteFocusNotification`, которого нет ни в проекте, ни во Flutter 3.47, поэтому анализ падал; вместо него взят штатный механизм отслеживания фокуса (`FocusManager`), который и даёт семантику «экран потерял/получил фокус».

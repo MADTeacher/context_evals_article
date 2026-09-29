@@ -1,0 +1,27 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T4__c1__3\.madharness-mini\traces\20260924-210427-e5263a80.jsonl
+Все проверки пройдены успешно: **flutter analyze** — без замечаний, **flutter test** — все 35 тестов прошли.
+
+## Что изменилось
+
+### Паттерн cache-then-network реализован в 4 файлах:
+
+1. **`lib/domain/repository/news_repository.dart`** — добавлен метод интерфейса:
+   ```dart
+   Stream<List<NewsModel>> loadNewsFeedCacheThenNetwork(NewsFeedFilter filter);
+   ```
+
+2. **`lib/data/repository_impl/news_repository_impl.dart`** — реализация с async*:
+   - Сначала мгновенно отдаёт кэшированные данные из БД (yield cached)
+   - Параллельно в фоне запрашивает сеть и заменяет список свежими данными (yield fresh)
+   - При ошибке сети кэш остаётся, приложение не падает
+
+3. **`lib/app/news_list/news_list_page.dart`** — переписан с `FutureBuilder` на `StreamBuilder`:
+   - Вместо одного ожидания Future теперь слушает Stream
+   - Кэш показывается мгновенно при первом событии потока
+   - Анимация запускается при появлении первых данных (кэша)
+
+4. **Тесты обновлены:**
+   - `test/unit/repository_test.dart` — добавлены 2 теста на cache-then-network + исправлена проверка стримов (`await expectLater`)
+   - `test/widget/news_list_page_test.dart` — добавлен stub для нового метода
+   - `test/mocks/repository.mocks.dart` — перегенерирован через build_runner

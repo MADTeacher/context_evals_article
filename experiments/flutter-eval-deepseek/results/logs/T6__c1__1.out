@@ -1,0 +1,15 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c1__1\.madharness-mini\traces\20260924-100629-61939402.jsonl
+Готово.
+
+**Что изменено**
+
+- `lib/app/profile/profile_page.dart`: вместо локального `ValueNotifier` теперь `StreamBuilder<AppThemeMode>` поверх `SettingsRepository.themeModeStream`, поэтому подпись темы обновляется автоматически при смене режима (в том числе из нижнего шита). Начальное значение читается синхронно в `initState` через `_settingsRepository.readThemeMode()` и передаётся в `initialData` — UI сразу показывает актуальный режим, без ожидания первого события потока. Заодно убраны дублирующий `setThemeMode` (его уже вызывает `ThemeModeSelectorBottomSheet`) и ручной `dispose` нотифаера.
+- `test/widget/profile_page_test.dart` (новый): тест на синхронное отображение начального режима и тест на автообновление после `setThemeMode`.
+- `test/widget/home_container_test.dart`: добавлен стаб `themeModeStream` для `MockSettingsRepository` — без него мок падал с `MissingStubError`.
+- `CHANGELOG.md` (новый): запись по правилу из AGENTS.md.
+
+**Проверки**
+
+- `flutter analyze` — No issues found.
+- `flutter test` — All tests passed (35).

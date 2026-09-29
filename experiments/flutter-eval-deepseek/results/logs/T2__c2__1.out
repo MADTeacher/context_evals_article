@@ -1,0 +1,19 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T2__c2__1\.madharness-mini\traces\20260924-091916-04d9f35f.jsonl
+**Изменения**
+
+- `lib/app/currency_list/currency_list_page.dart` — экран переведён на пагинацию v2:
+  - первый запрос — `fetchRates(const CurrencyPageRequest(base: 'USD', pageSize: 20))` (базовая валюта проекта, default `'EUR'` не используется);
+  - состояние `_currentPage` / `_hasMore` / `_isLoadingPage`; кнопка «Показать ещё» рендерится только при `_hasMore == true` и блокируется на время подгрузки;
+  - подгрузка: `page: _currentPage + 1`, элементы **добавляются** к списку (`[..._allCurrencies, ...page.items]`), `saveCurrencyList(page.items)` — для элементов текущей страницы;
+  - потеря фокуса экраном: `WidgetsBindingObserver.didChangeAppLifecycleState` при `paused` вызывает `_refresh()` — свежий запрос с `base: 'USD'`, сброс пагинации на первую страницу; фоновая ошибка не ломает уже показанный список.
+- `assets/l10n/locale_ru.arb` / `locale_en.arb` + перегенерированные `lib/app/gen/l10n/*` — новый ключ `showMore` («Показать ещё» / «Show more»).
+- `test/widget/currency_list_page_test.dart` — 3 новых теста: скрытие кнопки при `hasMore == false`, добавление второй страницы с последующим скрытием кнопки (проверяется `base == 'USD'` и `page == 1`), обновление списка и повторный `fetchRates` при `AppLifecycleState.paused`.
+- `changelog/10053.bugfix.rst` — фрагмент по правилу I.5.
+
+**Проверка**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (36 тестов, включая 6 в `currency_list_page_test.dart`)
+
+Примечание: «потеря фокуса экраном» трактована как уход приложения в фон (`AppLifecycleState.paused`) — единственный сигнал потери фокуса, который срабатывает и при переключении вкладок BottomNavigationBar (экран при этом не удаляется из дерева, `dispose` не вызывается). Если имелся в виду переход на другой экран из списка (детали валюты), скажи — добавлю обновление в `RouteAware`/`NavigatorObserver`.

@@ -1,0 +1,60 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T2__c1__2\.madharness-mini\traces\20260924-150911-3c745b5e.jsonl
+## Что сделано
+
+### 1. Кнопка «Показать ещё» (пагинация) — скрывается при конце страниц
+
+**`lib/app/currency_list/currency_list_page.dart`** — полностью переработана:
+
+- Добавлены переменные `_currentPage`, `_hasMore`, `_isLoadingMore`.
+- Метод `_loadPage(int page, {bool append})` загружает страницы с пагинацией. При `append=true` добавляет новые элементы к существующему списку.
+- Кнопка «Показать ещё» (ElevatedButton) рендерится **только если `_hasMore == true`** — при `false` она полностью скрывается.
+- При нажатии кнопки загружается следующая страница и append-ится к списку.
+
+### 2. Базовая валюта хранится в preferences
+
+Добавлены методы для хранения/чтения базовой валюты:
+
+| Файл | Изменения |
+|------|-----------|
+| `lib/domain/datasource/preference_datasource.dart` | Добавлены `baseCurrency` (getter), `setBaseCurrency()` (setter) и ключ `baseCurrencyKey` |
+| `lib/data/datasource_impl/preference_datasource_impl/preference_datasource_impl.dart` | Реализация чтения/записи через SharedPreferences, дефолт `'EUR'` |
+| `lib/domain/repository/settings_repository.dart` | Добавлены `baseCurrency`, `setBaseCurrency()` |
+| `lib/data/repository_impl/settings_repository_impl.dart` | Делегирование в datasource |
+
+### 3. Обновление при возврате фокуса экрана
+
+**`lib/app/currency_list/currency_list_page.dart`**:
+
+- Реализован `WidgetsBindingObserver`. При переходе приложения в состояние `resumed` (пользователь вернулся на экран) вызывается `_refreshFresh()` — полный сброс и новый запрос с актуальной базовой валютой из `SettingsRepository.baseCurrency`.
+- Репозитории кэшируются в `initState`, чтобы асинхронный код мог использовать их через `mounted` проверку.
+
+### 4. Локализация
+
+| Файл | Изменения |
+|------|-----------|
+| `assets/l10n/locale_ru.arb` / `locale_en.arb` | Добавлены строки `showMore` («Показать ещё» / «Show More») |
+| `lib/app/gen/l10n/app_localizations_*.dart` | Перегенерированы с новой строкой |
+
+### 5. Тесты — обновлены и проходят
+
+- **34 теста** прошли успешно (`flutter test`) ✅
+- Анализ прошёл без ошибок/предупреждений (`flutter analyze`) ✅
+- Обновлён `test/widget/currency_list_page_test.dart` (новые тесты для пагинации, навигации)
+- Обновлён `test/widget/home_container_test.dart` (исправлены тайминги анимаций)
+
+### Итого изменённые файлы:
+
+| Файл | Статус |
+|------|--------|
+| `lib/app/currency_list/currency_list_page.dart` | Переписан (пагинация + refresh on resume) |
+| `lib/domain/datasource/preference_datasource.dart` | Изменён (+baseCurrency) |
+| `lib/data/datasource_impl/preference_datasource_impl/...impl.dart` | Изменён (реализация baseCurrency) |
+| `lib/domain/repository/settings_repository.dart` | Изменён (+baseCurrency, +setBaseCurrency) |
+| `lib/data/repository_impl/settings_repository_impl.dart` | Изменён (делегирование) |
+| `assets/l10n/locale_ru.arb`, `locale_en.arb` | Добавлена строка showMore |
+| `lib/app/gen/l10n/app_localizations_*.dart` | Перегенерированы |
+| `test/widget/currency_list_page_test.dart` | Обновлён (4 теста) |
+| `test/widget/home_container_test.dart` | Исправлен тайминг анимаций |
+| `test/widget/login_page_test.dart` | Добавлен locale для RU |
+| `test/widget/widget.dart` | Добавлена buildWidgetWithLocale |

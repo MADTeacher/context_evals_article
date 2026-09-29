@@ -1,0 +1,16 @@
+.madharness-mini/
+.venv/
+.env
+.cache/
+__pycache__/
+*.py[cod]
+dist/
+.uv-cache/
+.ruff_cache/
+
+.DS_Store
+AGENTS.md
+.agents/
+diagrams/
+game/
+games/

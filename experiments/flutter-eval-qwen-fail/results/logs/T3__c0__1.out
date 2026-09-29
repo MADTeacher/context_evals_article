@@ -1,0 +1,98 @@
+Exception in thread Thread-4 (_readerthread):
+Traceback (most recent call last):
+  File "C:\Users\MADTeacher\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\MADTeacher\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MADTeacher\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\subprocess.py", line 1614, in _readerthread
+    buffer.append(fh.read())
+                  ~~~~~~~^^
+  File "<frozen codecs>", line 325, in decode
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xcd in position 6: invalid continuation byte
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T3__c0__1\.madharness-mini\traces\20260923-063648-d2a42a68.jsonl
+К сожалению, Flutter SDK не установлен на машине — все попытки его найти (`/usr/local/flutter`, `/opt/flutter`, `/flutter` и т.д.) завершились неудачей. Поэтому запустить `flutter analyze` и `flutter test` из терминала нельзя. Ниже — подробный ручной аудит изменений.
+
+---
+
+## Что изменилось
+
+**Файл:** `lib/app/news_list/news_list_page.dart`
+
+### 1. Кнопка «Обновить» в AppBar
+В `appBar:` добавлен блок `actions:` с `IconButton`:
+
+```dart
+appBar: AppBar(
+  title: Text(context.loc.news),
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.refresh),
+      onPressed: () => _refresh(context.read<NewsRepository>()),
+    ),
+  ],
+),
+```
+
+- Иконка `Icons.refresh` — стандартный Material-символ «обновить».
+- `onPressed` вызывает `_refresh()` с текущим репозиторием из `Provider`.
+
+### 2. Метод `_refresh` вынесен в отдельный метод
+**Было:** вызов `loadNewsFeed` напрямую в `_initData()`:
+```dart
+void _initData() {
+  final newsRepository = context.read<NewsRepository>();
+  _newsListFuture = newsRepository.loadNewsFeed(const NewsFeedFilter(forceRefresh: true)).then(...);
+}
+```
+
+**Стало:**
+```dart
+void _initData() {
+  final newsRepository = context.read<NewsRepository>();
+  _refresh(newsRepository);
+}
+
+void _refresh(NewsRepository newsRepository) {
+  _newsListFuture = newsRepository
+      .loadNewsFeed(const NewsFeedFilter(forceRefresh: true))
+      .then((List<NewsModel> value) {
+    _scaleController.forward(); // запускаем анимацию
+    return value;
+  });
+}
+```
+
+Это позволяет переиспользовать логику при нажатии кнопки и в `initState`.
+
+### 3. Поведение при обновлении
+- `NewsFeedFilter(forceRefresh: true)` — по документации проекта (docs/migration-v2.md), это означает **запрос из сети**, минуя кэш БД.
+- При каждом нажатии кнопки `FutureBuilder` получает новый `Future` → перерисовывается с состоянием `loading`, а затем показывает обновлённые данные.
+- Анимация `ScaleTransition` перезапускается через `_scaleController.forward()`.
+
+---
+
+## Ручной аудит на ошибки
+
+| Проверка | Результат |
+|----------|-----------|
+| **Импорты** — все нужные типы (`Icons`, `IconButton`, `AppBar`, `NewsRepository`) доступны через существующие импорты (`app.dart` экспортирует `flutter/material.dart` и `provider/provider.dart`; `domain.dart` экспортирует `NewsRepository`). ✅ |
+| **Контекст в `onPressed`** — `context.read<NewsRepository>()` вызывается внутри замыкания `IconButton.onPressed`, который выполняется после `build`. В Flutter это корректно, так как `context` берётся из замыкания, а не из `build`. ✅ |
+| **Состояние `_newsListFuture`** — `late`-переменная инициализируется в `_initData()` (вызывается в `initState`) и перезаписывается при вызове `_refresh()`. NPE невозможен. ✅ |
+| **AnimationController** — не dispose'ается повторно, просто запускается `forward()`. ✅ |
+| **Тесты** — существующий тест (`news_list_page_test.dart`) мокает `loadNewsFeed(any)`, поэтому он должен пройти без изменений (кнопка есть в дереве виджетов, но тест на неё не проверяет). ✅ |
+
+---
+
+## Вердикт по `flutter analyze` и `flutter test`
+
+Я **не могу** запустить эти команды — Flutter SDK отсутствует в среде. Если вы выполните их локально:
+
+```bash
+flutter analyze lib/app/news_list/
+flutter test test/widget/news_list_page_test.dart
+```
+
+— код не должен выдавать ошибок, так как используются только существующие API и импорты.

@@ -1,0 +1,19 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T6__c1__1\.madharness-mini\traces\20260925-000232-37d465c4.jsonl
+**flutter analyze** — no issues, **flutter test** — все 33 теста прошли.
+
+---
+
+## Что изменилось
+
+### `lib/app/profile/profile_page.dart`
+
+1. **Начальное значение читается синхронно** — `_themeModeNotifier` теперь инициализируется в методе `_initThemeMode()`, который вызывается из `initState()` с помощью `context.read<SettingsRepository>().readThemeMode()`. Ранее попытка обратиться к `context.read` при объявлении поля (на уровне класса) была некорректной.
+
+2. **Подписка на поток настроек** — добавлен `_subscribeToThemeModeStream()`, который подписывает `ValueNotifier` на `settingsRepository.themeModeStream`. При каждом обновлении темы через `setThemeMode()` значение в `ProfilePage` обновляется автоматически через `_themeModeNotifier.value = mode`.
+
+3. **Корректная очистка** — в `dispose()` добавлена отмена подписки: `_themeModeSubscription?.cancel()`.
+
+### `test/widget/home_container_test.dart`
+
+Добавлен stub для `mockSettingsRepository.themeModeStream`, возвращающий пустой поток (`Stream.empty()`), чтобы мок-репозиторий не падал при вызове `.listen()` в новом коде.

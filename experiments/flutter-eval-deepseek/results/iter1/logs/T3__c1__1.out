@@ -1,0 +1,16 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T3__c1__1\.madharness-mini\traces\20260923-235334-9d5897b6.jsonl
+Готово. Кнопка «Обновить» добавлена в AppBar экрана новостей.
+
+**Изменения:**
+- `lib/app/news_list/news_list_page.dart` — в `AppBar` добавлен `IconButton` (`Icons.refresh`) с тултипом из локализации. Обработчик `_refresh()` через `context.read<NewsRepository>()` заново вызывает `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` и обновляет `_newsListFuture` внутри `setState` — это гарантирует загрузку именно из сети (в `NewsRepositoryImpl` ветка `forceRefresh` идёт в REST и перезаписывает кэш), минуя БД.
+- `assets/l10n/locale_ru.arb` / `locale_en.arb` — добавлен ключ `refresh` («Обновить» / «Refresh»).
+- `lib/app/gen/l10n/*` — перегенерировано через `flutter gen-l10n` (`String get refresh`).
+- `test/widget/news_list_page_test.dart` — новый тест «should reload feed from network when refresh is tapped»: тапает по иконке и проверяет, что второй вызов `loadNewsFeed` пришёл с `forceRefresh: true`. Также добавил `reset(mockNewsRepository)` в `setUp`, иначе вызовы мока накапливались между тестами.
+- `changelog/10053.feature.rst` — запись в changelog по правилам проекта.
+
+**Проверки:**
+- `flutter analyze` — No issues found.
+- `flutter test` — All tests passed (34).
+
+Примечание: изначально тест упал на длине списка вызовов (3 вместо 2) — это был не прод-баг, а отсутствие сброса мока между тестами; исправлено добавлением `reset`.

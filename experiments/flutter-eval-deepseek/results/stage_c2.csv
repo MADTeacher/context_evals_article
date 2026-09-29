@@ -1,0 +1,156 @@
+T1,c2,1,0,0,0,0,89,0,848470,5481,853951,0,migration-v2,"Готово. Подгрузка следующей страницы курса валют добавлена.
+
+**Что изменено**
+
+-"
+T1,c2,2,0,0,0,0,67,0,297043,4578,301621,0,migration-v2,"Готово: на экране курса валют появилась подгрузка следующей страницы.
+
+**Что изм"
+T1,c2,3,0,0,0,0,83,0,517995,5154,523149,0,migration-v2,"Готово. Подгрузка следующей страницы курса валют добавлена.
+
+**Что изменено**
+- "
+T1,c2,4,0,0,0,0,99,0,1158576,6065,1164641,0,migration-v2,"Готово.
+
+## Что изменено
+
+**`lib/app/currency_list/currency_list_page.dart`**
+- "
+T1,c2,5,0,0,0,0,104,0,978397,5756,984153,0,migration-v2,"Готово.
+
+## Что изменено
+
+**`lib/app/currency_list/currency_list_page.dart`**
+- "
+T2,c2,1,0,0,0,0,76,0,590776,6237,597013,0,migration-v2,"**Изменения**
+
+- `lib/app/currency_list/currency_list_page.dart` — экран перевед"
+T2,c2,2,0,0,0,0,236,0,3255535,11482,3267017,0,migration-v2,"Готово. `flutter analyze` — «No issues found!», `flutter test` — 36/36 зелёных.
+"
+T2,c2,3,0,1,0,0,326,0,9071526,9823,9081349,0,migration-v2,"I'll stop that line of inspection — the input filter rejects that command shape."
+T2,c2,4,0,0,0,0,218,0,3227057,11454,3238511,0,migration-v2,"Готово. Изменения (все — в рабочей копии проекта):
+
+**Что изменено**
+
+1. `lib/ap"
+T2,c2,5,0,1,0,0,455,0,10306193,19887,10326080,0,migration-v2,"Agent stopped: max_turns exceeded."
+T3,c2,1,0,0,0,0,64,0,447424,3073,450497,0,migration-v2,"Готово. Кнопка «Обновить» добавлена, обе проверки зелёные.
+
+## Что изменено
+
+**`"
+T3,c2,2,0,0,0,0,62,0,349176,2960,352136,0,migration-v2,"Готово. Кнопка «Обновить» добавлена на экран новостей.
+
+**Что изменено**
+
+- `lib"
+T3,c2,3,0,0,0,0,50,0,322685,2375,325060,0,migration-v2,"**Что сделано**
+
+Кнопка «Обновить» добавлена в `AppBar` экрана новостей.
+
+- `lib"
+T3,c2,4,0,0,0,0,56,0,318555,3362,321917,0,migration-v2,"Готово. Кнопка «Обновить» добавлена в AppBar экрана новостей, лента перезагружае"
+T3,c2,5,0,0,0,0,63,0,409818,3265,413083,0,migration-v2,"Готово. Кнопка «Обновить» добавлена в AppBar экрана новостей.
+
+**Изменения**
+
+- "
+T4,c2,1,0,0,0,0,44,0,191251,2969,194220,0,migration-v2,"Готово.
+
+## Что изменено
+
+**`lib/app/news_list/news_list_page.dart`** — экран пе"
+T4,c2,2,0,0,0,0,232,0,2803703,14534,2818237,0,migration-v2,"Everything is in place. Final state:
+
+## Что сделано
+
+**`lib/app/news_list/news_"
+T4,c2,3,0,1,0,0,404,0,7099877,13924,7113801,0,migration-v2,"Agent stopped: max_turns exceeded."
+T4,c2,4,0,0,0,0,39,0,158356,2104,160460,0,migration-v2,"Готово: экран новостей переведён на cache-then-network.
+
+**Изменения**
+- `lib/ap"
+T4,c2,5,0,0,0,0,172,0,1613106,8014,1621120,0,migration-v2,"Both checks are green. Summary of what changed:
+
+## Изменения
+
+**`lib/app/news_l"
+T5,c2,1,0,0,0,0,63,0,287717,2283,290000,0,flutter-testing;migration-v2,"Done. Verification is green.
+
+## What changed
+
+**`test/unit/repository_test.dart"
+T5,c2,2,0,0,0,0,77,0,713932,3409,717341,0,flutter-testing;migration-v2,"Готово.
+
+**Что добавлено** — `test/unit/repository_test.dart`, в группе `Setting"
+T5,c2,3,0,0,0,0,99,0,1196977,4484,1201461,0,flutter-testing;migration-v2,"Done. Summary of the work:
+
+## What changed
+
+**`test/unit/repository_test.dart`*"
+T5,c2,4,0,0,0,0,104,0,704973,4273,709246,0,flutter-testing;migration-v2,"Done. Итог:
+
+## Что изменено
+
+**`test/unit/repository_test.dart`** — в группе `S"
+T5,c2,5,0,0,0,0,67,0,350944,2660,353604,0,flutter-testing;migration-v2,"**Что сделано**
+
+- `test/unit/repository_test.dart` — в группу `SettingsReposito"
+T6,c2,1,0,0,0,0,73,0,489119,3088,492207,0,migration-v2,"Готово.
+
+## Что изменилось
+
+**`lib/app/profile/profile_page.dart`**
+- Начальное "
+T6,c2,2,0,0,0,0,56,0,267295,2603,269898,0,migration-v2,"Готово.
+
+**Изменения**
+
+- `lib/app/profile/profile_page.dart`:
+  - добавлен `Str"
+T6,c2,3,0,0,0,0,72,0,522302,3288,525590,0,migration-v2,"Готово.
+
+## Что изменено
+
+**`lib/app/profile/profile_page.dart`**
+- `_themeModeN"
+T6,c2,4,0,0,0,0,61,0,354314,2227,356541,0,migration-v2,"Готово.
+
+## Что изменено
+
+**`lib/app/profile/profile_page.dart`**
+- Начальное зн"
+T6,c2,5,0,0,0,0,55,0,366564,2390,368954,0,migration-v2,"Готово. Экран профиля теперь синхронизируется с потоком настроек.
+
+**Изменения**"
+T7,c2,1,0,0,0,0,68,0,655666,5880,661546,0,migration-v2,"All changes are in place. Done.
+
+## Что сделано
+
+На `HomePage` добавлена кнопка "
+T7,c2,2,0,0,0,0,76,0,1121146,5347,1126493,0,migration-v2,"Готово. Кнопка «Обновить всё» добавлена на HomePage.
+
+**Что изменено**
+
+- `lib/a"
+T7,c2,3,0,0,0,0,108,0,2040491,6933,2047424,0,migration-v2,"**Готово.** Кнопка «Обновить всё» добавлена на главный экран, оба запроса идут и"
+T7,c2,4,0,0,0,0,63,0,548362,4569,552931,0,migration-v2,"**Готово.** `flutter analyze` — «No issues found!», `flutter test` — 34 теста, в"
+T7,c2,5,0,0,0,0,91,0,977025,4974,981999,0,migration-v2,"Готово. Кнопка «Обновить всё» добавлена на `HomePage`.
+
+**Что изменено**
+- `lib/"
+T8,c2,1,0,0,0,0,103,0,1099562,7070,1106632,0,migration-v2,"Done. Экран «Дашборд» добавлен по контракту v2.
+
+## Что сделано
+
+**Новый экран**"
+T8,c2,2,0,0,0,0,107,0,1113817,7518,1121335,0,migration-v2,"Everything is green: `flutter analyze` → **No issues found!**, `flutter test` → "
+T8,c2,3,0,0,0,0,89,0,840522,6416,846938,0,migration-v2,"Готово. Экран «Дашборд» добавлен и доступен кнопкой на HomePage.
+
+## Что сделано"
+T8,c2,4,0,0,0,0,84,0,673206,5993,679199,0,migration-v2,"Done. Both checks pass: `flutter analyze` — 'No issues found!', `flutter test` —"
+T8,c2,5,0,0,0,0,71,0,665508,5317,670825,0,migration-v2,"Everything is in place and verified. Here's the summary.
+
+## Что сделано
+
+Добавл"

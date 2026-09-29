@@ -1,0 +1,21 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T8__c2__2\.madharness-mini\traces\20260925-030833-0a4ede6b.jsonl
+## Выполнено. Сводка изменений
+
+### Что создано / изменено
+
+| Файл | Действие |
+|---|---|
+| `lib/app/dashboard_page.dart` | **Новый** — экран «Дашборд». При `initState` через `Future.wait` параллельно загружаются: курс (`fetchRates(CurrencyPageRequest)`) и новости (`loadNewsFeed(NewsFeedFilter(forceRefresh: true))`). Пока данные не пришли — `Center(child: CircularProgressIndicator())`. |
+| `lib/app/home.dart` | **Изменён** — добавлен `FloatingActionButton` с `Icons.dashboard`, при нажатии — `Navigator.push(... DashboardPage)`. |
+| `lib/app/app.dart` | **Изменён** — добавлен экспорт `dashboard_page.dart`. |
+| `assets/l10n/locale_en.arb` / `locale_ru.arb` | **Изменены** — добавлены ключи `@@dashboard` («Dashboard» / «Дашборд») и `@@noData` («No data available» / «Нет данных»). Выполнена регенерация через `flutter.bat gen-l10n`. |
+| `changelog/10053.feature.rst` | **Новый** — фрагмент changelog по правилу I.5. |
+
+### Соответствие контракту v2 (I)
+
+- **I.1** — курс запрашивается через `fetchRates(CurrencyPageRequest())` ✅
+- **I.2** — новости через `loadNewsFeed(NewsFeedFilter(forceRefresh: true))` ✅
+- **I.4** — deprecated-члены (`getCurrencyList`, `getNewsList`, `.themeMode`) не используются ✅
+- **I.5** — changelog-фрагмент добавлен ✅
+- **I.6–I.7** — `flutter.bat analyze` → «No issues found!»; `flutter.bat test` → 33 passed, 0 failed ✅

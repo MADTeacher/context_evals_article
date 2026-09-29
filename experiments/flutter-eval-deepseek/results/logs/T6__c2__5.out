@@ -1,0 +1,18 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c2__5\.madharness-mini\traces\20260924-101640-877d3d11.jsonl
+Готово. Экран профиля теперь синхронизируется с потоком настроек.
+
+**Изменения**
+
+- `lib/app/profile/profile_page.dart`:
+  - начальное значение по-прежнему читается синхронно — `ValueNotifier(_settingsRepository.readThemeMode())` (читается только после `initAsyncData()` на Splash, как требует конвенция v2);
+  - в `initState()` добавлена подписка `_themeModeSubscription = _settingsRepository.themeModeStream.listen(...)`, которая пишет новое значение в `_themeModeNotifier` → `ValueListenableBuilder` обновляет подпись автоматически (в т.ч. при `setThemeMode` из bottom sheet или извне);
+  - в `dispose()` подписка отменяется до `dispose()` нотифаера; добавлен `import 'dart:async'` в правильную позицию (до package-импортов, `directives_ordering`).
+  - `@Deprecated`-члены (`themeMode`, `getCurrencyList`, `getNewsList`) не используются.
+- `test/widget/home_container_test.dart`: добавлен стаб `when(mockSettingsRepository.themeModeStream).thenAnswer((_) => const Stream<AppThemeMode>.empty())` — без него `MockSettingsRepository` (strict, с `throwOnMissingStub`) падал при построении `ProfilePage`.
+- `changelog/10053.bugfix.rst`: новый фрагмент по правилу I.5.
+
+**Проверки**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (33 теста, 0 падений)

@@ -1,0 +1,13 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T3__c2__4\.madharness-mini\traces\20260924-002542-afd8b920.jsonl
+**Готово.** Кнопка «Обновить» добавлена на экран новостей.
+
+Изменения:
+- `lib/app/news_list/news_list_page.dart` — в `AppBar.actions` добавлен `IconButton` (`Icons.refresh`, tooltip из l10n); метод `_refresh()` сбрасывает анимацию и перезапускает загрузку через `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — сеть + запись в кэш, кэш не используется (конвенция v2, «действие пользователя Обновить — всегда forceRefresh: true»).
+- `assets/l10n/locale_ru.arb` / `locale_en.arb` + сгенерированные `lib/app/gen/l10n/app_localizations*.dart` — новая строка `refresh` («Обновить» / «Refresh»). Генератор l10n в проекте не запускается автоматически (кэшированного генератора нет), поэтому артефакты правились синхронно с .arb.
+- `test/widget/news_list_page_test.dart` — новый тест: после тапа по `Icons.refresh` проверяется, что репозиторий вызван с `forceRefresh == true` и список отрисован.
+- `changelog/10053.feature.rst` — фрагмент changelog (I.5).
+
+Проверка: `flutter analyze` → «No issues found!»; `flutter test` → 34 теста, все зелёные.
+
+Замечание: экран по-прежнему не следует паттерну cache-then-network из `references/news.md` (при открытии сразу идёт сеть, кэш не показывается) — я оставил это поведение как есть, так как задача касалась только кнопки. Скажи, если нужно привести открытие экрана к cache-then-network.

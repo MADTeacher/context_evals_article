@@ -1,0 +1,25 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T4__c2__3\.madharness-mini\traces\20260923-181321-6c87d1d0.jsonl
+Готово. Экран новостей переведён на паттерн **cache-then-network**.
+
+## Что изменилось
+
+**Файл:** `lib/app/news_list/news_list_page.dart`
+
+### Было
+Один вызов `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` через `FutureBuilder` — экран пустовал до ответа сети.
+
+### Стало
+Два параллельных асинхронных вызова в `initState`:
+
+1. **`_loadCachedData()`** — быстрый кэш (`NewsFeedFilter.all`, т.е. `forceRefresh: false`) → данные из БД, мгновенная отрисовка + анимация.
+2. **`_loadNewsInBackground()`** — фоновая загрузка из сети (`forceRefresh: true`) → по приходу ответа список обновляется через `setState`.
+
+`FutureBuilder` убран полностью — состояние хранится в `List<NewsModel>? _newsList`, UI перестраивается реактивно.
+
+## Верификация
+
+| Команда | Результат |
+|---|---|
+| `flutter.bat analyze` | **No issues found!** |
+| `flutter.bat test` | **33/33 passed** ✅ (включая `news_list_page_test.dart`) |

@@ -1,0 +1,22 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T7__c2__4\.madharness-mini\traces\20260924-102227-b5001595.jsonl
+**Готово.** `flutter analyze` — «No issues found!», `flutter test` — 34 теста, все зелёные (включая новый тест на кнопку).
+
+## Что изменено
+
+**`lib/app/home.dart`** — на `HomePage` добавлена кнопка «Обновить всё» (`IconButton` с `Icons.refresh` в `AppBar.actions`, пока идёт обновление — спиннер и `onPressed: null`), ключ `HomePage.refreshAllButtonKey` для тестов. `_refreshAll()`:
+- `CurrencyRepository.fetchRates(const CurrencyPageRequest(base: 'USD'))` → затем `saveCurrencyList(items)` (конвенция I.1: base только `'USD'`, курс пишется в кэш);
+- `NewsRepository.loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` (конвенция I.2: `forceRefresh: true` = сеть + запись в кэш);
+- после `await` — проверка `mounted` перед `setState`.
+
+**l10n** — добавлен ключ `refreshAll`: `assets/l10n/locale_ru.arb` («Обновить всё»), `locale_en.arb` («Refresh all») и вручную синхронизированы сгенерированные `lib/app/gen/l10n/app_localizations{,_ru,_en}.dart` (flutter gen-l10n в песочнице не запускался, поэтому файлы приведены к тому же формату, что и остальные геттеры).
+
+**`test/widget/home_container_test.dart`** — новый тест: после тапа кнопки проверяется, что `fetchRates` вызван с `base == 'USD'`, `saveCurrencyList` вызван один раз, а `loadNewsFeed` — с `forceRefresh == true`.
+
+**`changelog/10053.bugfix.rst`** — фрагмент changelog (I.5).
+
+## Замечания
+
+- В `AppBar` `HomePage` заголовок не задан (`Text(loc.appTitle)` из первой версии патча убран — такого ключа локализации нет); добавлена только секция `actions`. Если нужен заголовок, скажите — добавлю ключ локализации.
+- Функциональный нюанс (не менял без запроса): экраны `CurrencyListPage`/`NewsListPage` держат собственные futures, поэтому уже отрисованные списки после «Обновить всё» не перерисуются до повторного открытия вкладки — обновляются сеть и кэш. Если нужно ещё и мгновенно обновлять открытый экран, это отдельная правка (общий стрим/нотифаер на HomePage).
+- `@Deprecated`-члены (`getCurrencyList`, `getNewsList`, `.themeMode`) не использованы — хук V не срабатывал.

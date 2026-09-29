@@ -1,0 +1,53 @@
+T1,c0,2,2,,l10n: правка ARB без регенерации — undefined getter
+T1,c0,4,2,,l10n: правка ARB без регенерации — undefined getter
+T1,c0,5,2,,"дефект кода: This 'onError' handler must return a value assignable to 'List<CurrencyModel>', but ends w"
+T1,c1,2,2,,l10n: правка ARB без регенерации — undefined getter
+T1,c1,4,2,,info-линт (analyze требует нуля замечаний): The declaration '_resetPagination' isn't referenced. Try removing the declaratio
+T1,c1,5,2,,дефект кода: Invalid constant value - lib\app\currency_list\currency_list_page.dart:157:27 - invalid_co
+T2,c0,1,2,,info-линт (analyze требует нуля замечаний): The import of 'package:flutter/material.dart' is unnecessary because all of the 
+T2,c0,2,2,,"дефект кода: Undefined name '_isLoadingMore'. Try correcting the name to one that is defined, or defini"
+T2,c0,3,2,,дефект кода: The method 'read' isn't defined for the type 'BuildContext'. Try correcting the name to th
+T2,c0,4,2,,info-линт (analyze требует нуля замечаний): The value of the local variable 'data' isn't used. Try removing the variable or 
+T2,c0,5,2,,дефект кода: The method doesn't override an inherited method. Try updating this class to match the supe
+T2,c1,1,2,,пагинация не доведена до конвенций v2 (hasMore/page+1)
+T2,c1,3,2,,падение тестов (собственных/существующих) при приёмке
+T2,c1,5,2,,info-линт (analyze требует нуля замечаний): The import of 'package:flutter/material.dart' is unnecessary because all of the 
+T2,c2,3,2,,info-линт (analyze требует нуля замечаний): The import of 'package:flutter/material.dart' is unnecessary because all of the 
+T3,c0,3,2,,l10n: правка ARB без регенерации — undefined getter
+T3,c0,4,2,,дефект кода: The method '_initData' isn't defined for the type '_NewsListPageState'. Try correcting the
+T3,c1,5,2,,l10n: правка ARB без регенерации — undefined getter
+T4,c0,1,2,,loadNewsFeed должен вызываться в обеих ветках обновления (кэш и сеть)
+T4,c0,3,2,,loadNewsFeed должен вызываться в обеих ветках обновления (кэш и сеть)
+T4,c0,4,2,,loadNewsFeed должен вызываться в обеих ветках обновления (кэш и сеть)
+T4,c0,5,2,,loadNewsFeed должен вызываться в обеих ветках обновления (кэш и сеть)
+T4,c1,1,2,,loadNewsFeed должен вызываться в обеих ветках обновления (кэш и сеть)
+T4,c1,2,2,,loadNewsFeed должен вызываться в обеих ветках обновления (кэш и сеть)
+T4,c1,3,2,,loadNewsFeed должен вызываться в обеих ветках обновления (кэш и сеть)
+T4,c1,4,2,,loadNewsFeed должен вызываться в обеих ветках обновления (кэш и сеть)
+T5,c0,1,2,,падение тестов (собственных/существующих) при приёмке
+T5,c1,2,2,,падение тестов (собственных/существующих) при приёмке
+T5,c1,3,2,,падение тестов (собственных/существующих) при приёмке
+T6,c0,1,2,,info-линт (analyze требует нуля замечаний): The import of 'package:flutter/material.dart' is unnecessary because all of the 
+T6,c0,2,2,,нет импорта dart:async — Undefined class 'StreamSubscription'. Try changing the name to the name of an ex
+T6,c0,4,2,,падение тестов (собственных/существующих) при приёмке
+T6,c0,5,2,,падение тестов (собственных/существующих) при приёмке
+T6,c1,1,2,,нет импорта dart:async — Undefined class 'StreamSubscription'. Try changing the name to the name of an ex
+T6,c1,4,2,,падение тестов (собственных/существующих) при приёмке
+T6,c1,5,2,,нет импорта dart:async — Undefined class 'StreamSubscription'. Try changing the name to the name of an ex
+T6,c2,3,2,,падение тестов (собственных/существующих) при приёмке
+T7,c0,1,2,,l10n: правка ARB без регенерации — undefined getter
+T7,c0,2,2,,менее трёх changelog-фрагментов на многочастное изменение
+T7,c0,4,2,,дефект кода: The method '_refresh' isn't defined for the type 'CurrencyListPageState'. Try correcting t
+T7,c0,5,2,,менее трёх changelog-фрагментов на многочастное изменение
+T7,c1,1,2,,менее трёх changelog-фрагментов на многочастное изменение
+T7,c1,2,2,,менее трёх changelog-фрагментов на многочастное изменение
+T7,c1,3,2,,info-линт (analyze требует нуля замечаний): The import of 'package:provider/provider.dart' is unnecessary because all of the
+T8,c0,2,2,,параллельная загрузка через Future.wait не реализована
+T8,c0,3,2,,дефект кода: Target of URI doesn't exist: 'widgets/dashboard_currency_row.dart'. Try creating the file 
+T8,c0,4,2,,дефект кода: The getter 'semiBold16' isn't defined for the type 'ThemeFonts'. Try importing the library
+T8,c0,5,2,,info-линт (analyze требует нуля замечаний): The import of 'package:flutter/material.dart' is unnecessary because all of the 
+T8,c1,1,2,,параллельная загрузка через Future.wait не реализована
+T8,c1,2,2,,l10n: правка ARB без регенерации — undefined getter
+T8,c1,5,2,,менее трёх changelog-фрагментов на многочастное изменение
+T2,c2,3,2,,пагинация не доведена до конвенций v2 (hasMore/page+1) — остаточный дефект модели
+T6,c2,3,2,,неиспользуемый импорт (info-линт), analyze требует нуля замечаний

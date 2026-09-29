@@ -1,0 +1,20 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T2__c0__5\.madharness-mini\traces\20260923-234051-62caab3e.jsonl
+Both checks are green — `flutter analyze`: **No issues found**, `flutter test`: **36/36 passed**.
+
+## What changed
+
+**`lib/app/currency_list/currency_list_page.dart`** (main change)
+- Loads the first page via `fetchRates(CurrencyPageRequest(base: 'USD', page: 0, pageSize: 20))` (project convention from `docs/migration-v2.md`), stores `hasMore` and `_currentPage`.
+- The «Показать ещё» button is rendered only `if (_hasMore)`, i.e. hidden once `CurrencyPage.hasMore == false` (end-of-pages flag).
+- Tapping it loads the next page, appends items, updates `hasMore`, and caches the new items via `saveCurrencyList`.
+- `didChangeDependencies` now triggers a refresh — a fresh first-page request with `base: 'USD'` — so returning focus to the screen (e.g. popping back from the currency detail page or re-entering the tab) rebuilds the list from the network.
+
+**Supporting files**
+- `lib/app/currency_list/widgets/show_more_button.dart` (new) — button widget with `onPressed`/`isLoading`, exported via `widgets/widgets.dart`.
+- `assets/l10n/locale_ru.arb` / `locale_en.arb` + generated `lib/app/gen/l10n/*` — new `showMore` string («Показать ещё» / «Show more»); the generated files were edited by hand because the ARB/generated pair was already out of sync (`asNominal` exists only in the generated files).
+- `test/widget/widget.dart` — optional `locale` parameter so widget tests can render localized text.
+- `test/widget/currency_list_page_test.dart` — three new tests: button hidden when `hasMore == false`; button shown and next page appended while `hasMore == true` (then hidden); list refreshed with `base: 'USD'`, page 0 when focus returns from the detail page.
+- `changelog/10053.bugfix.rst` (new) — per the convention in `docs/migration-v2.md` §4.
+
+Note: I kept the deprecated `getCurrencyList()` untouched and introduced no new references to it, so `flutter analyze` stays clean.

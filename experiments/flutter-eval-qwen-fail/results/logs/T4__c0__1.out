@@ -1,0 +1,46 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T4__c0__1\.madharness-mini\traces\20260923-071723-c99aca19.jsonl
+Flutter SDK недоступен в этой среде (MINGW64 без установленных инструментов), поэтому `flutter analyze` / `flutter test` запустить нельзя — это ограничение окружения, а не ошибка кода. Но я проверил все файлы вручную на корректность. Вот что изменилось:
+
+---
+
+## Что было сделано
+
+### 1. Domain-слой: добавлен новый метод репозитория
+**Файл:** `lib/domain/repository/news_repository.dart`
+
+Добавлен контракт:
+```dart
+Stream<List<NewsModel>> loadNewsFeedStream(NewsFeedFilter filter);
+```
+
+### 2. Data-слой: реализация cache-then-network
+**Файл:** `lib/data/repository_impl/news_repository_impl.dart`
+
+Новый метод `loadNewsFeedStream` запускает **два параллельных запроса**:
+1. **БД (кэш)** — данные отдаются в стрим мгновенно, UI видит ленту сразу.
+2. **REST-сеть** —.fetchит свежие данные, сохраняет их в БД и делает второй `add` в тот же стрим → `StreamBuilder` автоматически перерисовывает список.
+
+При ошибке сети кэш остаётся на экране (без баблов). Контроллер корректно закрывается по `onCancel`.
+
+### 3. Presentation-слой: замена FutureBuilder → StreamBuilder
+**Файл:** `lib/app/news_list/news_list_page.dart`
+
+| Было | Стало |
+|------|-------|
+| `Future<List<NewsModel>> _newsListFuture` | `Stream<List<NewsModel>> _newsListStream` |
+| `FutureBuilder` с `loadNewsFeed(forceRefresh: true)` — пустой экран до прихода сети | `StreamBuilder` с `loadNewsFeedStream` — кэш показывается мгновенно, сеть обновляет список фоном |
+| Анимация запускалась после прихода данных (`.then(...forward())`) | Анимация не зависит от данных — она запускается в `initState`, что работает корректно для стрима |
+
+### 4. Тесты: mock-генератор
+Файл `test/mocks/repository.dart` **не требует изменений** — Mockito генерирует моки по аннотации `@GenerateMocks([NewsRepository, ...])`, и новый метод `loadNewsFeedStream` появится в сгенерированном `_mocks.dart` автоматически при повторной генерации (`dart run build_runner build`).
+
+---
+
+### Итог
+Паттерн **cache-then-network** реализован на всех трёх уровнях Clean Architecture:
+- **Domain** — новый Stream-контракт
+- **Data** — параллельный кэш + сеть, стрим с двумя эмитами  
+- **Presentation** — `StreamBuilder` вместо `FutureBuilder`, мгновенный показ кэша
+
+Проверка `flutter analyze` / `flutter test` невозможна из-за отсутствия Flutter SDK в среде выполнения.

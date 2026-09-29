@@ -1,0 +1,21 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T4__c1__5\.madharness-mini\traces\20260924-001018-bc900637.jsonl
+Готово. Экран новостей переведён на cache-then-network.
+
+**Что изменено**
+
+- `lib/app/news_list/news_list_page.dart`
+  - `FutureBuilder` + `_newsListFuture` заменены на `ValueNotifier<List<NewsModel>>` и `ValueListenableBuilder` (как в `CurrencyListPage`), поэтому список умеет обновляться дважды за один визит.
+  - `_initData()` запускает два независимых запроса параллельно:
+    1. кэш: `loadNewsFeed(NewsFeedFilter.all)` → мгновенно показываем ленту из БД;
+    2. сеть: `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` → репозиторий сам сохраняет свежие данные в кэш и возвращает их, список перерисовывается по ответу.
+  - Пустой результат не затирает уже показанные данные (`if (!mounted || fresh.isEmpty) return;`), анимация `ScaleTransition` запускается при первом непустом результате; `_newsListNotifier` освобождается в `dispose`.
+- `test/widget/news_list_page_test.dart` — тест переписан под новую семантику: кэш и сеть застаблены разными данными, добавлены проверки «кэш читается без forceRefresh» и «кэш виден до прихода сети, после ответа список заменяется» (через `Completer`).
+- `changelog/10053.feature.rst` — запись об изменении (по правилам проекта).
+
+**Проверки**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (35 тестов, включая 3 теста `NewsListPage`)
+
+Замечание: `loadNewsFeed(NewsFeedFilter.all)` и `NewsFeedFilter(forceRefresh: true)` в моках различаются только по `forceRefresh`, поэтому в тестах для аргументов используется точное сопоставление matcher'ом `NewsFeedFilter.all` (у него сравнение по ссылке на константу) — поведение проверено фактическим прогоном.

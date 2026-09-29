@@ -1,0 +1,22 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T5__c1__1\.madharness-mini\traces\20260923-090217-33ea47ce.jsonl
+Отлично! Оба проверки пройдены без ошибок. Вот итог:
+
+## Что изменилось
+
+**Файл:** `test/unit/repository_test.dart`
+
+Добавлена новая группа тестов **'SettingsRepository — readThemeMode'** с двумя тестами:
+
+1. **`readThemeMode returns the datasource theme mode after initAsyncData`** — подтверждает, что после вызова `initAsyncData()` метод `readThemeMode()` возвращает актуальное значение из `PreferenceDatasource`.
+
+2. **`readThemeMode reflects the latest value after setThemeMode`** — проверяет, что `readThemeMode()` всегда делегирует чтение в datasource и отражает последние изменения после вызова `setThemeMode()`.
+
+Для изоляции тестов добавлен `reset(mockPreferenceDatasource)` в `setUp`, чтобы глобальный мок не накапливал звонки от предыдущих тестов.
+
+## Результаты верификации
+
+| Команда | Результат |
+|---------|-----------|
+| `flutter analyze` | ✅ No issues found |
+| `flutter test` | ✅ All 35 tests passed |

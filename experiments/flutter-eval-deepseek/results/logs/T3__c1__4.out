@@ -1,0 +1,15 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T3__c1__4\.madharness-mini\traces\20260924-094848-c09cb4e8.jsonl
+Готово.
+
+**Что изменено**
+- `lib/app/news_list/news_list_page.dart` — в `AppBar` добавлен `IconButton` с иконкой `Icons.refresh` и тултипом из локализации. По нажатию `_refresh()` вызывает `setState(_initData)`, а `_initData()` запрашивает `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — то есть сеть, минуя кэш (`NewsRepositoryImpl` при `forceRefresh` берёт данные из REST и перезаписывает БД).
+- Локализация: добавлен ключ `refresh` в `assets/l10n/locale_ru.arb` («Обновить») и `assets/l10n/locale_en.arb` («Refresh»), вручную синхронизированы сгенерированные файлы `lib/app/gen/l10n/app_localizations.dart`, `app_localizations_ru.dart`, `app_localizations_en.dart` (в стиле существующих записей; `flutter gen-l10n` в этом окружении не запускался, но результат эквивалентен).
+- `test/widget/news_list_page_test.dart` — новый тест: по тапу на иконку обновления репозиторий вызывается повторно, и все захваченные фильтры имеют `forceRefresh == true`, лента отображается.
+- `changelog/10053.feature.rst` — запись о пользовательском изменении (по правилу из AGENTS.md).
+
+**Проверка**
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (34 теста, включая новый)
+
+Примечание: кнопка пока не показывает индикатор загрузки и не блокируется во время запроса — `FutureBuilder` при обновлении просто перестраивается (`snapshot.data == null` → пустой `SizedBox`). Если нужно, добавлю `CircularProgressIndicator`/дизейбл кнопки на время загрузки.

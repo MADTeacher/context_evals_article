@@ -1,0 +1,19 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T8__c1__4\.madharness-mini\traces\20260924-005603-33adff81.jsonl
+Готово. Экран «Дашборд» добавлен и доступен с HomePage.
+
+**Что изменено**
+
+- `lib/app/dashboard/dashboard_page.dart` (новый) — `DashboardPage`: в `initState` через `Future.wait` параллельно запрашиваются свежий курс (`fetchRates` с `base: 'USD'` — проектная конвенция из `docs/migration-v2.md`, `pageSize: 5`) и свежая лента (`loadNewsFeed` с `forceRefresh: true`, `limit: 5`); пока грузится — `CircularProgressIndicator`, при ошибке — заглушка с кнопкой «Повторить», после загрузки — секции с `CurrencyCard`/`NewsCard`.
+- `lib/app/dashboard/widgets/` (новые) — `dashboard_section.dart` (заголовок + список карточек) и `dashboard_retry_view.dart`, плюс barrel `widgets.dart`.
+- `lib/app/home.dart` — кнопка (`FloatingActionButton` с `Icons.dashboard`) на HomePage открывает дашборд через `Navigator.push`; `lib/app/app.dart` — экспорт нового экрана.
+- `assets/l10n/locale_ru.arb`, `assets/l10n/locale_en.arb` — ключи `dashboard`, `dashboardOpen`, `dashboardCurrencySection`, `dashboardNewsSection`, `dashboardLoadError`, `dashboardRetry`; сгенерированные `lib/app/gen/l10n/*` обновлены через `flutter gen-l10n`.
+- `test/widget/dashboard_page_test.dart` (новый) — индикатор прогресса при загрузке, проверка параметров запросов (`base: 'USD'`, `forceRefresh: true`) и рендер карточек, заглушка при ошибке; `test/widget/home_container_test.dart` — тест открытия дашборда с HomePage.
+- `changelog/10053.feature.rst` — фрагмент changelog.
+
+**Проверка**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (37 тестов, включая 3 новых по дашборду + 1 в home-тесте)
+
+Замечание: `flutter gen-l10n` предупреждает, что в `l10n.yaml` параметр `synthetic-package` больше не действует — на результат не влияет, файл я не трогал (вне рамок задачи).

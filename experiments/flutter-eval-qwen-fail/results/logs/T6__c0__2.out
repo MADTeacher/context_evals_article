@@ -1,0 +1,25 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T6__c0__2\.madharness-mini\traces\20260923-101102-391355b5.jsonl
+Flutter и Dart не установлены в этой среде, поэтому `flutter analyze` и `flutter test` выполнить невозможно. Однако я могу проверить корректность изменений вручную, изучив код.
+
+## Что изменено
+
+**Файл:** `lib/app/profile/profile_page.dart`
+
+### Проблема
+1. Поле `_themeModeNotifier` инициализировалось прямо в объявлении: `ValueNotifier(_settingsRepository.readThemeMode())`. Это **не работает**, потому что getter `_settingsRepository` (который использует `context.read<SettingsRepository>()`) недоступен на этапе инициализации поля — `this` ещё не существует.
+2. Не было подписки на `themeModeStream`, поэтому при изменении темы из другого экрана профиль бы об этом не узнал.
+
+### Решение
+
+| Изменение | Описание |
+|---|---|
+| `_themeModeNotifier` объявлен как `late` без инициализатора | Инициализация перенесена в `initState()`, где `context.read<SettingsRepository>()` уже доступен |
+| `_subscribeToThemeMode()` | В `initState()` подписываемся на `themeModeStream`; при каждом `add` обновляем `_themeModeNotifier.value` с проверкой `mounted` |
+| `dispose()` отписывается | Вызывает `_themeModeSubscription?.cancel()`, чтобы избежать утечек памяти и ошибок после disposal |
+
+### Как это работает
+
+- **Начальное значение** читается синхронно: `ValueNotifier(_settingsRepository.readThemeMode())` — в `initState()`.
+- **Обновление при изменении**: подписка на `_settingsRepository.themeModeStream.listen(...)` получает каждый новый режим темы и обновляет нотификатор, что через `ValueListenableBuilder` триггерит перестройку виджета.
+- **Очистка**: в `dispose()` отписка по подписке предотвращает утечки.

@@ -1,0 +1,56 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T6__c1__1\.madharness-mini\traces\20260923-100711-eff5ca5d.jsonl
+Flutter-SDK не найден в этой машине — команды `flutter analyze` и `flutter test` выполнить не удалось (ошибка «file not found»). Ниже — итог изменений; проверьте локально командой:
+
+```bash
+cd <workspace_root> && flutter analyze && flutter test
+```
+
+---
+
+### Что изменилось
+
+**Файл:** `lib/app/profile/profile_page.dart`
+
+#### До
+
+```dart
+late final ValueNotifier<AppThemeMode> _themeModeNotifier = ValueNotifier(_settingsRepository.readThemeMode());
+```
+
+Начальное значение читалось синхронно ✅, но **поток `themeModeStream` не подписывался** — при изменении темы на другом экране виджет не обновлялся.
+
+#### После
+
+```dart
+late final ValueNotifier<AppThemeMode> _themeModeNotifier;
+StreamSubscription<AppThemeMode>? _themeModeSub;
+```
+
+В `initState`:
+
+```dart
+_themeModeNotifier = ValueNotifier(_settingsRepository.readThemeMode());  // синхронное начальное значение
+_themeModeSub = _settingsRepository.themeModeStream.listen((mode) {        // подписка на поток
+  if (mounted && mode != _themeModeNotifier.value) {
+    _themeModeNotifier.value = mode;                                        // автообновление UI через ValueListenableBuilder
+  }
+});
+```
+
+В `dispose`:
+
+```dart
+_themeModeSub?.cancel();  // корректная отписка без утечек
+```
+
+### Ключевые моменты
+
+| Требование | Реализация |
+|---|---|
+| **Начальное значение синхронно** | `_settingsRepository.readThemeMode()` в `initState` — мгновенно, без await |
+| **Автообновление при смене темы** | Подписка на `themeModeStream`, через который все слои проекта уведомляются об изменении режима |
+| **Безопасность** | Проверка `mounted` + сравнение со старым значением (лишние билды исключены) |
+| **Утечки** | `_themeModeSub?.cancel()` в `dispose` |
+
+После запуска проверок сообщите, если будут замечания или падения — поправлю.

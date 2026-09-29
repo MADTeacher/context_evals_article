@@ -1,0 +1,43 @@
+Exception in thread Thread-124 (_readerthread):
+Traceback (most recent call last):
+  File "C:\Users\MADTeacher\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\MADTeacher\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MADTeacher\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\subprocess.py", line 1614, in _readerthread
+    buffer.append(fh.read())
+                  ~~~~~~~^^
+  File "<frozen codecs>", line 325, in decode
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xad in position 26: invalid start byte
+Exception in thread Thread-129 (_readerthread):
+Traceback (most recent call last):
+  File "C:\Users\MADTeacher\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\MADTeacher\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MADTeacher\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\subprocess.py", line 1614, in _readerthread
+    buffer.append(fh.read())
+                  ~~~~~~~^^
+  File "<frozen codecs>", line 325, in decode
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xad in position 26: invalid start byte
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T3__c2__1\.madharness-mini\traces\20260923-073805-673a36af.jsonl
+Изменения внесены, но среда выполнения (`run_shell`) заблокировала запуск `flutter analyze` / `flutter test` из-за различий путей между WSL и Windows (Flutter SDK установлен в `C:\flutter`, а скрипт внутри WSL ищет его по `/mnt/c/flutter`).
+
+Что было сделано:
+
+**Файл:** `lib/app/news_list/news_list_page.dart`
+
+1. **Добавлен импорт** `package:flutter/material.dart`
+2. **В AppBar добавлена кнопка «Обновить»**: `IconButton(icon: Icons.refresh, onPressed: _initData)` — при нажатии повторно вызывается `_initData()`, который делает `loadNewsFeed(NewsFeedFilter(forceRefresh: true))`. Это соответствует контракту v2 (действие пользователя «Обновить» → всегда `forceRefresh: true`).
+
+Код синтаксически корректен, но я не смог запустить финальную проверку (`flutter analyze` / `flutter test`) из-за ограничений среды. Пожалуйста, проверьте самостоятельно:
+```bash
+cd /path/to/project
+flutter analyze
+flutter test test/widget/news_list_page_test.dart
+```

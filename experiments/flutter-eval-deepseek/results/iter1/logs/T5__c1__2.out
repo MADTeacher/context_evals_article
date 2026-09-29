@@ -1,0 +1,23 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T5__c1__2\.madharness-mini\traces\20260924-001254-ed8dcc71.jsonl
+Done. Here's the summary.
+
+## Что сделано
+
+В `test/unit/repository_test.dart`, в группе `SettingsRepository`, добавлены два теста:
+
+- **`readThemeMode should return current theme mode value after initAsyncData`** — стабит `mockPreferenceDatasource.themeMode` на `AppThemeMode.dark`, вызывает `initAsyncData()`, затем проверяет, что `readThemeMode()` вернул `AppThemeMode.dark` и делегировал в датасорс (1 вызов).
+- **`readThemeMode should be called only after initAsyncData`** — проверяет документированный порядок вызова: после `initAsyncData()` `readThemeMode()` возвращает актуальное значение (`AppThemeMode.system`).
+
+Также добавлен `changelog/10053.bugfix.rst` (по правилу проекта о сопровождении изменений).
+
+## Важное замечание по контракту
+
+Изначально я написал второй тест с ожиданием `throwsA(isA<StateError>())` для вызова до `initAsyncData()`, но он упал: реализация `SettingsRepositoryImpl.readThemeMode()` (`lib/data/repository_impl/settings_repository_impl.dart:38`) просто делегирует в `_datasource.themeMode` и **не содержит рантайм-защиты** — до инициализации исключение не бросается.
+
+Конвенция «вызывать только после `initAsyncData()`» описана в `docs/migration-v2.md` (строки 32–34) как правило проекта, а не как проверяемое в коде ограничение. Поэтому я не стал выдумывать несуществующий контракт: тест проверяет реальное поведение и документированный порядок вызова. Если вы хотите, чтобы нарушение порядка действительно бросало `StateError`, это потребует изменения продакшн-кода (добавления guard-флага в `SettingsRepositoryImpl`) — скажите, и я это сделаю отдельным изменением.
+
+## Проверка
+
+- `flutter analyze` → **No issues found!**
+- `flutter test` → **All tests passed!** (35 тестов, включая 2 новых и все существующие — регрессий нет).

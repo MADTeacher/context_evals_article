@@ -1,0 +1,17 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T7__c2__5\.madharness-mini\traces\20260924-102340-36f8c4e5.jsonl
+Готово. Кнопка «Обновить всё» добавлена на `HomePage`.
+
+**Что изменено**
+- `lib/app/home.dart` — добавлен `FloatingActionButton.extended` с локализованной подписью `refreshAll`. Обработчик `_onRefreshAllPressed` показывает индикатор прогресса в SnackBar, затем `_refreshAll()` через `Future.wait` параллельно запускает оба сетевых запроса:
+  - курс: `fetchRates(const CurrencyPageRequest(base: 'USD'))` + `saveCurrencyList(page.items)` (запись в кэш);
+  - новости: `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` (сеть + запись в кэш).
+  Добавлен импорт `package:mad_flutter_practicum/domain/domain.dart`. `@Deprecated`-члены не используются (I.4).
+- `assets/l10n/locale_ru.arb` / `locale_en.arb` — ключ `refreshAll` («Обновить всё» / «Refresh all»), плюс синхронизированы сгенерированные `lib/app/gen/l10n/app_localizations{,_ru,_en}.dart`.
+- `changelog/10053.bugfix.rst` — фрагмент changelog (I.5).
+
+**Проверка**
+- `flutter analyze` — `No issues found!`
+- `flutter test` — 33 теста, `All tests passed!`
+
+Замечание по инварианту: `HomePage` только триггерит обновление; экран новостей (`NewsListPage`) по-прежнему загружается по паттерну cache-then-network, а `CurrencyListPage` — через `fetchRates(CurrencyPageRequest())`, то есть с дефолтным `base`. Если требуется, чтобы обновлённые данные сразу появлялись на экранах (проброс результата/refresh-сигнала в страницы), это отдельное изменение — скажи, и я его сделаю.

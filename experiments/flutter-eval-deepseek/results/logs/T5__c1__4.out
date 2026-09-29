@@ -1,0 +1,15 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T5__c1__4\.madharness-mini\traces\20260924-100356-b437ea4c.jsonl
+Готово. Добавил три теста на чтение режима темы в `test/unit/repository_test.dart` (группа `SettingsRepository`):
+
+- `readThemeMode returns actual value after setThemeMode` — значение отражает текущее состояние датасорса и меняется после `setThemeMode`.
+- `readThemeMode uses only synchronous datasource value before initAsyncData` — вызов безопасен до инициализации: читается только синхронный `themeMode` датасорса, `getToken()` не дергается.
+- `readThemeMode is safe to call after initAsyncData` — после `initAsyncData()` чтение по-прежнему возвращает актуальный режим, при этом `isAuth` корректно инициализирован.
+
+Попутно пришлось починить латентную проблему тестового файла: mock-датасорсы создаются один раз на файл и не сбрасывались, поэтому счётчики вызовов накапливались между тестами (из-за этого мои `verify(...).called(1)` сначала падали). Добавил `reset(...)` в `setUp` групп `CurrencyRepository`, `NewsRepository` и `SettingsRepository` — это делает проверки количества вызовов детерминированными и не меняет логику существующих тестов.
+
+Также добавил запись в changelog: `changelog/10053.feature.rst` (по правилу из AGENTS.md).
+
+Проверки:
+- `flutter analyze` — No issues found.
+- `flutter test` — все 36 тестов прошли (включая 3 новых и все ранее существовавшие).

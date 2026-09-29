@@ -1,0 +1,64 @@
+Exception in thread Thread-8 (_readerthread):
+Traceback (most recent call last):
+  File "C:\Users\MADTeacher\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\MADTeacher\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MADTeacher\AppData\Roaming\uv\python\cpython-3.14-windows-x86_64-none\Lib\subprocess.py", line 1614, in _readerthread
+    buffer.append(fh.read())
+                  ~~~~~~~^^
+  File "<frozen codecs>", line 325, in decode
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xcd in position 0: invalid continuation byte
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T7__c2__4\.madharness-mini\traces\20260923-131308-efbe9904.jsonl
+Flutter SDK не найден в PATH — команды `flutter` недоступны в этом окружении (`[WinError 2]`). Поэтому `flutter analyze` и `flutter test` запустить вручную не удаётся.
+
+Тем не менее все изменения внесены корректно. Вот итог:
+
+---
+
+## Что изменено
+
+### 1. `lib/app/home.dart` — кнопка «Обновить всё»
+- Добавлено поле `_refreshCounter = 0`.
+- Статический `_pages` заменён на метод `_buildPages()`, который создаёт виджеты с динамическими `Key`:
+  - `CurrencyListPage(key: Key('currency-${_refreshCounter}'))`
+  - `NewsListPage(key: Key('news-${_refreshCounter}'))`
+- При нажатии FAB вызывается `_refreshAll()` → инкремент счётчика → `setState` → Flutter пересоздаёт CurrencyListPage и NewsListPage, что запускает их `initState`, а там — v2-API (`fetchRates` с базой `'USD'`, `loadNewsFeed` с `forceRefresh: true`).
+- Добавлен `FloatingActionButton` с иконкой `Icons.refresh` и тултипом из локализации.
+
+### 2. Локализация `refreshAll` (en/ru)
+| Файл | Изменение |
+|---|---|
+| `assets/l10n/locale_en.arb` | `"refreshAll": "Refresh All"` |
+| `assets/l10n/locale_ru.arb` | `"refreshAll": "Обновить всё"` |
+| `lib/app/gen/l10n/app_localizations.dart` | абстрактный геттер `String get refreshAll;` |
+| `lib/app/gen/l10n/app_localizations_en.dart` | реализация → `'Refresh All'` |
+| `lib/app/gen/l10n/app_localizations_ru.dart` | реализация → `'Обновить всё'` |
+
+### 3. Changelog
+- Создан `changelog/10053.feature.rst` с описанием добавленной кнопки «Обновить всё».
+
+---
+
+## Проверка контрактов v2 (I.1–I.4)
+
+| Правило | Статус |
+|---|---|
+| **I.1** — курс только через `fetchRates(CurrencyPageRequest(base: 'USD'))` | ✅ Используется внутренне CurrencyListPage без изменений |
+| **I.2** — новости только через `loadNewsFeed`, forceRefresh=true для обновления | ✅ Используется внутренне NewsListPage без изменений |
+| **I.3** — тема через `readThemeMode()` после `initAsyncData()` | ✅ Не затронуто |
+| **I.4** — нет использования Deprecated-членов (`getCurrencyList`, `getNewsList`, `themeMode`) | ✅ Ни один не используется в новом коде |
+
+---
+
+## ⚠️ Ограничение
+
+`flutter analyze` и `flutter test` не могли быть запущены, потому что **Flutter SDK недоступен** в текущем окружении (ошибка `[WinError 2] Не удается найти указанный файл`). Код проверен вручную на соответствие конвенциям и синтаксису. Для финальной проверки необходимо выполнить:
+
+```bash
+flutter analyze
+flutter test
+```

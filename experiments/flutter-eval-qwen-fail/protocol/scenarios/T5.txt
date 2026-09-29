@@ -1,0 +1,1 @@
+В проекте (Flutter, Clean Architecture) добавь в test/unit/repository_test.dart тесты на чтение режима темы: readThemeMode() возвращает актуальное значение, и этот метод безопасно вызывать только после initAsyncData(). Проверь, что существующие тесты не сломались. Перед завершением прогони flutter analyze и flutter test — без замечаний и падений.

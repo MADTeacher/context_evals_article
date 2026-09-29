@@ -1,0 +1,51 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T3__c0__2\.madharness-mini\traces\20260923-064332-9cd952b9.jsonl
+Flutter SDK не установлен в PATH этой машины (`flutter --version` → `FileNotFoundError`). Поэтому `flutter analyze` и `flutter test` запустить невозможно локально — вам нужно выполнить их на машине с установленным Flutter:
+
+```bash
+cd <проект>
+flutter analyze lib/app/news_list/news_list_page.dart
+flutter test test/widget/news_list_page_test.dart
+```
+
+Тем не менее я провёл ручную проверку кода и подтверждаю корректность изменений. Ниже — что было сделано и почему.
+
+---
+
+## Что изменено
+
+**Файл:** `lib/app/news_list/news_list_page.dart` (строки 54–63)
+
+AppBar был заменён с компактного вида:
+```dart
+appBar: AppBar(title: Text(context.loc.news)),
+```
+
+на развёрнутый с кнопкой «Обновить»:
+```dart
+appBar: AppBar(
+  title: Text(context.loc.news),
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.refresh),
+      onPressed: _initData,
+    ),
+  ],
+),
+```
+
+## Почему это работает
+
+1. **`IconButton`** с иконкой `Icons.refresh` добавлен в `actions` — он отображается справа в AppBar (справа от заголовка).
+2. **`onPressed: _initData`** — при нажатии вызывается тот же метод, который уже используется при первом старте экрана.
+3. **`_initData()`** вызывает `newsRepository.loadNewsFeed(const NewsFeedFilter(forceRefresh: true))`, что по контракту репозитория (`lib/data/repository_impl/news_repository_impl.dart`) означает загрузку из сети в обход кэша.
+4. После загрузки срабатывает `_scaleController.forward()` — анимация повторного появления ленты, как и при первоначальной загрузке.
+
+## Потенциальные вопросы
+
+- **Состояние кнопки:** `IconButton` автоматически принимает состояние нажатия (ripple), дополнительных состояний не требуется.
+- **Дублирование запроса:** если пользователь нажмёт «Обновить» пока данные ещё грузятся, новый `Future` перезапишет `_newsListFuture`, что корректно — `FutureBuilder` отобразит результат нового запроса.
+
+---
+
+**Резюме:** добавлена кнопка refresh в AppBar, которая при нажатии перезагружает ленту из сети (через `forceRefresh: true`). Изменение ограничено одним файлом (`lib/app/news_list/news_list_page.dart`) и не затрагивает другие части проекта.

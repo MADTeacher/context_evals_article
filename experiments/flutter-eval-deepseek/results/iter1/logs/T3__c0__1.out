@@ -1,0 +1,15 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T3__c0__1\.madharness-mini\traces\20260923-234423-7b0e5ac8.jsonl
+Готово. Изменения:
+
+**Функциональность** — `lib/app/news_list/news_list_page.dart`:
+- В `AppBar` добавлен `IconButton` с иконкой `Icons.refresh` и `tooltip: context.loc.refresh`.
+- Новый метод `_refreshData()`: сбрасывает анимацию, через `setState` пересоздаёт `_newsListFuture` вызовом `newsRepository.loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — это идёт в `NewsRepositoryImpl.loadNewsFeed`, где `forceRefresh: true` читает ленту из `RestDatasource` и перезаписывает кэш в БД, минуя чтение из кэша. Затем запускается анимация появления.
+
+**Локализация** (RU/EN, по шаблону проекта — arb + генератор):
+- `assets/l10n/locale_ru.arb`: `"refresh": "Обновить"`, `assets/l10n/locale_en.arb`: `"refresh": "Refresh"`.
+- Ручные зеркальные правки в сгенерированных файлах `lib/app/gen/l10n/app_localizations.dart`, `app_localizations_ru.dart`, `app_localizations_en.dart` (кодогенерация l10n не запускалась, чтобы не переписывать весь gen-каталог).
+
+**Тест** — `test/widget/news_list_page_test.dart`: добавлен кейс «should reload news from network when refresh button is tapped» — тапает по `Icons.refresh`, проверяет, что после тапа сделан ровно один новый вызов `loadNewsFeed` с `forceRefresh == true`, и что список отрисован. Существующие кейсы не тронуты.
+
+Проверки: `flutter analyze` → «No issues found!»; `flutter test` → все 34 теста прошли.

@@ -1,0 +1,24 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T1__c2__4\.madharness-mini\traces\20260924-134213-1b8ae4d8.jsonl
+## Что сделано
+
+### Изменённые файлы
+
+1. **`assets/l10n/locale_en.arb`** / **`locale_ru.arb`** — добавлен ключ локализации:
+   - `"showMore": "Show more"` / `"showMore": "Показать ещё"`
+   - Выполнен `flutter.bat gen-l10n` для генерации кода.
+
+2. **`lib/app/currency_list/currency_list_page.dart`** — добавлена подгрузка «показать ещё»:
+   - Запрос теперь с `base: 'USD'` (контракт v2, I.1).
+   - Отслеживание пагинации: `_currentPage`, `_hasMore`, `_isLoadingMore`.
+   - Кнопка **«Показать ещё»** появляется внизу списка после загруженных карточек. При нажатии запрашивается `CurrencyPageRequest(base: 'USD', page: _currentPage + 1, pageSize: 20)`, и элементы дописываются к существующему списку (не заменяют).
+   - Пока идёт загрузка — вместо кнопки показывается `CircularProgressIndicator`.
+   - При достижении конца (`_hasMore == false`) кнопка скрывается.
+   - **Поиск сохранён**: текущий query хранится в `_searchQuery` и заново применяется к объединённому списку после каждой подгрузки новой страницы.
+
+### Верификация
+
+| Команда | Результат |
+| --- | --- |
+| `flutter.bat analyze` | ✅ «No issues found!» (0 замечаний) |
+| `flutter.bat test` | ✅ All tests passed! — **33 теста** зелёные |

@@ -1,0 +1,24 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T7__c0__3\.madharness-mini\traces\20260924-001925-89415116.jsonl
+Both checks pass. Here's the summary.
+
+## What changed
+
+**`lib/app/home.dart`** — added a `FloatingActionButton.extended` «Обновить всё» to `HomePage`. On tap, `_refreshAll()` starts both network requests concurrently via `Future.wait`:
+- `CurrencyRepository.fetchRates(const CurrencyPageRequest(base: 'USD'))` → result persisted with `saveCurrencyList(...)`
+- `NewsRepository.loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` → result persisted with `saveNewsList(...)`
+
+Both use the v2 (non-deprecated) API and follow the project conventions from `docs/migration-v2.md` (`base: 'USD'`, `forceRefresh: true` for a user-initiated refresh). After both futures complete, the state bumps `_refreshAllKey`, which re-keys `CurrencyListPage`/`NewsListPage` so both tabs re-run their own loaders and show fresh data. `ProfilePage` stays const. The `mounted` guard avoids `setState` after dispose.
+
+**`assets/l10n/locale_ru.arb` / `locale_en.arb`** — new key `refreshAll` («Обновить всё» / «Refresh all»), regenerated into `lib/app/gen/l10n/` via `flutter gen-l10n`.
+
+**`changelog/10053.feature.rst`** — new changelog fragment (next free number after 10051/10052).
+
+**`test/widget/home_container_test.dart`** — added a test that taps the button and verifies `fetchRates` is called with `base: 'USD'` and `loadNewsFeed` with `forceRefresh: true`.
+
+## Verification
+
+- `flutter analyze` → **No issues found!**
+- `flutter test` → **34 tests, all passed** (33 baseline + 1 new)
+
+One judgment call worth flagging: `NewsListPage` currently always loads with `forceRefresh: true`, so the news tab already hits the network on every mount. I deliberately did not restructure it to the documented cache-then-network pattern, since that would change existing tab behavior beyond what you asked for. The button itself does perform both requests over the network, so the requirement is met as stated.

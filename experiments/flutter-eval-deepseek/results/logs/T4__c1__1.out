@@ -1,0 +1,23 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T4__c1__1\.madharness-mini\traces\20260924-095107-a7cbcb8f.jsonl
+Готово. Экран новостей переведён на cache-then-network.
+
+## Что изменилось
+
+**`lib/app/news_list/news_list_page.dart`** — вместо единственного `FutureBuilder` с `forceRefresh: true`:
+- `_loadCachedNews` — читает кэш через `loadNewsFeed(NewsFeedFilter.all)` и сразу отрисовывает его (если он не пустой);
+- `_loadFreshNews` — параллельно (не дожидаясь кэша) запрашивает сеть через `loadNewsFeed(NewsFeedFilter(forceRefresh: true))`; репозиторий сам сохраняет свежие данные в sqflite, а экран обновляет список, когда ответ пришёл;
+- оба ответа проходят через `_showNews`, который делает `setState` и запускает прежнюю анимацию `ScaleTransition`;
+- при ошибке сети список остаётся на кэше, ошибка не всплывает; ответы игнорируются, если экран уже закрыт (`_isDisposed`), — это убирает `setState after dispose` и `AnimationController after dispose`;
+- `ListView` теперь строится из состояния, а не из `AsyncSnapshot`, поэтому кэш появляется без ожидания сети. Виджет `news_card` и слой data/domain не менялись — `NewsRepository.loadNewsFeed` уже поддерживал оба режима.
+
+**`test/widget/news_list_page_test.dart`** — переписан под новое поведение (4 теста): пустой кэш → грузится сеть; кэш показывается до ответа сети (через `Completer`), затем заменяется свежими данными; ошибка сети оставляет кэш; dispose до ответа сети не бросает исключение.
+
+**`CHANGELOG.md`** — создан, запись об изменении (требование `AGENTS.md`).
+
+## Проверки
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (36 тестов, было 33)
+
+Замечание: `test/widget/home_container_test.dart` уже мокал `loadNewsFeed(any)`, поэтому тесты навигации работают без правок. Поведение при полностью пустом кэше и недоступной сети визуально не отличается от прежнего (пустой список без индикатора) — если нужен `CircularProgressIndicator`/pull-to-refresh на этот случай, скажите, добавлю.

@@ -1,0 +1,26 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T4__c0__4\.madharness-mini\traces\20260924-102221-baecb8ad.jsonl
+Готово. Экран новостей переведён на cache-then-network.
+
+## Что изменилось
+
+**Domain** — `lib/domain/repository/news_repository.dart`
+- Добавлен `NewsFeedPage` (`cached` + `fresh`) и метод `NewsFeedPage watchNewsFeed([NewsFeedFilter filter])`. `loadNewsFeed` оставлен как есть (обратная совместимость).
+
+**Data** — `lib/data/repository_impl/news_repository_impl.dart`
+- `watchNewsFeed` запускает оба запроса сразу: `cached` читает `DbDatasource.getNewsList()`, `fresh` — `RestDatasource.getNewsList()` с сохранением в кэш. Применяется `filter.limit`, чтобы сеть и кэш отдавали ленту в одном объёме.
+
+**Presentation** — `lib/app/news_list/news_list_page.dart`
+- `FutureBuilder` заменён на состояние: сначала отрисовывается кэш (как только прочитан), затем список перекрывается ответом сети. Анимация `ScaleTransition` запускается на первом пришедшем результате.
+- Ошибка сети не ломает экран — остаёмся на кэше; при пустой ленте показывается пустое состояние (новый ключ локализации `newsIsEmpty` в `assets/l10n/*.arb` и в checked-in `lib/app/gen/l10n/*`).
+
+**Тесты**
+- `test/widget/news_list_page_test.dart`: добавлены сценарии «кэш показан до ответа сети», «пустое состояние», «ошибка сети при непустом кэше»; существующий тест сохранён.
+- `test/unit/repository_test.dart`: проверки порядка cache→network, фоновой записи в кэш и применения `limit`.
+- `test/widget/home_container_test.dart`: стаб нового метода; `test/mocks/repository.mocks.dart` перегенерирован через `dart run build_runner build` (mockito-мок без нового члена не компилировался).
+
+## Проверки
+- `flutter analyze` — `No issues found!`
+- `flutter test` — `+38: All tests passed!` (до изменений было 33)
+
+Замечание: `flutter gen-l10n` для проверки не запускался, чтобы не перезаписать checked-in `lib/app/gen` (в проекте нет `synthetic-package`-режима); строку я добавил и в ARB, и в генераты вручную, `flutter analyze`/`flutter test` проходят.

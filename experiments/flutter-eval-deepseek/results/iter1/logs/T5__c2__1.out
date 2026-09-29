@@ -1,0 +1,31 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T5__c2__1\.madharness-mini\traces\20260924-003707-c2d53896.jsonl
+I need to be transparent about one important finding regarding the "safe only after `initAsyncData()`" requirement.
+
+## What I found
+
+**The production code does not enforce an init-guard.** In `lib/data/repository_impl/settings_repository_impl.dart`:
+
+```dart
+AppThemeMode readThemeMode() => _datasource.themeMode;
+```
+
+`initAsyncData()` only sets `_isAuth`; it never touches theme state. So `readThemeMode()` returns a value even before init and never throws. The "call only after `initAsyncData()`" rule in `docs/migration-v2.md` and `references/settings.md` is a **convention/defect rule**, not something the code asserts.
+
+I initially wrote a test asserting `throwsStateError` before init — it failed, correctly, because no guard exists. Rather than fabricate behavior, I wrote tests that match the actual contract.
+
+## What I changed
+
+`test/unit/repository_test.dart`, `SettingsRepository` group:
+- Added `reset(mockPreferenceDatasource)` in `setUp` — the mock is a single top-level instance shared across the file, so without reset the new getter calls inflated the existing `verify(...).called(1)` count in `should return current theme mode value` (that test went red until I added it).
+- Added 3 tests:
+  - `readThemeMode returns actual value after initAsyncData` — reads `AppThemeMode.dark` after init and verifies one datasource read.
+  - `readThemeMode reflects the value changed after initAsyncData` — light → `setThemeMode(system)` → reads `system`.
+  - `readThemeMode returns the persisted datasource value after initAsyncData` — reads `system` after init.
+
+## Verification
+- `flutter analyze` → **No issues found!**
+- `flutter test` → **36 passed** (baseline 33; +3 new). All pre-existing tests green.
+
+## Caveat you should decide on
+The literal requirement "safe to call **only** after `initAsyncData()`" cannot be tested as a negative assertion because the implementation has no guard — before init it silently returns the datasource value instead of failing. If you want that enforced, the fix belongs in `SettingsRepositoryImpl` (e.g. a `bool _initialized` set in `initAsyncData()` and `StateError` in `readThemeMode()` when false), and I'd then add the `throwsStateError` test. I did not make that production change because you asked only for tests. Also note: no `changelog/<n>.bugfix.rst` fragment was added since this is a test-only change — tell me if the project convention requires one anyway.

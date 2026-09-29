@@ -1,0 +1,21 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c2__5\.madharness-mini\traces\20260924-005337-4a159d31.jsonl
+**Что изменено**
+
+- `lib/app/profile/profile_page.dart`:
+  - добавлен импорт `dart:async`;
+  - поле `StreamSubscription<AppThemeMode>? _themeModeSubscription`;
+  - в `initState()` — подписка на `_settingsRepository.themeModeStream` (v2-поток), эмиссии пишутся в `_themeModeNotifier`;
+  - в `dispose()` — `cancel()` подписки перед dispose нотифаера.
+  - Начальное значение по-прежнему читается синхронно `readThemeMode()` (экран открывается после Splash/`initAsyncData`), `@Deprecated`-члены не используются.
+
+- `test/widget/profile_page_test.dart` (новый): проверяет синхронное стартовое значение (`readThemeMode`) и автообновление подписи при эмиссиях потока (`setThemeMode` → «Тёмная»/«Светлая»).
+
+- `test/widget/home_container_test.dart`: добавлен стаб `when(mockSettingsRepository.themeModeStream).thenAnswer((_) => const Stream<AppThemeMode>.empty())` — без него `MockSettingsRepository` падал с `MissingStubError` при открытии вкладки профиля.
+
+- `changelog/10053.bugfix.rst` (новый фрагмент по правилу I.5).
+
+**Проверка**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (35 тестов, включая 2 новых).

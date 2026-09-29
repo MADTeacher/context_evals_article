@@ -1,0 +1,22 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T1__c1__3\.madharness-mini\traces\20260923-232900-7fd97b4a.jsonl
+Готово. Что сделано:
+
+**Основное изменение — `lib/app/currency_list/currency_list_page.dart`**
+- Первая страница по-прежнему грузится через `fetchRates(CurrencyPageRequest(base: 'USD', pageSize: 20))` (конвенция v2 — `base: 'USD'`).
+- Добавлено состояние пагинации: `_lastLoadedPage`, `_hasMore`, `_isLoadingMore`.
+- `_loadNextPage()` запрашивает `page: _lastLoadedPage + 1`, дописывает `page.items` к `_allCurrencies`, обновляет `hasMore` и заново применяет текущий поисковый запрос (`_applyFilter(_query)`), поэтому поиск продолжает работать по всему накопленному списку. Новая страница дополнительно сохраняется через `saveCurrencyList(page.items)`.
+- Кнопка «Показать ещё» показывается под списком только когда `hasMore == true`; во время загрузки она блокируется и показывает индикатор. Ошибка запроса не ломает список — снимается флаг загрузки.
+
+**Новые/изменённые файлы**
+- `lib/app/currency_list/widgets/show_more_button.dart` — новый виджет `ShowMoreButton` (экспортирован из `widgets.dart`).
+- `assets/l10n/locale_ru.arb`, `locale_en.arb` + сгенерированные `lib/app/gen/l10n/app_localizations{,_ru,_en}.dart` — строки `showMore` («Показать ещё» / «Show more») и `loading`. Файлы gen-l10n поправлены вручную тем же формат, что даёт `flutter gen-l10n` (в этом окружении нет сети для его запуска).
+- `test/widget/currency_list_page_pagination_test.dart` — новый тест: по тапу подгружается вторая страница (проверяется запрос с `base: 'USD'` и `page: 1`), карточки дописываются, кнопка исчезает, поиск после подгрузки находит валюту со второй страницы.
+- `test/widget/currency_list_page_test.dart` — добавлен кейс «кнопки нет, когда страниц больше нет».
+- `changelog/10053.feature.rst` — запись об изменении.
+
+**Проверки**
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (36 тестов)
+
+Замечание по процессу: два промежуточных вызова инструментов у меня прошли некорректно и вписали текст патча в конец `show_more_button.dart` и в начало теста — это было замечено на `flutter analyze` и исправлено, итоговые файлы проверены чтением.

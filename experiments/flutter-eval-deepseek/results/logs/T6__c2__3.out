@@ -1,0 +1,23 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c2__3\.madharness-mini\traces\20260924-101408-9195b611.jsonl
+Готово.
+
+## Что изменено
+
+**`lib/app/profile/profile_page.dart`**
+- `_themeModeNotifier` больше не создаётся через `late final` в поле: начальное значение читается синхронно в `initState()` — `ValueNotifier(_settingsRepository.readThemeMode())` (после Splash-инициализации, конвенция v2).
+- Добавлена подписка `_themeModeSubscription = _settingsRepository.themeModeStream.listen(...)`, которая обновляет `_themeModeNotifier` при любом `setThemeMode` (в т.ч. из bottom sheet, который пишет через репозиторий).
+- Подписка отменяется в `dispose()` до `dispose()` нотифаера. `@Deprecated`-член `themeMode` не используется.
+- Добавлен `import 'dart:async';` (первой группой, порядок директив сохранён).
+
+**`test/widget/profile_page_test.dart`** (новый) — 2 виджет-теста на mock-репозитории: синхронное чтение режима при инициализации («Светлая») и автообновление подписи при эмиссии в `themeModeStream` («Тёмная»).
+
+**`test/widget/home_container_test.dart`** — в `setUp` добавлен стаб `when(mockSettingsRepository.themeModeStream).thenAnswer((_) => const Stream<AppThemeMode>.empty())`; без него существующий тест навигации падал с `MissingStubError` из-за новой подписки в `initState`.
+
+**`changelog/10053.bugfix.rst`** (новый) — фрагмент changelog по правилу I.5.
+
+## Проверка
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (35 тестов, включая 2 новых)
+
+Примечание: в `lib/main.dart` (вне зоны задачи) в `build` по-прежнему используется `@Deprecated` геттер `themeMode` как fallback для `snapshot.data` — не трогал, чтобы дифф остался минимальным; при желании можно заменить на `readThemeMode()`.

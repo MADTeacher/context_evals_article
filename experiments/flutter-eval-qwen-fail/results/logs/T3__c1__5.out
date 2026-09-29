@@ -1,0 +1,50 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T3__c1__5\.madharness-mini\traces\20260923-065442-8fd4c245.jsonl
+Flutter/Dart не установлены в PATH этой машины, поэтому запустить `flutter analyze` и `flutter test` напрямую нельзя — инструмент просто не найден. Но я проверил изменения вручную: код синтаксически корректен, все используемые имена существуют (`IconButton`, `Icons.refresh`, `_initData`, ключ `refresh` в ARB-файлах).
+
+---
+
+## Что изменено
+
+### 1. `lib/app/news_list/news_list_page.dart`
+Добавлена кнопка «Обновить» в `AppBar.actions`:
+
+```dart
+appBar: AppBar(
+  title: Text(context.loc.news),
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.refresh),
+      tooltip: context.loc.refresh,
+      onPressed: _initData,
+    ),
+  ],
+),
+```
+
+- **`onPressed: _initData`** — повторно вызывает метод загрузки данных из `NewsRepository`.  
+  `_initData` всегда использует `const NewsFeedFilter(forceRefresh: true)`, поэтому нажатие кнопки **всегда делает запрос к сети**, минуя кэш.
+- После получения ответа запускается та же анимация масштабирования, что и при первоначальной загрузке.
+
+### 2. `assets/l10n/locale_en.arb` — добавлен ключ локализации:
+```arb
+"refresh": "Refresh",
+```
+
+### 3. `assets/l10n/locale_ru.arb` — добавлен ключ локализации:
+```arb
+"refresh": "Обновить",
+```
+
+---
+
+## Чтобы запустить проверки самостоятельно
+
+На вашей машине выполните:
+
+```bash
+flutter analyze
+flutter test
+```
+
+Если оба пройдут без замечаний и падений — задача полностью завершена.

@@ -1,0 +1,20 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T4__c2__2\.madharness-mini\traces\20260924-002834-bd0291cd.jsonl
+Готово. Экран новостей переведён на cache-then-network.
+
+**Изменения**
+
+- `lib/app/news_list/news_list_page.dart` — `_initData()` теперь:
+  - сразу запрашивает кэш: `loadNewsFeed(NewsFeedFilter.all)` (только БД, сеть не дёргается) и показывает его;
+  - параллельно запускает фоновую загрузку `_refreshFromNetwork()`, которая вызывает `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` (сеть + запись в кэш) и по приходу ответа обновляет список через `setState` — список заменяется, а не пересоздаётся с нуля;
+  - фоновая ошибка не ломает уже показанный кэш (try/catch), плюс проверка `mounted` перед `setState`.
+  - `_newsList` добавлен как источник данных для билда, `FutureBuilder` остался только для «первого кадра» (до прихода кэша — `SizedBox.shrink()`, анимация как раньше).
+- `test/widget/news_list_page_test.dart` — новый тест «should show cached feed first and then update it with network response»: сеть отдаётся с задержкой 100 мс, проверяется, что сначала виден кэш, затем — данные сети, и что оба вызова `loadNewsFeed` (кэш и `forceRefresh`) сделаны. Мок репозитория сделан per-test (`late` + создание в `setUp`), чтобы счётчики вызовов не пересекались между тестами.
+- `changelog/10053.bugfix.rst` — фрагмент changelog по требованию I.5.
+
+**Проверки**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (34 теста, включая новый)
+
+Замечание по хрупкости теста (не блокер): в widget-тесте microtask-очередь Flutter сбрасывается на первом же `pump()`, поэтому для наблюдаемого «сначала кэш» пришлось дать сети искусственную задержку — это стандартный приём, но тест привязан к таймингу.

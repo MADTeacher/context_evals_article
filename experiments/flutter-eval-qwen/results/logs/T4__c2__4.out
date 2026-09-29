@@ -1,0 +1,25 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T4__c2__4\.madharness-mini\traces\20260924-202743-9d615db4.jsonl
+## Готово ✅
+
+**Что изменилось:** файл `lib/app/news_list/news_list_page.dart` переведён на паттерн cache-then-network по конвенции v2.
+
+### Ключевые изменения
+
+| Было | Стало |
+|---|---|
+| Один `FutureBuilder` с единственным вызовом `forceRefresh: true` — пустой экран пока идёт сеть | Мгновенный кэш из БД + параллельная фоновая загрузка в сеть |
+| Нет pull-to-refresh | Добавлен `RefreshIndicator(onRefresh: _initData)` |
+
+### Как работает новый код (согласно news.md §2)
+
+1. **`_initData()`** — асинхронный метод при инициализации экрана
+2. Запрашивает кэш: `loadNewsFeed(NewsFeedFilter.all)` → мгновенно показывает список
+3. Запускает анимацию `ScaleTransition`
+4. Через `Timer(Duration.zero, ...)` параллельно запускает фоновую загрузку: `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — сеть + запись в кэш (БД)
+5. При получении ответа из сети обновляет список через `setState`
+
+### Верификация
+
+- **`flutter.bat analyze`** — `No issues found!` (0 замечаний, включая info)
+- **`flutter.bat test`** — 33 теста, все прошли зелёные

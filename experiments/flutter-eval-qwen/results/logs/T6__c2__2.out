@@ -1,0 +1,21 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T6__c2__2\.madharness-mini\traces\20260924-222630-cbd57db7.jsonl
+Готово! Вот что изменилось:
+
+## Что изменено
+
+### 1. `lib/app/profile/profile_page.dart`
+- Добавлен импорт `dart:async` для `StreamSubscription`.
+- В `initState()` добавлена подписка на `_settingsRepository.themeModeStream`: при каждом изменении режима темы (`setThemeMode`) значение в `ValueNotifier` обновляется автоматически, и `ValueListenableBuilder` перестраивает виджет.
+- В `dispose()` подписка корректно отменяется через `.cancel()`.
+
+Начальное значение по-прежнему читается синхронно через `readThemeMode()` (строка 16) — это соответствует контракту v2 (чтение после `initAsyncData`).
+
+### 2. `test/widget/home_container_test.dart`
+- Добавлен импорт `dart:async`.
+- В `setUp()` добавлен stub для `themeModeStream`, возвращающий broadcast Stream, чтобы мок не падал при вызове `.listen()`.
+
+## Верификация
+
+- `flutter.bat analyze` — **No issues found!**
+- `flutter.bat test` — **33 passed**, все тесты зелёные.

@@ -1,0 +1,23 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T4__c0__4\.madharness-mini\traces\20260923-235608-ff33bc6d.jsonl
+I need to stop repeating the same tool calls. Let me step back and report the actual state honestly.
+
+**Current state of the change**
+
+`lib/app/news_list/news_list_page.dart` — переписан на cache-then-network:
+- `_cachedNewsListFuture = newsRepository.loadNewsFeed(NewsFeedFilter.all)` — мгновенный кэш (только БД, без сети);
+- `_refreshFromNetwork(...)` — параллельный фоновый запрос `const NewsFeedFilter(forceRefresh: true)`, результат кладётся в `_news` через `setState`, ошибка сети проглатывается (остаётся кэш);
+- в `build` показывается `_news ?? snapshot.data`.
+
+`test/widget/news_list_page_test.dart` — добавлены два теста (кэш виден первым, затем подменяется сетевыми данными; при ошибке сети остаётся кэш). `changelog/10053.feature.rst` — добавлен по конвенции из `docs/migration-v2.md`.
+
+**Verification (фактические результаты последнего прогона)**
+
+- `flutter analyze` → `No issues found!` ✅
+- `flutter test` → **34 passed, 1 failed** ❌
+
+Падает мой новый тест `NewsListPage should show cached feed first and refresh it from network` на строке 65: `expect(find.text('Из кэша'), findsOneWidget)` — найдено 0 виджетов. То есть после первого `tester.pump()` кэш ещё не отрисован (FutureBuilder ждёт микротаск `loadNewsFeed(NewsFeedFilter.all)`, а `pump()` без длительности не продвигает очередь микротасок). Второй новый тест (`pumpAndSettle`) проходит, старые тесты проходят.
+
+**Чего я не сделал:** не подобрал корректный способ «остановиться на кадре с кэшем» (нужен либо `await tester.runAsync(...)`, либо `tester.pump(Duration.zero)` в комбинации с ожиданием future кэша до сетевого, либо проверка кэша через `pumpAndSettle` с разделением ответов мока). Готовые варианты `pump()`/`pump(50..400ms)` я перепробовал — они либо не успевают за микротаском, либо сразу пропускают оба ответа. Задача **не завершена**: `flutter test` красный, требование «без падений» не выполнено.
+
+Дальнейший корректный шаг: вынести ожидание кэш-future в тесте (например, держать `Completer` для сетевого ответа, чтобы `pumpAndSettle` не мог проскочить мимо кадра с кэшем), либо проверять кэш через `await tester.pump(Duration.zero)` после `await tester.runAsync(() => Future<void>.delayed(Duration.zero))`.

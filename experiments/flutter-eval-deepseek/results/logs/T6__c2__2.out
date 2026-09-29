@@ -1,0 +1,18 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c2__2\.madharness-mini\traces\20260924-101302-69b8fc0d.jsonl
+Готово.
+
+**Изменения**
+
+- `lib/app/profile/profile_page.dart`:
+  - добавлен `StreamSubscription<AppThemeMode> _themeModeSubscription`, подписка создаётся в `initState` через `_settingsRepository.themeModeStream`, эмиссия кладётся в `_themeModeNotifier.value` → `ValueListenableBuilder` перерисовывает строку режима автоматически;
+  - начальное значение по-прежнему читается синхронно: `ValueNotifier(_settingsRepository.readThemeMode())` (v2-метод, без deprecated-геттера `themeMode`);
+  - подписка отменяется в `dispose` перед `_themeModeNotifier.dispose()`.
+- `test/widget/profile_page_test.dart` (новый): проверяет синхронное чтение начального значения и обновление UI при эмиссии в `themeModeStream`.
+- `test/widget/home_container_test.dart`: в `setUp` добавлен стаб `themeModeStream` (без него существующий тест падал с `MissingStubError` после появления подписки); контроллер закрывается в `tearDown`.
+- `changelog/10053.bugfix.rst` — фрагмент changelog по правилу I.5.
+
+**Проверки**
+
+- `flutter analyze` → «No issues found!»
+- `flutter test` → все 35 тестов зелёные (включая 2 новых).

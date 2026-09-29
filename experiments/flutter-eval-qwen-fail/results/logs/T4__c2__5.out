@@ -1,0 +1,24 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T4__c2__5\.madharness-mini\traces\20260923-182046-a3856f07.jsonl
+Готово. Вот что сделано:
+
+## Что изменилось
+
+**Файл:** `lib/app/news_list/news_list_page.dart`
+
+Было — один Future с `forceRefresh: true`, пользователь ждёт ответа от сети, экран пустой. Стало — паттерн **cache-then-network**:
+
+1. **Шаг 1 (мгновенно):** вызов `loadNewsFeed(NewsFeedFilter.all)` — читает из кэша (БД), сразу показывает список и запускает анимацию появления.
+2. **Шаг 2 (параллельно):** вызов `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — в фоне запрашивает сеть, по приходу ответа обновляет состояние через `setState`.
+
+Ключевые изменения:
+- Убран `FutureBuilder` — теперь состояние хранится как `List<NewsModel> _newsList = const []`.
+- Два параллельных вызова репозитория вместо одного с `forceRefresh: true`.
+- Проверка `mounted` перед `setState`, чтобы не обновлять disposed-виджет.
+
+## Верификация
+
+| Команда | Результат |
+|---|---|
+| `flutter.bat analyze lib/app/news_list/` | ✅ No issues found! |
+| `flutter.bat test` | ✅ 33 теста, все зелёные (включая `news_list_page_test`) |

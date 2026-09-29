@@ -1,0 +1,25 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c2__3\.madharness-mini\traces\20260924-005123-ee640f6d.jsonl
+The changes are complete and verified. Here's a summary:
+
+## Что изменилось
+
+**`lib/app/profile/profile_page.dart`** — экран профиля теперь:
+- В `initState()` подписывается на `SettingsRepository.themeModeStream` и обновляет `ValueNotifier` через `_onThemeModeChanged`. Поток уже broadcast, поэтому подписка безопасна.
+- Начальное значение по-прежнему читается **синхронно** через `readThemeMode()` (v2-конвенция, после `initAsyncData()` на Splash).
+- В `dispose()` подписка отменяется (`_themeModeSubscription.cancel()`), затем освобождается notifier.
+
+**`test/widget/profile_page_test.dart`** (новый) — 3 теста:
+1. начальный режим читается синхронно (`readThemeMode()` вызывается один раз, показывается «Светлая»);
+2. при эмите в `themeModeStream` отображаемый режим обновляется на «Тёмная»;
+3. после dispose слушатель потока отписан (`hasListener == false`).
+
+**`test/widget/home_container_test.dart`** — в существующий мок добавлен стаб `themeModeStream` (тест навигации теперь монтирует `ProfilePage`, который подписывается на поток).
+
+**`changelog/10053.bugfix.rst`** (новый) — фрагмент changelog по правилу I.5.
+
+## Проверка
+
+- `flutter analyze` → **No issues found!**
+- `flutter test` → **All tests passed!** (36 тестов, включая 3 новых).
+- Конвенции v2 соблюдены: используется `readThemeMode()` и `themeModeStream`, deprecated-геттер `themeMode` не задействован.

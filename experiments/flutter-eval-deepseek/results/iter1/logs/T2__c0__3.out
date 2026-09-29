@@ -1,0 +1,21 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T2__c0__3\.madharness-mini\traces\20260923-233711-fdb896de.jsonl
+Готово.
+
+## Что изменено
+
+**`lib/app/currency_list/currency_list_page.dart`** — экран курса валют:
+- Добавлена реальная пагинация: кнопка «Показать ещё» рендерится только при `_hasMore` (признак конца страниц `CurrencyPage.hasMore == false`). Нажатие догружает следующую страницу (`page: _nextPage`) и добавляет элементы к уже показанным; после загрузки последней страницы кнопка исчезает. На время запроса кнопка деактивирована (`_isLoadingMore`).
+- Все запросы идут с `base: 'USD'` (константа `_baseCurrency`), как требует проектная конвенция из `docs/migration-v2.md`; `pageSize = 20`.
+- Добавлена подписка на потерю фокуса экраном: в `didChangeDependencies` берётся `FocusScope.of(context)` и вешается listener; когда `hasFocus == false`, вызывается `_reloadData()` — свежий запрос первой страницы (`CurrencyPageRequest(base: 'USD', page: 0, ...)`), сброс пагинации и обновление списка. Listener снимается в `dispose`.
+- `_filteredCurrenciesNotifier` перестал быть `late final` и создаётся один раз — иначе повторная загрузка при потере фокуса падала с `LateInitializationError` (это поймали новые тесты).
+
+**Локализация** — ключ `showMore`: `assets/l10n/locale_ru.arb` («Показать ещё»), `locale_en.arb` («Show more») и вручную синхронизированные generated-файлы `lib/app/gen/l10n/app_localizations{,_ru,_en}.dart` (они закоммичены в репозиторий, `flutter gen-l10n` не запускался, чтобы не переписывать весь файл).
+
+**`test/widget/currency_list_page_test.dart`** — 3 новых теста: скрытие кнопки при `hasMore: false`; догрузка второй страницы и исчезновение кнопки после последней страницы; обновление списка при потере фокуса с проверкой `captured.base == 'USD'`.
+
+**`changelog/10053.bugfix.rst`** — фрагмент changelog по конвенции проекта.
+
+## Проверки
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (36 тестов, включая 6 в `currency_list_page_test.dart`)

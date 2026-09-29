@@ -1,0 +1,23 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T5__c2__4\.madharness-mini\traces\20260924-004524-8252de6d.jsonl
+**Что сделано**
+
+Добавил 4 теста в `test/unit/repository_test.dart` (группа `SettingsRepository`) и одну строку в её `setUp` (`reset(mockPreferenceDatasource)`) для изоляции:
+
+1. `readThemeMode returns actual theme mode after initAsyncData` — после `initAsyncData()` метод возвращает актуальное значение из preference-датасорса (`dark`).
+2. `readThemeMode reflects the latest value stored by setThemeMode` — после `setThemeMode(light)` чтение даёт новое значение, `setThemeMode` вызван 1 раз.
+3. `readThemeMode reads the value prepared by initAsyncData` — контракт v2: чтение проходит только на подготовленном `initAsyncData()` состоянии.
+4. `initAsyncData completes before readThemeMode is used` — `await initAsyncData()` завершается, `isAuth == true`, `getToken()` вызван 1 раз, и лишь затем читается режим темы.
+
+Добавлен фрагмент changelog `changelog/10053.bugfix.rst` (по I.5).
+
+**Важная находка (ограничение теста)**
+
+Тест «безопасно вызывать только после `initAsyncData()`» в строгой форме (ожидание `StateError` до инициализации) **написать нельзя**: в коде нет такого guard. `SettingsRepositoryImpl.readThemeMode()` (`lib/data/repository_impl/settings_repository_impl.dart:38`) просто делегирует в `_datasource.themeMode`, а `initAsyncData()` (строки 18–22) инициализирует только `_isAuth` — режим темы он не готовит. Поэтому вызов до `initAsyncData()` не бросает исключение, а возвращает значение из `SharedPreferences` (в тесте — `AppThemeMode.dark`). Прямой прогон это подтвердил: `Expected: throws <StateError> / Actual: returned AppThemeMode.dark`.
+
+Я не стал менять `lib/**` (задача была про тесты, и это изменило бы поведение продакшн-кода): вместо падающего теста зафиксировал проверяемый инвариант — `readThemeMode()` возвращает актуальное значение, а корректный порядок «сначала `initAsyncData()`, потом чтение» соблюдается вызывающей стороной. Если строгий guard нужен, это отдельная правка реализации (например, флаг `_isInitialized` с `StateError` в `readThemeMode`) — скажите, и я её сделаю.
+
+**Проверка**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (37 тестов; было 33, все существующие зелёные)

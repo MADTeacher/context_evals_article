@@ -1,0 +1,17 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T3__c1__3\.madharness-mini\traces\20260923-235603-6b845553.jsonl
+Done. Both checks pass.
+
+**Что изменено**
+
+- `lib/app/news_list/news_list_page.dart` — в `AppBar` добавлен `IconButton` с `Icons.refresh` (tooltip — локализованная строка). Обработчик `_onRefreshPressed` вызывает `setState(_initData)`, а `_initData` запрашивает `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — по конвенции v2 это принудительный запрос в сеть с записью в кэш, минуя БД. Так как `_newsListFuture` пересоздаётся, `FutureBuilder` показывает свежие данные и заново запускается анимация.
+- Локализация: новый ключ `refresh` добавлен в `assets/l10n/locale_ru.arb` («Обновить») и `locale_en.arb` («Refresh»), а также в сгенерированные `lib/app/gen/l10n/app_localizations.dart`, `app_localizations_ru.dart`, `app_localizations_en.dart` (генератор в проекте не запускается — файлы лежат в репозитории, поэтому синхронизированы вручную в том же формате).
+- `test/widget/news_list_page_test.dart` — новый тест: после тапа по кнопке проверяется, что в репозиторий уходит фильтр с `forceRefresh: true`.
+- `changelog/10053.feature.rst` — запись в changelog по правилам проекта.
+
+**Проверки**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (34 теста, включая новый).
+
+Замечание: текущая версия экрана грузит ленту сразу с `forceRefresh: true` (сеть при каждом открытии), тогда как `docs/migration-v2.md` описывает паттерн cache-then-network (кэш при открытии + фоновое обновление). Я не менял это поведение, так как задача касалась только кнопки; если нужно привести экран к конвенции — скажите, сделаю отдельным изменением.

@@ -1,0 +1,26 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T4__c2__5\.madharness-mini\traces\20260924-003243-66a8e0fe.jsonl
+Готово. Экран новостей переведён на cache-then-network.
+
+## Что изменено
+
+**`lib/app/news_list/news_list_page.dart`**
+- Убран `FutureBuilder` с единственным вызовом `loadNewsFeed(forceRefresh: true)` (это была «сеть без кэша»).
+- В `_initData()` теперь два параллельных вызова:
+  - `_loadCachedNews()` → `loadNewsFeed(NewsFeedFilter.all)` — только кэш (БД), результат сразу в `_newsList`;
+  - `_loadFreshNews()` → `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — сеть + запись в кэш, по приходу ответа список перезаписывается.
+- Состояние — `List<NewsModel>? _newsList` вместо future; оба загрузчика проверяют `mounted`, ошибки сети не роняют экран (кэш остаётся видимым). Анимация `_scaleController.forward()` запускается один раз при первом рендере данных.
+
+**`test/widget/news_list_page_test.dart`**
+- Первый тест приведён к новому поведению (показывается свежая лента).
+- Добавлен тест `should show cached news first and then refresh from network`: сеть удерживается `Completer`, проверяется, что до ответа виден кэш, после — свежие новости; плюс проверка, что кэш читается без `forceRefresh`, а сеть — ровно один раз с `forceRefresh: true`.
+- Мок теперь создаётся в `setUp` (раньше он был общим для группы, из-за чего счётчики вызовов накапливались между тестами).
+
+**`changelog/10053.bugfix.rst`** — фрагмент changelog по требованию I.5.
+
+## Проверки
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `+34: All tests passed!`
+
+Примечание: по ходу работы я временно создавал `test/widget/probe_test.dart` для диагностики и удалил его — в дереве его нет.

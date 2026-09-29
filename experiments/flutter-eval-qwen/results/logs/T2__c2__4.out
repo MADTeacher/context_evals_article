@@ -1,0 +1,24 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T2__c2__4\.madharness-mini\traces\20260924-161540-0e5643b5.jsonl
+Все 33 теста прошли, `flutter analyze` — «No issues found!». Вот что изменено:
+
+### Изменения
+
+**1. l10n (`assets/l10n/locale_en.arb`, `locale_ru.arb`)**  
+Добавлен ключ `showMore`:
+- EN: `"Show more"`
+- RU: `"Показать ещё"`
+
+**2. Экран валют (`lib/app/currency_list/currency_list_page.dart`) — полностью переработан:**
+- Запрос идёт через `fetchRates(CurrencyPageRequest(base: 'USD', page: 0, pageSize: 20))` — по конвенции v2 (I.1), базовая валюта `'USD'`.
+- Кнопка «Показать ещё» отображается **только когда `hasMore == true`**. Когда пагинация заканчивается (`hasMore == false`) — кнопка исчезает, список показывает только карточки валют.
+- При нажатии загружается следующая страница: `page = currentPage + 1`, элементы **добавляются** к списку (конвенция v2).
+- Показывается индикатор загрузки во время фоновой подгрузки.
+
+**3. Главная вкладка (`lib/app/home.dart`) — сброс при возврате:**
+- Добавлен `GlobalKey<CurrencyListPageState>` для удержания состояния экрана валют между переключениями.
+- При уходе с вкладки валют и возврате на неё вызывается метод `refreshData()` — список сбрасывается к `page: 0` и загружается заново свежим запросом с базовой валютой `'USD'`.
+
+### Верификация (п. I.6)
+- ✅ `flutter.bat analyze` — **«No issues found!»**
+- ✅ `flutter.bat test` — **33/33 passed** (все зелёные)

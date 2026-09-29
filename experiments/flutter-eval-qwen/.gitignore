@@ -1,0 +1,8 @@
+build/
+.dart_tool/
+.venvs/
+workspaces/
+data/
+__pycache__/
+.idea/
+contexts/local-key.json

@@ -1,0 +1,25 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T4__c0__5\.madharness-mini\traces\20260924-102440-0f6bd178.jsonl
+Готово. Экран новостей переведён на паттерн **cache-then-network**.
+
+## Что изменено
+
+**Domain** (`lib/domain/repository/news_repository.dart`)
+- Добавлен метод `Stream<List<NewsModel>> watchNewsFeed(NewsFeedFilter filter)` — контракт для ленты «кэш → сеть».
+
+**Data** (`lib/data/repository_impl/news_repository_impl.dart`)
+- Реализация `watchNewsFeed`: сначала читает кэш из `DbDatasource` и, если он непустой, эмитит его; затем идёт в сеть, сохраняет результат в БД и эмитит свежие данные. При пустом кэше эмитится только сеть.
+
+**Presentation** (`lib/app/news_list/news_list_page.dart`)
+- `FutureBuilder` заменён на `StreamBuilder` над `watchNewsFeed(...)`. Кэш показывается сразу при открытии вкладки, список обновляется, когда приходит ответ сети. Анимация `ScaleTransition` запускается при первом показе списка.
+
+**Тесты**
+- `test/unit/repository_test.dart` — 2 новых теста: эмиссия «кэш → сеть» и «только сеть при пустом кэше».
+- `test/widget/news_list_page_test.dart` и `test/widget/home_container_test.dart` — стабы переведены с `loadNewsFeed` на `watchNewsFeed`.
+- `test/mocks/repository.mocks.dart` — перегенерирован через `build_runner` (в мок добавился `watchNewsFeed`).
+
+## Верификация
+- `flutter analyze` — **No issues found!**
+- `flutter test` — **All tests passed!** (35 тестов, было 33; +2 новых).
+
+Примечание: в репозитории нет `AGENTS.md`, поэтому следовал общим соглашениям Clean Architecture, уже принятым в проекте (domain-контракт → data-реализация → presentation). Поведение `loadNewsFeed` оставлено без изменений для обратной совместимости.

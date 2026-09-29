@@ -1,0 +1,24 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T5__c2__1\.madharness-mini\traces\20260924-100331-f97de365.jsonl
+Done. Verification is green.
+
+## What changed
+
+**`test/unit/repository_test.dart`** — in the `SettingsRepository` group:
+- Added `readThemeMode returns actual value after initAsyncData`: stubs `getToken`/`themeMode`, awaits `initAsyncData()`, then asserts `readThemeMode()` returns `AppThemeMode.dark` and the datasource getter was read once.
+- Added `readThemeMode is safe to call after initAsyncData`: asserts the call returns normally (no throw) once initialization has run.
+- Added `reset(mockPreferenceDatasource)` in the group's `setUp`: the mock is a shared top-level instance, so without the reset the pre-existing `should return current theme mode value` test failed with "Unexpected number of calls (2)" once the new tests also touched `themeMode`. This was a real regression in the existing suite, not a stylistic tweak.
+
+**`changelog/10053.bugfix.rst`** — new fragment per project rule I.5.
+
+## Notes / limitations
+
+- The tests exercise the read/watch split contract from `references/settings.md`: `readThemeMode()` is the v2 accessor, called only after `initAsyncData()`. No `@Deprecated` members (`themeMode`, `getCurrencyList`, `getNewsList`) were added — the existing test at line ~184 still uses the deprecated getter, but I left it untouched as it is outside the requested scope.
+- "Safe to call only after `initAsyncData()`" is covered as an explicit post-init contract. The impl (`SettingsRepositoryImpl.readThemeMode()`) has no guard for pre-init calls, so there is no defined pre-init behavior to assert against without inventing a contract the code does not implement. Say the word if you want a guard added to the production class plus a negative test.
+- No `build_runner` regeneration was needed; the existing generated mocks already cover `PreferenceDatasource.themeMode`.
+
+## Verification
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (35 tests, including the 2 new ones)
+- `flutter test test/unit/repository_test.dart` → 17/17 passed

@@ -1,0 +1,18 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T3__c0__4\.madharness-mini\traces\20260924-094310-d4fc0f65.jsonl
+Готово. Кнопка «Обновить» добавлена в AppBar экрана новостей, лента перезагружается из сети в обход кэша.
+
+**Изменения**
+
+- `lib/app/news_list/news_list_page.dart` — в `AppBar.actions` добавлен `IconButton(Icons.refresh)` с тултипом из локализации. Обработчик `_refreshNews()` делает `_scaleController.reset()` и повторный вызов `_initData()`, который запрашивает `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))`. Флаг `forceRefresh` в `NewsRepositoryImpl.loadNewsFeed` идёт в `_restDatasource.getNewsList()` и обновляет БД, то есть кэш (`_dbDatasource`) не читается.
+- Локализация: ключ `refresh` добавлен в `assets/l10n/locale_ru.arb` («Обновить») и `locale_en.arb` («Refresh»), а также в сгенерированные файлы `lib/app/gen/l10n/app_localizations.dart`, `app_localizations_ru.dart`, `app_localizations_en.dart` (руками, в том же стиле/порядке, что и остальные ключи, — `flutter gen-l10n` не запускался, чтобы не перегенерировать файлы целиком).
+- `test/widget/news_list_page_test.dart` — новый тест: после тапа по кнопке `loadNewsFeed` вызывается второй раз именно с `forceRefresh: true`.
+
+**Замечание по тесту (нашлось при проверке)**
+
+Первая версия теста падала: `tester.tap(find.byIcon(Icons.refresh))` попадал в `Tooltip`-обёртку (её `GestureDetector` перекрывает центр иконки), из-за чего `onPressed` не срабатывал. Также мок в группе общий и накапливал вызовы между тестами. Исправлено: тап по `find.widgetWithIcon(IconButton, Icons.refresh)` и `reset(...)` + переустановка `when(...)` в начале теста.
+
+**Проверка**
+
+- `flutter analyze` — No issues found.
+- `flutter test` — 34 теста, все прошли (33 было до изменения, +1 новый).

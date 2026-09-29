@@ -1,0 +1,17 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T3__c2__2\.madharness-mini\traces\20260924-094323-e8e12d27.jsonl
+Готово. Кнопка «Обновить» добавлена на экран новостей.
+
+**Что изменено**
+
+- `lib/app/news_list/news_list_page.dart` — в `AppBar` добавлен `IconButton` (`Icons.refresh`, tooltip из l10n). Новый метод `_refresh()` сбрасывает `_scaleController.value = 0`, затем `setState(_initData)`; `_initData()` вызывает `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — сеть + запись в кэш (конвенция v2: действие пользователя «Обновить» всегда `forceRefresh: true`). `@Deprecated`-члены не используются.
+- `assets/l10n/locale_en.arb` / `locale_ru.arb` — ключ `refresh` («Refresh» / «Обновить»); перегенерированы `lib/app/gen/l10n/*` через `flutter gen-l10n`.
+- `changelog/10053.feature.rst` — фрагмент changelog (I.5); номер 10053 не занят (есть 10051, 10052).
+- `test/widget/news_list_page_test.dart` — новый тест: после тапа по кнопке репозиторий вызывается с фильтром, у которого `forceRefresh == true`. Заодно в `setUp` добавлен `reset(mockNewsRepository)`, а в тесте — `clearInteractions`, чтобы вызовы не накапливались между тестами.
+
+**Проверки**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (34 теста, включая новый).
+
+Замечание: тест проверяет, что перезагрузка идёт с `forceRefresh: true` (сеть минуя кэш). Само ветвление «сеть vs кэш» уже покрыто юнит-тестами `NewsRepository` в `test/unit/repository_test.dart`.

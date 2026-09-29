@@ -1,0 +1,24 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T4__c0__2\.madharness-mini\traces\20260923-235217-c8adbcaf.jsonl
+Done. Экран новостей работает по cache-then-network.
+
+**Что изменено**
+
+`lib/app/news_list/news_list_page.dart`:
+- Кэш читается первым: `loadNewsFeed(NewsFeedFilter.all)` (`forceRefresh: false` → только БД), как требует конвенция в `docs/migration-v2.md`.
+- Параллельно, не дожидаясь кэша, запускается `_refreshFromNetwork` → `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))`; результат сети перезаписывает кэш (в репозитории) и обновляет список через `setState`.
+- Список рендерится из `_newsList ?? snapshot.data`: если сеть ответила раньше кэша — показываются свежие данные, иначе кэш, который затем заменяется ответом сети.
+- Сетевой сбой больше не ломает экран: ошибка фонового запроса перехватывается, остаётся содержимое кэша (раньше исключение из `initState` становилось необработанным).
+- Анимация (`_scaleController.forward()`) и разметка списка сохранены без изменений.
+
+`test/widget/news_list_page_test.dart` — тест переписан под новый сценарий и усилен:
+- «кэш → затем сеть»: кэш отдаётся мгновенно, сеть отвечает по `Completer`; проверяется, что сначала виден кэш, после ответа сети — свежие новости, и что вызваны оба режима `loadNewsFeed`.
+- добавлен тест «сеть упала — показывается кэш».
+
+`changelog/10053.bugfix.rst` — фрагмент changelog по конвенции проекта.
+
+**Проверка**
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (34 теста)
+
+Примечание: `integration_test/app_test.dart` требует устройства/эмулятора, поэтому прогонялись только `flutter analyze` и `flutter test`; логика интеграционного сценария не затрагивалась.

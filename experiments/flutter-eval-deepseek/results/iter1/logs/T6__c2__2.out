@@ -1,0 +1,20 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c2__2\.madharness-mini\traces\20260924-005028-31b09193.jsonl
+Done.
+
+**What changed**
+
+- `lib/app/profile/profile_page.dart`
+  - Added `import 'dart:async'`.
+  - Kept the synchronous initial read: `ValueNotifier(_settingsRepository.readThemeMode())` (v2 convention — method, not the deprecated `themeMode` getter).
+  - Subscribed in `initState` to `_settingsRepository.themeModeStream` (`listen(...)`) and pushed emitted values into `_themeModeNotifier`, so the tile updates automatically on `setThemeMode`.
+  - Cancelled the `StreamSubscription` in `dispose` before disposing the notifier.
+- `test/widget/home_container_test.dart` — `MockSettingsRepository` uses `throwOnMissingStub`, so I added the now-required stub `when(mockSettingsRepository.themeModeStream).thenAnswer((_) => const Stream<AppThemeMode>.empty())`. Without it the profile tab test failed with `MissingStubError: 'themeModeStream'`.
+- `changelog/10053.bugfix.rst` — new fragment per project rule I.5.
+
+**Verification**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (33 tests)
+
+Note: the manual `setThemeMode` call is not present in the profile page — the bottom sheet only returns the new mode and the local notifier is still updated directly in `onTap`; the stream subscription now also covers external changes (e.g. from other screens).

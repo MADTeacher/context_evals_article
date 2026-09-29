@@ -1,0 +1,21 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T7__c0__2\.madharness-mini\traces\20260924-001530-a89f8184.jsonl
+Готово. Кнопка «Обновить всё» на `HomePage` запускает оба сетевых запроса одновременно.
+
+**Что изменено**
+
+- `lib/app/home.dart` — кнопка `ElevatedButton` под текущей вкладкой (над навигацией), с индикатором загрузки и блокировкой повторного нажатия; после завершения показывает снекбар (успех/ошибка). По результату обновления рассылает сигналы `ValueNotifier<int>` на вкладки.
+- `lib/domain/repository/refresh_repository.dart` (новый) — контракт `RefreshRepository.refreshAll()` + `RefreshResult{currencyUpdated, newsUpdated, isSuccess}`; экспортирован из `domain/repository/repository.dart`.
+- `lib/data/repository_impl/refresh_repository_impl.dart` (новый) — оба запроса стартуют до `await` (реально параллельно): `CurrencyRepository.fetchRates(CurrencyPageRequest(base: 'USD'))` и `NewsRepository.loadNewsFeed(NewsFeedFilter(forceRefresh: true))`; ошибка одного запроса не отменяет второй, флаги отражают, что прошло. Экспортирован из `repository_impl.dart`.
+- `lib/app/currency_list/currency_list_page.dart`, `lib/app/news_list/news_list_page.dart` — необязательный параметр `refreshSignal`; по сигналу перечитывают данные из сети через существующие репозитории. В `CurrencyListPage` `_filteredCurrenciesNotifier` стал `final` (сброс значения вместо пересоздания), чтобы повторная загрузка не падала.
+- `lib/main.dart` — добавлен `Provider<RefreshRepository>` (репозитории курса/новостей переиспользуются).
+- Локализация: `assets/l10n/locale_ru.arb`, `locale_en.arb` + вручную синхронизированные `lib/app/gen/l10n/app_localizations{,_ru,_en}.dart` (`refreshAll`, `refreshAllSuccess`, `refreshAllError`).
+- Тесты: `test/unit/repository_test.dart` — группа `RefreshRepository` (сеть-запросы, параллельный старт, частичный сбой); `test/widget/home_container_test.dart` — нажатие кнопки обновляет и курс, и новости, и сообщение об ошибке; мок `MockRefreshRepository` добавлен в `test/mocks/repository.dart` и `.mocks.dart`.
+- Changelog: `changelog/10053.feature.rst`.
+
+**Проверка**
+
+- `flutter analyze` — No issues found.
+- `flutter test` — 38 тестов, все прошли (до изменений было 33).
+
+Замечания: `flutter gen-l10n` в этом окружении недоступен (нет `flutter_gen`), поэтому сгенерированные l10n-файлы обновлены вручную в формате генератора — при следующем `flutter pub get`/генерации они совпадут с ARB. Интеграционный тест (`integration_test/app_test.dart`) требует устройства, не запускался.

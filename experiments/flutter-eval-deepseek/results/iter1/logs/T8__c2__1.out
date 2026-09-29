@@ -1,0 +1,19 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T8__c2__1\.madharness-mini\traces\20260924-011525-662b2279.jsonl
+Готово. Экран «Дашборд» добавлен и подключён к HomePage.
+
+**Что сделано**
+
+- `lib/app/dashboard/dashboard_page.dart` — новый экран. В `_loadDashboard()` данные грузятся параллельно через `Future.wait`: `fetchRates(const CurrencyPageRequest(base: 'USD'))` и `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` (сеть + запись в кэш). Пока фьючер не завершён — `CircularProgressIndicator`; при ошибке — сообщение. Результат: секция «Курс Валют» (`CurrencyCard`) и секция «Новости» (`NewsCard`), элементы текущей страницы сохраняются через `saveCurrencyList`.
+- `lib/app/dashboard/widgets/dashboard_section_title.dart`, `widgets/widgets.dart`, `dashboard.dart` — по конвенции соседних фич; экспорт добавлен в `lib/app/app.dart`.
+- `lib/app/home.dart` — доступ к дашборду: `FloatingActionButton` (tooltip = локализованное «Дашборд») и четвёртая вкладка `BottomNavigationBar`; открытие через `Navigator.push` с `MaterialPageRoute`.
+- l10n: ключи `dashboard` / `dashboardError` добавлены в `assets/l10n/locale_en.arb`, `locale_ru.arb` и в сгенерированные `lib/app/gen/l10n/*` (ручная синхронизация, т.к. генерация l10n в этом окружении не запускалась).
+- `changelog/10053.feature.rst` — фрагмент пользовательского изменения.
+- Тесты: `test/widget/dashboard_page_test.dart` (индикатор загрузки, отображение данных, проверка `base: 'USD'` и `forceRefresh: true` + вызов `saveCurrencyList`); в `test/widget/home_container_test.dart` проверено наличие вкладки и переход на дашборд.
+
+**Проверка**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (37 тестов, включая 4 новых)
+
+Замечание: экран использует `Navigator.push`, а не отдельный маршрут в `app.dart`, так как в проекте нет именованных маршрутов — навигация везде делается напрямую (как в `CurrencyCard` → `CurrencyDetailPage`).

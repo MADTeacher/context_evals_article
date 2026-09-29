@@ -1,0 +1,28 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T4__c0__5\.madharness-mini\traces\20260923-235929-0c87e151.jsonl
+Готово. Экран новостей переведён на cache-then-network.
+
+## Что изменено
+
+**`lib/app/news_list/news_list_page.dart`** — `FutureBuilder` заменён на явное состояние `List<NewsModel>? _news`:
+- `_initData()` делает два параллельных запроса к `NewsRepository`:
+  - `loadNewsFeed(NewsFeedFilter.all)` — только кэш (БД), результат показывается сразу, как придёт;
+  - `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — сеть с записью в кэш, список заменяется по приходу ответа.
+- `_showCachedFeed` не перетирает уже показанные свежие данные (`_news != null`), `_showFreshFeed` обновляет список и запускает анимацию.
+- Оба колбэка проверяют `mounted`; ошибка сети глушится (`.catchError`), кэш остаётся на экране.
+- `FutureBuilder` убран, поэтому `saveNewsList` из UI больше не вызывается — кэширование делает репозиторий.
+
+**`test/widget/news_list_page_test.dart`** — существующий тест сохранён, добавлены два, фиксирующие новое поведение:
+- кэш показывается до ответа сети, затем список заменяется свежими данными (через `Completer`);
+- при падении сети остаётся кэш.
+
+**`changelog/10053.bugfix.rst`** — фрагмент changelog, как требует `docs/migration-v2.md` §4.
+
+## Проверка
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (35 тестов, было 33)
+
+Оба прогона я делал и до правок (базовое состояние тоже было зелёным), так что регрессий не внесено. Стоит отметить: `dart format` требует строку ≤ 120 символов (в `pubspec.yaml` есть `dev_line_length: 120`), и в двух строках с `argThat(...)` в тесте она длиннее — я оставил как есть, так как analyze этого не проверяет; если нужен строгий формат, скажите, разобью их.
+
+Отдельно: в `lib/main.dart:93` есть обращение к deprecated-геттеру `_settingsRepository.themeMode`, которое существует независимо от этой задачи — я его не трогал, чтобы не расширять область изменений.

@@ -1,0 +1,14 @@
+T2,c1,1,2,loop_max_turns,"патч<->flutter test (один файл) без сходимости, 149 ходов; структурные grep-ы пройдены"
+T2,c1,5,2,loop_max_turns,"94 run_shell: карусель патч/тест виджет-теста, 149 ходов"
+T2,c2,2,2,loop_max_turns,"уход в исходники Flutter SDK (RouteObserver/didPushNext), 8 идентичных команд подряд, 149 ходов"
+T2,c2,3,2,loop_max_turns,"патч-цикл с временным _debug_future_test.dart, 15 идентичных вызовов, 149 ходов"
+T2,c2,4,2,loop_max_turns,flutter test --dart-define=x=100..103 — буквальный инкремент параметра вместо диагностики
+T4,c0,3,2,wrong_api_choice,придумал watchNewsFeed (стрим) вместо конвенции loadNewsFeed+forceRefresh; docs/migration-v2.md не открывал; analyze/tests зелёные
+T4,c0,4,2,test_timing,не осилил pump/microtask-тайминг виджет-теста cache-then-network; честно отчитался о красных тестах
+T5,c1,3,2,overstrict_interpretation,"тест expect(StateError) на init-guard, который кодом не энфорсится (доку читал, цитировал); остановился спросить вместо адаптации"
+T7,c1,2,2,loop_max_turns,"findstr-циклы по отладочному флагу _verificationInProgress, 149 ходов"
+T7,c1,5,2,loop_max_turns,"патч<->тест home_container_test без сходимости, 149 ходов"
+T7,c2,3,2,loop_max_turns,"патч<->тест home_refresh_all_test без сходимости, 149 ходов"
+T8,c0,5,2,literal_req_missed,"параллелизм через Dart-3 records (a,b).wait вместо Future.wait, названного в постановке; analyze/tests зелёные"
+T8,c1,2,2,loop_max_turns,"102 идентичных git status подряд — полный зацикл, 149 ходов"
+T8,c1,5,2,literal_req_missed,"Future.wait отсутствует (постановка называет явно); 26 ходов, сдался рано"

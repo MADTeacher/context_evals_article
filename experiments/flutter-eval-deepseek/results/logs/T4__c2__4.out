@@ -1,0 +1,17 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T4__c2__4\.madharness-mini\traces\20260924-095942-f66d40c0.jsonl
+Готово: экран новостей переведён на cache-then-network.
+
+**Изменения**
+- `lib/app/news_list/news_list_page.dart`:
+  - убран `FutureBuilder` и единственный вызов с `forceRefresh: true` (сеть без показа кэша);
+  - в `_initData()` теперь два независимых вызова: `loadNewsFeed(NewsFeedFilter.all)` — только кэш (БД), сразу отрисовывается списком состояния, и `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — фоновая сеть с записью в кэш;
+  - состояние списка — `List<NewsModel> _newsList`, обновляется через `setState` в `_applyCachedNews` / `_applyFreshNews`; обе ветки защищены `mounted`;
+  - анимация `_scaleController.forward()` запускается по приходу свежих данных; кэш с пустым списком не рендерится, чтобы не мигать пустым экраном до ответа сети.
+- `changelog/10053.bugfix.rst` — фрагмент по правилу I.5.
+
+Старые члены (`getNewsList`, `themeMode`, `getCurrencyList`) не использовались.
+
+**Проверка**
+- `flutter analyze` — `No issues found!`
+- `flutter test` — `All tests passed!` (33 теста, включая `test/widget/news_list_page_test.dart`).

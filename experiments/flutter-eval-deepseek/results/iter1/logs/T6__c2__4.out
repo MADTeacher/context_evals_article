@@ -1,0 +1,19 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c2__4\.madharness-mini\traces\20260924-005243-2f84f506.jsonl
+Готово.
+
+**Что изменено**
+
+- `lib/app/profile/profile_page.dart`:
+  - начальное значение по-прежнему читается синхронно: `ValueNotifier(_settingsRepository.readThemeMode())` (после `initAsyncData()` на Splash, как требует v2);
+  - в `initState` добавлена подписка `_settingsRepository.themeModeStream.listen(_onThemeModeChanged)`, которая обновляет `_themeModeNotifier` → `ValueListenableBuilder` перерисовывает подпись автоматически при `setThemeMode`;
+  - в `dispose` подписка отменяется (`_themeModeSubscription.cancel()`); добавлен импорт `dart:async`.
+- `test/widget/home_container_test.dart`: добавлен стаб `when(mockSettingsRepository.themeModeStream).thenAnswer((_) => const Stream<AppThemeMode>.empty())` — без него `MockSettingsRepository` падал с `MissingStubError` при построении `ProfilePage`.
+- `changelog/10053.bugfix.rst` — фрагмент по правилу I.5.
+
+Публичный контракт (`setThemeMode` в bottom sheet) не менялся, @Deprecated-члены не используются.
+
+**Проверки**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (33 теста).

@@ -1,0 +1,20 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T5__c1__3\.madharness-mini\traces\20260924-232632-6e92a61f.jsonl
+Готово! Вот что было сделано:
+
+### Что изменилось
+
+**Файл:** `test/unit/repository_test.dart`
+
+Добавлены **2 новых теста** в группу `SettingsRepository`:
+
+1. **`readThemeMode returns current theme from datasource before initAsyncData`** — проверяет, что метод возвращает актуальное значение из datasource до вызова инициализации (в тесте замокнут `AppThemeMode.dark`).
+
+2. **`readThemeMode returns current theme from datasource after initAsyncData`** — проверяет то же самое после вызова `initAsyncData()` (в тесте замокнут `AppThemeMode.light`).
+
+Также добавлен **`reset(mockPreferenceDatasource)`** в `setUp` группы `SettingsRepository`, чтобы моки не накапливали вызовы между тестами и существующие `verify(...).called(1)` не ломались.
+
+### Верификация
+
+- ✅ `flutter analyze` — **No issues found!**
+- ✅ `flutter test` — **All 38 tests passed!** (включая все существующие)

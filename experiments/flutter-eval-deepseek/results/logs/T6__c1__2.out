@@ -1,0 +1,24 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c1__2\.madharness-mini\traces\20260924-100741-54f43044.jsonl
+Готово.
+
+## Что изменено
+
+**`lib/app/profile/profile_page.dart`**
+- Убран локальный `late final ValueNotifier<AppThemeMode> _themeModeNotifier` (и его `dispose`).
+- Вместо `ValueListenableBuilder` — `StreamBuilder<AppThemeMode>` на `SettingsRepository.themeModeStream`, поэтому подпись режима темы обновляется автоматически при любом изменении настройки (в т.ч. извне экрана профиля).
+- Начальное значение читается синхронно: `late final AppThemeMode _initialThemeMode = _settingsRepository.readThemeMode();` и передаётся в `initialData`, плюс `snapshot.data ?? _initialThemeMode` как страховка.
+- Выбор в bottom sheet теперь сохраняется через `_settingsRepository.setThemeMode(newMode)` (запись в preferences + эмиссия в поток), а не только в локальный notifier.
+
+**`test/widget/profile_page_test.dart`** (новый) — 3 теста: синхронное начальное значение, обновление подписи при эмиссии из потока, сохранение выбранного режима через репозиторий.
+
+**`test/widget/home_container_test.dart`** — добавлен стаб `themeModeStream` для `MockSettingsRepository`: после правки `ProfilePage` подписывается на поток при построении, и без стаба существующий тест навигации падал с `MissingStubError`.
+
+**`CHANGELOG.md`** (новый) — запись об изменении, как требует корневой AGENTS.md.
+
+## Проверки
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (36 тестов, включая 3 новых)
+
+Примечание по тесту сохранения режима: `setThemeMode` вызывается дважды — один раз из bottom sheet (`themeMode_selector_bs.dart`) и один раз из `onTap` страницы. Это существующее дублирование в коде, я его не трогал (правка была бы за рамками задачи); при желании можно оставить единственный вызов в bottom sheet.

@@ -1,0 +1,20 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T1__c0__2\.madharness-mini\traces\20260924-091217-3e1aaa4f.jsonl
+Готово. Добавил подгрузку курса валют по кнопке «Показать ещё».
+
+**Что изменилось**
+
+- `lib/app/currency_list/currency_list_page.dart`
+  - Добавил состояние пагинации: `_currentPage`, `_hasMore`, `_isLoadingMore`, `_query`, `_pageSize = 20`.
+  - Первичный запрос теперь идёт через `CurrencyPageRequest(pageSize: _pageSize)` и сохраняет `page`/`hasMore` из ответа.
+  - `_loadMore()` запрашивает следующую страницу (`page + 1`), дописывает элементы к `_allCurrencies`, обновляет `hasMore` и повторно применяет текущий поисковый фильтр (выделил `_applyFilter`), чтобы поиск продолжал работать на объединённом списке. Есть защита от повторного нажатия и от `setState` после `dispose` (`mounted`).
+  - Под списком — кнопка «Показать ещё» (`ElevatedButton`), которая показывается только при `_hasMore`; во время загрузки показывает `CircularProgressIndicator` и блокируется.
+- `assets/l10n/locale_ru.arb` / `locale_en.arb` — добавил ключ `showMore` («Показать ещё» / «Show more»), перегенерировал l10n через `flutter gen-l10n` (обновились `lib/app/gen/l10n/*`).
+- `test/widget/currency_list_page_test.dart` — добавил два теста: подгрузка и дописывание следующей страницы по кнопке, и сохранение фильтра поиска после подгрузки.
+
+**Проверка**
+
+- `flutter analyze` — `No issues found!`
+- `flutter test` — все 35 тестов прошли (`All tests passed!`).
+
+Примечание: `CurrencyPageRequest` не переопределяет `==`, поэтому в тесте `verify` для аргумента использован `argThat` вместо сравнения по значению.

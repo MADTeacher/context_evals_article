@@ -1,0 +1,53 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T2__c0__1\.madharness-mini\traces\20260923-034004-bbf8fc60.jsonl
+## Что изменилось
+
+### 1. Кнопка «Показать ещё» с сокрытием при конце страниц
+
+**`lib/app/currency_list/currency_list_page.dart`** — полностью переписан:
+
+- **Пагинация**: добавлены `_currentPage`, `_pageSize = 20`, `_hasMore`, `_isLoading`. При нажатии кнопки загружается следующая страница (`page: _currentPage`) с `base: 'USD'`.
+- **Сокрытие кнопки**: `ListView.builder` имеет `itemCount: data.length + (_hasMore ? 1 : 0)`. Кнопка «Показать ещё» рендерится только как последний элемент, когда `_hasMore == true`. Когда `fetchRates` возвращает `hasMore: false`, кнопка автоматически скрывается.
+- **Убран `FutureBuilder`**: вся загрузка теперь идёт через `_loadPage()`, UI управляется флагом `_isLoading` и `ValueNotifier`.
+
+### 2. Перезапрос с `base: 'USD'` при возвращении на экран
+
+**Там же**: добавлен миксин `WidgetsBindingObserver`:
+- В `initState()` регистрируется observer; в `dispose()` — снимается.
+- Метод `didChangeAppLifecycleState(resumed)` вызывает `_refreshWithUsdBase()`, который сбрасывает страницу на 0, очищает список и делает свежий запрос с `CurrencyPageRequest(base: 'USD', page: 0)`.
+
+### 3. Локализация — добавлено «Показать ещё» / "Show more"
+
+| Файл | Изменение |
+|---|---|
+| `assets/l10n/locale_ru.arb` | Добавлено `"showMore": "Показать ещё"` |
+| `assets/l10n/locale_en.arb` | Добавлено `"showMore": "Show more"` |
+| `lib/app/gen/l10n/app_localizations.dart` | Добавлен абстрактный `String get showMore;` с документацией |
+| `lib/app/gen/l10n/app_localizations_ru.dart` | Добавлена реализация `get showMore => 'Показать ещё';` |
+| `lib/app/gen/l10n/app_localizations_en.dart` | Добавлена реализация `get showMore => 'Show more';` |
+
+### 4. Обновлён тест
+
+**`test/widget/currency_list_page_test.dart`**:
+
+- Убран `FutureBuilder` из ожиданий — теперь UI управляется через `ValueNotifier`.
+- Тест «show display all items» проверяет, что кнопка не рендерится при `hasMore: false` (`expect(find.byType(TextButton), findsNothing)`).
+- Добавлен тест на отображение кнопки «Показать ещё» когда `hasMore: true`.
+
+---
+
+### О проверках `flutter analyze` / `flutter test`
+
+Flutter CLI недоступен в данной среде выполнения (Windows, команда `flutter` не найдена), поэтому автоматический прогон не выполнен. Однако код проверен вручную:
+
+- Все импорты корректны (`Material`, `WidgetsBindingObserver`, `ValueNotifier`, `FutureBuilder` убран).
+- Методы `initState`/`dispose` сбалансированы (observer добавляется и удаляется).
+- `context.read<CurrencyRepository>()` используется только внутри `_loadPage`, который вызывается после mount.
+- Mock в тестах (`fetchRates(any)`) покрывает все варианты вызовов.
+- Интеграционный тест (`integration_test/app_test.dart`) не затронут — он использует реальный бэкенд и не зависит от внутренней структуры страницы.
+
+Для финальной верификации выполните локально:
+```bash
+flutter analyze
+flutter test
+```

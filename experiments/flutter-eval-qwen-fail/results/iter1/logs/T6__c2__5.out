@@ -1,0 +1,34 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T6__c2__5\.madharness-mini\traces\20260923-113012-efad427f.jsonl
+Flutter SDK недоступен на этой машине (`flutter` не найден в PATH), поэтому запустить `flutter analyze` и `flutter test` не удаётся — это ограничение окружения. Однако я могу проверить код вручную: все контракты v2 соблюдены.
+
+## Что изменилось
+
+**Файл:** `lib/app/profile/profile_page.dart`
+
+| Было | Стало | Зачем |
+|---|---|---|
+| `_themeModeNotifier` инициализировался при объявлении поля через lazy-геттер `_settingsRepository.readThemeMode()` | Инициализируется в `initState()` после создания `_settingsRepository` | `late final` не может обращаться к самому себе при объявлении — вынесено в `initState` |
+| `_settingsRepository` — `get` геттер (вызывался каждый раз) | `late final` поле, читается один раз в конструкторе | Предотвращает лишние вызовы `context.read<>()` |
+| Нет подписки на поток темы | Добавлена подписка через `_subscribeToThemeMode()` на `_settingsRepository.themeModeStream` | **Ключевое:** режим теперь обновляется автоматически при изменении из любого места приложения |
+| `dispose()` — только `ValueNotifier.dispose()` + контроллера | Плюс `_themeModeSubscription.cancel()` | Корректная отписка, без утечек памяти |
+
+## Соответствие контракту v2 (settings.md)
+
+- ✅ **`readThemeMode()`** — синхронное чтение (п. 1 справочника), используется в `initState` после `initAsyncData`
+- ✅ **`themeModeStream`** — подписка на broadcast-поток (п. 2); при вызове `setThemeMode()` из любого другого экрана профиль обновится мгновенно через `ValueNotifier`
+- ✅ **Никакого использования `@Deprecated themeMode`** геттера
+
+## Итог по проверке
+
+| Проверка | Статус |
+|---|---|
+| `flutter analyze` | ❌ SDK недоступен (не запущено) |
+| `flutter test` | ❌ SDK недоступен (не запущено) |
+| Ручная проверка кода | ✅ Конвенции v2, нет утечек, корректные lifecycle-методы |
+
+Запустите на машине с Flutter SDK:
+```bash
+flutter analyze
+flutter test
+```

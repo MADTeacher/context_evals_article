@@ -1,0 +1,29 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T8__c2__3\.madharness-mini\traces\20260924-012156-dade115b.jsonl
+Everything is in place. Task complete.
+
+## Что сделано
+
+Добавлен экран «Дашборд», доступный кнопкой на HomePage.
+
+**Новые файлы:**
+- `lib/app/dashboard/dashboard_page.dart` — экран с `Future.wait`, который параллельно запрашивает свежие данные и показывает `CircularProgressIndicator` во время загрузки.
+- `lib/app/dashboard/widgets/dashboard_view.dart` и `widgets.dart` — отображение курса и новостей (переиспользуют `CurrencyCard`/`NewsCard`).
+- `test/widget/dashboard_page_test.dart` — тесты на индикатор загрузки и на корректность запросов.
+- `changelog/10053.bugfix.rst` — фрагмент changelog (правило I.5).
+
+**Изменённые файлы:**
+- `lib/app/home.dart` — кнопка (`FloatingActionButton.extended`) для перехода на дашборд.
+- `lib/app/app.dart` — экспорт `dashboard/dashboard_page.dart`.
+- `assets/l10n/locale_ru.arb`, `assets/l10n/locale_en.arb` + перегенерированные `lib/app/gen/l10n/*` — ключ `dashboard` («Дашборд»/«Dashboard»).
+
+**Соблюдение конвенций v2:**
+- Курс — только `fetchRates(const CurrencyPageRequest(base: 'USD'))`, без дефолтного EUR.
+- Лента — `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` (свежая загрузка: сеть + кэш).
+- @Deprecated-члены (`getCurrencyList`, `getNewsList`, `.themeMode`) не используются.
+
+**Проверки:**
+- `flutter analyze` — «No issues found!»
+- `flutter test` — все 35 тестов зелёные.
+
+Примечание: в тест дашборда добавлен `reset(mock)` в `setUp`, иначе повторное использование моков между тестами давало «Too many elements» при `verify(...).captured.single`.

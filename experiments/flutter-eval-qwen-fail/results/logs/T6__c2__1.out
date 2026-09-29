@@ -1,0 +1,22 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T6__c2__1\.madharness-mini\traces\20260923-184712-977f46ac.jsonl
+Готово! Вот что изменилось:
+
+## Изменения
+
+### `lib/app/profile/profile_page.dart`
+- **Удалён** `ValueNotifier<AppThemeMode> _themeModeNotifier` — больше не нужен
+- **Заменён** `ValueListenableBuilder(valueListenable: _themeModeNotifier)` → `StreamBuilder<AppThemeMode>(stream: settingsRepository.themeModeStream, initialData: settingsRepository.readThemeMode())`:
+  - `initialData: readThemeMode()` — синхронное чтение начального значения (convention v2)
+  - `stream: themeModeStream` — автоматическое обновление при смене темы из любого экрана
+- **Исправлен** обработчик выбора: вместо `_themeModeNotifier.value = newMode` → `settingsRepository.setThemeMode(newMode)` — значение теперь сохраняется и публикуется в поток
+
+### `test/widget/home_container_test.dart`
+- Добавлен стаб для нового зависимого метода:
+  ```dart
+  when(mockSettingsRepository.themeModeStream).thenAnswer((_) => Stream.value(AppThemeMode.system));
+  ```
+
+## Верификация
+- `flutter.bat analyze` → **No issues found!**
+- `flutter.bat test` → **All tests passed! (33 tests)**

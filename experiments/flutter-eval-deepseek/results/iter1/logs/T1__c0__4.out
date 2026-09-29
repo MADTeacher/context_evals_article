@@ -1,0 +1,24 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T1__c0__4\.madharness-mini\traces\20260923-233020-8bf36f47.jsonl
+Готово.
+
+## Что изменено
+
+**`lib/app/currency_list/currency_list_page.dart`** — добавлена подгрузка страниц:
+- Первый запрос идёт через `fetchRates(const CurrencyPageRequest(base: 'USD'))` (конвенция `base: 'USD'` из `docs/migration-v2.md` сохранена), из ответа запоминаются `page`, размер страницы (`page.items.length`, с фоллбэком на 20) и флаг `hasMore`.
+- `_loadMore()` запрашивает следующую страницу (`page: _nextPage`, `pageSize: _pageSize`), дописывает `items` к накопленному `_allCurrencies` и обновляет `hasMore`/`_nextPage`. Есть защита от повторного нажатия (`_isLoadingMore`) и проверка `mounted` после `await`.
+- Кнопка «Показать ещё» рендерится под списком только при `_hasMore`, на время загрузки блокируется и показывает индикатор.
+- Поиск сохранён: запрос теперь хранится в `_query`, а фильтрация вынесена в `_applyFilter()`, который применяется и после подгрузки — то есть фильтр продолжает действовать на дописанные элементы, а не сбрасывается.
+
+**Локализация** — новый ключ `showMore` («Показать ещё» / «Show more»): `assets/l10n/locale_ru.arb`, `assets/l10n/locale_en.arb` и регенерированные `lib/app/gen/l10n/*.dart` (`flutter gen-l10n`).
+
+**`test/widget/currency_list_page_test.dart`** — три новых теста: кнопка скрыта при `hasMore: false`; по нажатию вторая страница дописывается (`USD`, `EUR`, `JPY`, кнопка исчезает); активный поисковый фильтр сохраняется после подгрузки.
+
+**`changelog/10053.feature.rst`** — фрагмент по конвенции проекта («Пользовательские изменения сопровождаются фрагментом `changelog/<номер>.…rst`»).
+
+## Проверки
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (36 тестов, включая 3 новых)
+
+Одно замечание: `flutter gen-l10n` выводит в stderr предупреждение о том, что `synthetic-package` в `l10n.yaml` больше не имеет эффекта — это существовавшая до правок настройка, я её не трогал.

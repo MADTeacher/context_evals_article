@@ -1,0 +1,53 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T4__c1__5\.madharness-mini\traces\20260924-222509-36d47eab.jsonl
+Все **36 тестов** прошли, `flutter analyze` — чистый результат ✅
+
+## Что изменилось
+
+### 1. Domain layer: интерфейс `NewsRepository`
+**Файл:** `lib/domain/repository/news_repository.dart`
+
+Добавлены два новых метода:
+- `getCachedNews()` — чтение из БД без сетевого запроса
+- `refreshNewsFromNetwork()` — загрузка из сети с сохранением в кэш
+
+### 2. Data layer: реализация `NewsRepositoryImpl`
+**Файл:** `lib/data/repository_impl/news_repository_impl.dart`
+
+Реализованы новые методы, которые инкапсулируют логику чтения/записи данных.
+
+### 3. UI слой: экран новостей — cache-then-network
+**Файл:** `lib/app/news_list/news_list_page.dart`
+
+Было:
+```dart
+// Один FutureBuilder, ждём сеть → показываем пустой экран пока грузится
+Future<List<NewsModel>> _newsListFuture;
+_newsListFuture = newsRepository.loadNewsFeed(forceRefresh: true);
+```
+
+Стало:
+```dart
+// 1. Мгновенно показываем кэш (из БД) — ValueNotifier инициализируется сразу
+_newsListNotifier = ValueNotifier([]);
+final cached = await newsRepository.getCachedNews();
+setState(() => _newsListNotifier.value = cached);
+
+// 2. Параллельно в фоне запрашиваем сеть и обновляем список
+final fresh = await newsRepository.refreshNewsFromNetwork();
+setState(() => _newsListNotifier.value = fresh);
+```
+
+Паттерн cache-then-network: пользователь видит данные сразу (даже если кэш пуст — будет лоадер), а когда сеть ответит, список обновится без перезагрузки экрана.
+
+### 4. Тесты
+
+**Unit-тесты** (`test/unit/repository_test.dart`):
+- Добавлены 2 теста для новых методов: `getCachedNews` и `refreshNewsFromNetwork`
+
+**Widget-тесты** (`test/widget/news_list_page_test.dart`):
+- Обновлён мок с `loadNewsFeed` на `getCachedNews()` + `refreshNewsFromNetwork()`
+- Добавлен тест: «показывает CircularProgressIndicator пока данные не загружены»
+
+### 5. Mocks
+Перегенерированы через `dart run build_runner build` — автоматически подхватили новые методы интерфейса.

@@ -1,0 +1,31 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T5__c2__3\.madharness-mini\traces\20260923-100043-be92addb.jsonl
+**Всё готово.** Ниже итог изменений и результатов проверок.
+
+---
+
+## Что изменилось
+
+Файл: `test/unit/repository_test.dart`
+
+Добавлены **3 новых теста** в группу `SettingsRepository`:
+
+1. **`readThemeMode returns the current theme from datasource`** — проверяет, что после `initAsyncData()` метод `readThemeMode()` корректно возвращает текущее значение из `PreferenceDatasource` (`AppThemeMode.light`).
+
+2. **`readThemeMode reflects setThemeMode changes`** — подтверждает, что:
+   - Начальное значение через `readThemeMode()` совпадает с тем, что возвращает datasource.
+   - Вызовы `setThemeMode(AppThemeMode.dark)` и `setThemeMode(AppThemeMode.system)` корректно форвардятся в `_datasource.setThemeMode` (через `verify`).
+
+3. **`readThemeMode is safe to call after initAsyncData`** — документированная проверка контракта v2: `readThemeMode()` вызывается строго после `initAsyncData()`, результат не `null`.
+
+## Важные нюансы реализации
+
+- Моковые объекты объявлены на уровне файла и сохраняют историю вызовов между тестами. Чтобы новые тесты были изолированы, в каждом из них вызывается `reset(mockPreferenceDatasource)` + создаётся новый экземпляр `SettingsRepositoryImpl`.
+- Поскольку `MockPreferenceDatasource.themeMode` после `reset()` теряет дефолтный stub, добавлен явный `when(mockPreferenceDatasource.themeMode).thenReturn(AppThemeMode.light)`.
+
+## Результаты проверок (контракт I.6 — Q.1)
+
+| Проверка | Результат |
+| --- | --- |
+| `flutter analyze` | **No issues found!** ✅ |
+| `flutter test` | **18/18 passed** (все существующие + 3 новых) ✅ |

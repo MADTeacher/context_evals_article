@@ -1,0 +1,21 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T5__c1__5\.madharness-mini\traces\20260924-001625-f329ae0e.jsonl
+Готово.
+
+**Что изменено**
+
+- `test/unit/repository_test.dart`:
+  - добавлен `_FakePreferenceDatasource` — датасорс с реальным состоянием (счётчик чтений `themeModeReads`), чтобы проверять именно актуальность значения, а не мок-заглушку;
+  - в группе `SettingsRepository` добавлены 4 теста:
+    - `readThemeMode returns the actual theme mode after initAsyncData` — возвращается реальное значение из датасорса (dark), а не дефолт мока (`light`);
+    - `readThemeMode returns the actual value written by setThemeMode` — после `initAsyncData()` + `setThemeMode(dark)` чтение даёт `dark`;
+    - `readThemeMode reads the value persisted before initAsyncData` — значение, сохранённое до инициализации, корректно читается после неё;
+    - `readThemeMode is not called before initAsyncData` — проверяет конвенцию из `docs/migration-v2.md`: `initAsyncData()` сам режим темы не читает (0 обращений), а `readThemeMode()` — ровно одно.
+- `changelog/10053.test.rst` — запись по правилу проекта (изменения сопровождаются фрагментом changelog).
+
+**Проверка**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `+37: All tests passed!` (существующие тесты не сломаны, включая widget-тесты `home_container_test.dart`, использующие `readThemeMode()`).
+
+Замечание: конвенция «только после `initAsyncData()`» на уровне типов не выражена (метод синхронный и работает с `late`-полем лишь косвенно), поэтому тест фиксирует порядок вызовов, а не бросаемое исключение. Если нужна жёсткая гарантия (assert/исключение при чтении до Splash), это уже изменение продакшн-кода — скажите, добавлю.

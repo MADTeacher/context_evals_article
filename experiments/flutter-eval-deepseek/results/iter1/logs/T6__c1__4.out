@@ -1,0 +1,18 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c1__4\.madharness-mini\traces\20260924-002133-738495dd.jsonl
+Готово.
+
+**Изменения**
+
+- `lib/app/profile/profile_page.dart`:
+  - добавлен `import 'dart:async';`;
+  - `_themeModeNotifier` создаётся в `initState()` (не в `late final` инициализаторе), поэтому начальное значение всё ещё читается синхронно через `SettingsRepository.readThemeMode()`, но уже после того, как `context` доступен, и не тянет `readThemeMode()` при каждом обращении к геттеру репозитория;
+  - добавлено поле `StreamSubscription<AppThemeMode>? _themeModeSubscription` и подписка на `_settingsRepository.themeModeStream` — при изменении режима темы `ValueNotifier` обновляется, и `ValueListenableBuilder` перерисовывает подпись режима;
+  - подписка отменяется в `dispose()`.
+- `test/widget/home_container_test.dart`: добавлен стаб `when(mockSettingsRepository.themeModeStream).thenAnswer((_) => const Stream<AppThemeMode>.empty())` — без него `MockSettingsRepository` падал с `MissingStubError` при навигации на вкладку профиля.
+- `changelog/10053.bugfix.rst`: запись о пользовательском изменении (по конвенции из `docs/migration-v2.md`).
+
+**Проверки**
+
+- `flutter analyze` — `No issues found!`
+- `flutter test` — `All tests passed!` (33 теста)

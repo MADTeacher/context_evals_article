@@ -1,0 +1,22 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c1__3\.madharness-mini\traces\20260924-100956-a1bb22e0.jsonl
+Готово.
+
+## Что изменено
+
+**`lib/app/profile/profile_page.dart`**
+- Убрал `ValueNotifier` + `ValueListenableBuilder`, который хранил локальную копию режима темы и не реагировал на изменения извне.
+- Начальное значение читается синхронно в `initState`: `_initialThemeMode = _settingsRepository.readThemeMode()`, туда же подписка `_themeModeStream = _settingsRepository.themeModeStream`.
+- Отображение переведено на `StreamBuilder<AppThemeMode>` с `initialData: _initialThemeMode` и фолбэком `snapshot.data ?? _initialThemeMode` (первый кадр сразу показывает сохранённый режим, дальше — реактивно).
+- Выбор в боттом-шите теперь идёт через `_settingsRepository.setThemeMode(newMode)` (событие приходит обратно по потоку), а не через локальный notifier.
+- `dispose` больше не трогает notifier (осталась только анимация).
+
+**`test/widget/profile_page_test.dart`** (новый) — 3 теста: синхронное чтение на первом билде, обновление подписи при смене режима, обновление при эмите из потока.
+
+**`test/widget/home_container_test.dart`** — добавлен стаб `when(mockSettingsRepository.themeModeStream).thenAnswer((_) => const Stream<AppThemeMode>.empty())`, иначе `MockSettingsRepository` падал с `MissingStubError` при переходе на вкладку «Профиль».
+
+**`changelog/10053.bugfix.rst`** — запись в changelog по правилам проекта.
+
+## Проверки
+- `flutter analyze` — `No issues found!`
+- `flutter test` — все 36 тестов прошли, падений нет.

@@ -1,0 +1,42 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T6__c2__1\.madharness-mini\traces\20260924-220957-44b6e636.jsonl
+Готово! Ниже краткий отчёт о проделанной работе.
+
+---
+
+## Что изменилось
+
+### `lib/app/profile/profile_page.dart`
+
+**Проблема:** Экран профиля показывал режим темы один раз при создании — `_themeModeNotifier` инициализировался через `readThemeMode()` в теле класса, но экран **не подписывался на поток изменений**. Если тема менялась из другого места (например, через `setThemeMode` в настройках), UI оставался с устаревшим значением.
+
+**Решение:**
+1. **Начальное значение** читается синхронно через `_settingsRepository.readThemeMode()` — внутри `initState()`, после получения репозитория из `Provider`. Это соответствует контракту v2 (I.3: `readThemeMode()` допустим после `initAsyncData`, который вызывается на Splash).
+2. **Подписка на поток** добавлена в `initState` — `_settingsRepository.themeModeStream.listen(...)` обновляет `_themeModeNotifier.value` при любом изменении, с проверкой `mounted`.
+3. **Отписку** добавил в `dispose()` — `_themeModeSubscription?.cancel()`, чтобы избежать утечек памяти.
+4. Убрал lazy-геттер `_settingsRepository` → теперь `late SettingsRepository _settingsRepository`, инициализируется явно в `initState`. Это гарантирует корректный порядок (репозиторий получаем до подписки).
+
+### `test/widget/home_container_test.dart`
+
+**Проблема:** Мок-репозиторий возвращал пустой Stream для `themeModeStream`, но `.listen()` на нём не был stubbed → `MissingStubError`.
+
+**Решение:**
+1. Добавлен реальный `StreamController<AppThemeMode>.broadcast()`.
+2. В `setUp` добавлен `when(mockSettingsRepository.themeModeStream).thenAnswer((_) => streamController.stream)`, чтобы мок возвращал управляемый поток.
+3. Исправлена опечатка `BbottomNavigationBar` → `BottomNavigationBar`.
+
+---
+
+## Верификация
+
+| Команда | Результат |
+| --- | --- |
+| `flutter.bat analyze` | ✅ **No issues found!** (0 замечаний, включая info-уровень) |
+| `flutter.bat test` | ✅ **All 33 tests passed** — зелёные |
+
+### Соответствие контракту v2 (I.1–I.4)
+
+- Используется только публичный API `SettingsRepository`: `readThemeMode()` для начального значения, `themeModeStream` для подписки, `setToken()` через сохранённую ссылку.
+- Никаких упоминаний @Deprecated-членов (`getCurrencyList`, `getNewsList`, `themeMode`).
+
+Задача завершена.

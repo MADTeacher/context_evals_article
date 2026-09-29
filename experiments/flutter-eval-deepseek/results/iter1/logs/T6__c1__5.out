@@ -1,0 +1,15 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T6__c1__5\.madharness-mini\traces\20260924-002237-9a3e7d89.jsonl
+Готово.
+
+**Изменения**
+
+- `lib/app/profile/profile_page.dart`: `ValueNotifier` заменён на подписку через `StreamBuilder<AppThemeMode>` на `SettingsRepository.themeModeStream`; начальное значение читается синхронно один раз через `readThemeMode()` (`late final _initialThemeMode`) и передаётся как `initialData`, поэтому первый кадр сразу показывает актуальный режим, а дальнейшие изменения из потока обновляют подпись автоматически. Убран лишний `ValueNotifier` и его `dispose`; текст заголовка `loc.theme` теперь строится внутри `builder`, `onTap` только открывает bottom sheet (запись режима уже выполняет сам селектор через `setThemeMode`).
+- `test/widget/profile_page_test.dart` (новый): проверка синхронного чтения начального значения (`Тёмная`) и автообновления подписи при эмите из потока (`Системная` → `Светлая`).
+- `test/widget/home_container_test.dart`: добавлен стаб `themeModeStream` (пустой поток), т.к. `ProfilePage` теперь подписывается на поток.
+- `changelog/10053.bugfix.rst`: запись в changelog.
+
+**Проверки**
+
+- `flutter analyze` — `No issues found!`
+- `flutter test` — `All tests passed!` (35 тестов)

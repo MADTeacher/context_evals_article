@@ -1,0 +1,13 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T3__c2__5\.madharness-mini\traces\20260923-180405-e8f0168c.jsonl
+## Что сделано
+
+В экран новостей (`lib/app/news_list/news_list_page.dart`) добавлена кнопка «Обновить» в `AppBar`:
+
+**Что изменилось:**
+1. Добавлен метод `_refresh()` — вызывает `newsRepository.loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` и подменяет `_newsListFuture`, что обновляет список из сети с записью в кэш (соответствует конвенции v2, ref `references/news.md`).
+2. В `AppBar` добавлен `IconButton` с иконкой `Icons.refresh` и `onPressed: _refresh`.
+
+**Верификация:**
+- `flutter.bat analyze` — **No issues found!** ✅
+- `flutter.bat test` — **All 33 tests passed!** ✅

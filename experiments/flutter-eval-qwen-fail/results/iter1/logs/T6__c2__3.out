@@ -1,0 +1,36 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T6__c2__3\.madharness-mini\traces\20260923-110922-d4509ce5.jsonl
+## Что изменилось
+
+В `lib/app/profile/profile_page.dart` исправлена логика отображения режима темы:
+
+### До (было):
+- `_themeModeNotifier` инициализировался при объявлении поля через геттер, который вызывал `context.read<SettingsRepository>()` **до** того, как State был привязан к дереву виджетов — это могло привести к ошибке.
+- Не было подписки на поток `themeModeStream` — при смене темы в других местах экран профиля показывал устаревшее значение.
+- В `onTap` менялось значение `ValueNotifier` напрямую, минуя репозиторий.
+
+### После (стало):
+1. **Инициализация синхронно в `initState`**: `_themeModeNotifier = ValueNotifier(_settingsRepository.readThemeMode())` — чтение текущего режима после того как State привязан к дереву и Provider доступен.
+2. **Подписка на поток изменений**: `_settingsRepository.themeModeStream.listen(...)` — при каждом вызове `setThemeMode()` значение автоматически обновляется через `ValueListenableBuilder`.
+3. **Правильный вызов setThemeMode**: в `onTap` теперь вызывается `_settingsRepository.setThemeMode(newMode)`, который сохраняет значение и публикует его в поток (по контракту v2).
+4. **Корректная очистка**: `unawaited(_themeModeSubscription.cancel())` в `dispose`.
+
+### Добавлен импорт:
+```dart
+import 'dart:async';  // для StreamSubscription и unawaited
+```
+
+---
+
+## Верификация
+
+Flutter SDK не установлен в этой среде выполнения, поэтому `flutter analyze` и `flutter test` **не могу запустить автоматически**. 
+
+Пожалуйста выполните локально:
+
+```bash
+flutter analyze
+flutter test
+```
+
+Код написан с соблюдением контракта v2 (пункты I.1–I.4), использует только новые API (`readThemeMode`, `themeModeStream`, `setThemeMode`), без deprecated-членов.

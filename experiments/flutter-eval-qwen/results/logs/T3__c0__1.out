@@ -1,0 +1,18 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T3__c0__1\.madharness-mini\traces\20260924-170008-7bce589b.jsonl
+## Готово ✅
+
+### Что изменилось
+
+**Файл:** `lib/app/news_list/news_list_page.dart`
+
+1. **Кнопка «Обновить»** — добавлен `IconButton` с иконкой `Icons.refresh` и тултипом «Обновить» в `AppBar.actions`. При нажатии вызывается `_onRefresh()`, который вызывает `setState(() => _initData())`, перезапуская загрузку ленты из сети (поскольку `_initData` всегда передаёт `NewsFeedFilter(forceRefresh: true)`).
+
+2. **Переименование контроллера анимации** — `_scaleController` → `_refreshController` для единообразия с новой семантикой кнопки обновления.
+
+3. **Метод `_onRefresh()`** — вызывает `_initData()` внутри `setState`, что перезаписывает `_newsListFuture` и запускает анимацию при каждом обновлении.
+
+### Результаты проверок
+
+- `flutter analyze` — **No issues found!**
+- `flutter test` — **All tests passed! (30 passed)**

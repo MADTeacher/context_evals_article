@@ -1,0 +1,16 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T3__c2__4\.madharness-mini\traces\20260924-094535-178600ec.jsonl
+Готово. Кнопка «Обновить» добавлена в AppBar экрана новостей, лента перезагружается из сети (минуя кэш).
+
+**Изменения**
+- `lib/app/news_list/news_list_page.dart` — в `AppBar.actions` добавлен `IconButton` с `Icons.refresh` (`tooltip` из локализации); обработчик `_refresh()` сбрасывает анимацию и перезапрашивает ленту через `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — это сеть + запись в кэш (правило I.2 и п.3 reference news).
+- `assets/l10n/locale_ru.arb` / `locale_en.arb` — новый ключ `refresh` («Обновить» / «Refresh»).
+- `lib/app/gen/l10n/app_localizations.dart`, `app_localizations_ru.dart`, `app_localizations_en.dart` — сгенерированные члены для нового ключа обновлены вручную (в окружении нет flutter-gen-l10n, файлы генерируются в `lib/app/gen/l10n`).
+- `test/widget/news_list_page_test.dart` — новый тест: по тапу на иконку `Icons.refresh` проверяется, что все вызовы `loadNewsFeed` идут с `forceRefresh: true`, и список отображается.
+- `changelog/10053.feature.rst` — фрагмент changelog (I.5).
+
+**Проверки**
+- `flutter analyze` → «No issues found!».
+- `flutter test` → All tests passed (34 теста, включая новый).
+
+Замечание: @Deprecated-члены не использовались; изменения затронули только зону news.

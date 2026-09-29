@@ -1,0 +1,23 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T5__c2__4\.madharness-mini\traces\20260924-100831-f93bae13.jsonl
+Done. Итог:
+
+## Что изменено
+
+**`test/unit/repository_test.dart`** — в группе `SettingsRepository`:
+- `readThemeMode returns actual theme mode after initAsyncData` — после `initAsyncData()` метод возвращает актуальное значение из датасорса.
+- `readThemeMode reflects theme mode changed after initAsyncData` — после `setThemeMode(dark)` последующее чтение возвращает новое значение.
+- `readThemeMode is safe to call only after initAsyncData` — до инициализации метод бросает `StateError` и **не обращается** к датасорсу (`verifyNever`), после `initAsyncData()` возвращает значение.
+- Удалён тест `should return current theme mode value`, который читал **deprecated-геттер** `settingsRepository.themeMode` (нарушение правила I.4); его роль выполняет новый тест на `readThemeMode()`.
+
+**`lib/data/repository_impl/settings_repository_impl.dart`** — добавлено `bool _isInit`, выставляется в `initAsyncData()`, и `readThemeMode()` при `!_isInit` бросает `StateError`. Это обязательно: без guard'а реализация возвращала значение датасорса всегда, и тест «безопасно только после init» был бы фиктивным (я прогнал его до правки — он падал: `Actual: returned AppThemeMode:<AppThemeMode.dark>`).
+
+**`changelog/10053.bugfix.rst`** — фрагмент changelog по правилу I.5.
+
+## Проверка
+
+- `flutter test test/unit/repository_test.dart` — 17/17 зелёные.
+- `flutter test` — 35/35 зелёные (существующие тесты, включая widget-тесты с моком `readThemeMode`, не сломаны).
+- `flutter analyze` — `No issues found!`.
+
+Замечу по остаточному риску: guard делает порядок вызова жёстким, поэтому `readThemeMode()` (и устаревший геттер `themeMode`, который в него делегирует) теперь бросит исключение, если вызвать их до `initAsyncData()`. В текущем коде это безопасно — единственные места вызова (`lib/main.dart:93`, `lib/app/profile/profile_page.dart`) работают уже после инициализации на Splash, и полный прогон тестов это подтверждает.

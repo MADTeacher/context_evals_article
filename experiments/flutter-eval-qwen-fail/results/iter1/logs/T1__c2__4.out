@@ -1,0 +1,48 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T1__c2__4\.madharness-mini\traces\20260923-020027-e22fc4e2.jsonl
+Задача выполнена. Вот краткий итог:
+
+## Что изменено
+
+### 1. Локализации (l10n)
+- **assets/l10n/locale_ru.arb** — добавлен ключ `"showMoreLabel": "Показать ещё"`
+- **assets/l10n/locale_en.arb** — добавлен ключ `"showMoreLabel": "Show more"`
+- **lib/app/gen/l10n/app_localizations.dart** — абстрактный метод `String get showMoreLabel`
+- **lib/app/gen/l10n/app_localizations_ru.dart** — реализация `'Показать ещё'`
+- **lib/app/gen/l10n/app_localizations_en.dart** — реализация `'Show more'`
+
+### 2. Экран валют (`lib/app/currency_list/currency_list_page.dart`)
+Основные изменения:
+
+| Было | Стало |
+|---|---|
+| `fetchRates(const CurrencyPageRequest(base: 'USD'))` — без пагинации | `fetchRates(CurrencyPageRequest(base: 'USD', page: 0, pageSize: 20))` |
+| `_filteredCurrenciesNotifier = ValueNotifier(value)` инициализировался только в then() | Инициализируется пустым списком в `_initAnimation()` (до `_initData`) — устранена утечка "late not initialized" |
+| `_filterCurrencies` напрямую мутировал notifier, принимая query | Выделен `_applyFilter()` (чистая фильтрация по `_searchQuery`); `_filterCurrencies` теперь вызывает `setState` для сохранения query |
+| Нет пагинации | **Новые члены:** `_currentPage`, `_hasMore`, `_isLoadingMore`; метод `_loadMore()` запрашивает `page: _currentPage + 1`, добавляет items к `_allCurrencies` и переприменяет фильтр |
+| ListView с padding внизу | Column с Expanded → ListView (padding 0 снизу) + условная кнопка "Показать ещё" (`if (_hasMore)`) |
+
+**Кнопка «Показать ещё»:**
+- Видна только когда `page.hasMore == true`
+- При нажатии: блокируется (`_isLoadingMore = true`), показывается CircularProgressIndicator, делается запрос следующей страницы
+- По завершении: items добавляются к `_allCurrencies`, фильтр переприменяется, кнопка разблокируется/скрывается в зависимости от `hasMore`
+- Ошибки обрабатываются — `isLoadingMore` сбрасывается
+
+### 3. Фильтрация
+Фильтрация работает по полному списку `_allCurrencies`. После подгрузки новых валют поиск продолжает работать по всем элементам, включая новые. Это сохранено корректно.
+
+### 4. Тесты (`test/widget/currency_list_page_test.dart`)
+Добавлены 5 новых тестов:
+- **Нет кнопки**, когда `hasMore == false`
+- **Кнопка видна**, когда `hasMore == true`
+- **Подгрузка** при нажатии — количество карточек растёт (2 → 3)
+- **Loading indicator** показывается во время запроса
+- **Поиск работает после подгрузки** — фильтрация по полному списку
+
+## Верификация
+
+`flutter analyze` и `flutter test` не удалось запустить в текущем окружении (Flutter SDK недоступен через shell: `FileNotFoundError` для flutter.bat). Код проверен вручную:
+- Нет обращений к `getCurrencyList`, `getNewsList`, `themeMode` — соблюдается правило I.4
+- Запрос идёт через `fetchRates(CurrencyPageRequest(base: 'USD', page, pageSize))` — соблюдается I.1
+- Все `late` поля инициализированы до использования
+- Структура паттерна cache-then-network сохранена (первая загрузка из FutureBuilder)

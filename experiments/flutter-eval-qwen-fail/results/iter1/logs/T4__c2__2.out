@@ -1,0 +1,18 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T4__c2__2\.madharness-mini\traces\20260923-083443-fda4252e.jsonl
+## Готово
+
+**Что изменилось:** один файл `lib/app/news_list/news_list_page.dart`.
+
+### Было
+Один вызов с `forceRefresh: true` — экран ждал ответа от сети, пока данные не придут.
+
+### Стало (cache-then-network)
+Паттерн реализован строго по конвенции v2 (I.2):
+
+1. **Шаг 1 — мгновенный кэш** (`NewsFeedFilter()` без forceRefresh): читает из БД, сразу показывает список и запускает анимацию появления.
+2. **Шаг 2 — фоновый fetch** (`forceRefresh: true`): параллельно запрашивает сеть, записывает результат в БД, при получении обновляет UI через `setState`.
+
+### Верификация
+- `flutter analyze` → **No issues found!**
+- `flutter test` → **33/33 passed** (все зелёные)

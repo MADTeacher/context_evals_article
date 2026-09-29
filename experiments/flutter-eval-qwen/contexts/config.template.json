@@ -1,0 +1,18 @@
+{
+ "model": "qwen3.6-35b-a3b-mtp",
+ "base_url": "http://127.0.0.1:13305/v1",
+ "api_key": "__API_KEY__",
+ "temperature": 0.8,
+ "max_turns": 150,
+ "context_max_tokens": 256000,
+ "context_keep_recent_turns": 3,
+ "http_timeout": 300,
+ "workspace_root": ".",
+ "protected_paths": [
+  ".git",
+  ".env",
+  "secrets",
+  "~/.ssh"
+ ],
+ "allow_shell": true
+}

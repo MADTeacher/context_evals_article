@@ -1,0 +1,18 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T6__c2__4\.madharness-mini\traces\20260923-185729-8dba32db.jsonl
+Готово. Все проверки пройдены: **`flutter.bat analyze` — No issues found!**, **33 теста зелёные**.
+
+## Что изменилось
+
+### `lib/app/profile/profile_page.dart`
+- Добавлен импорт `dart:async` для `StreamSubscription`.
+- Добавлено поле `_themeModeSubscription?` для хранения подписки.
+- В `initState()` — подписка на `_settingsRepository.themeModeStream`: при каждом событии обновляется `_themeModeNotifier.value`, что через `ValueListenableBuilder` автоматически перестраивает ListTile с режимом темы.
+- В `dispose()` — корректный `cancel()` подписки перед очисткой.
+
+Начальное значение по-прежнему читается синхронно через `readThemeMode()` (п. I.3 контракта v2).
+
+### `test/widget/home_container_test.dart`
+- Подписанный мок теперь возвращает broadcast-поток из `StreamController<AppThemeMode>`, созданного в `setUp`.
+- Mockito: использован `thenAnswer((_) => stream)` вместо недопустимого `thenReturn` для Stream.
+- В `tearDown` — закрытие контроллера, чтобы каждый тест получал свежий экземпляр и не было «мёртвых» потоков.

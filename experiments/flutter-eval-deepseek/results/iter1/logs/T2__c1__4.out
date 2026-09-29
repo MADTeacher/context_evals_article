@@ -1,0 +1,17 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T2__c1__4\.madharness-mini\traces\20260923-234546-c32412ce.jsonl
+**Готово.** `flutter analyze` — No issues found; `flutter test` — 36 тестов, все прошли (включая 3 новых).
+
+## Что изменено
+
+**`lib/app/currency_list/currency_list_page.dart`** (основная правка)
+- Добавлено состояние пагинации: `_page`, `_hasMore`, `_isLoadingMore`. `_hasMore` берётся из `CurrencyPage.hasMore` — это признак конца страниц.
+- Кнопка «Показать ещё» (`ElevatedButton` с `context.loc.showMore`) рендерится только при `_hasMore == true`, т.е. **скрывается, когда следующих страниц нет**. Нажатие грузит `fetchRates(CurrencyPageRequest(base: 'USD', page: _page + 1))` и дописывает элементы, обновляя `_page`/`_hasMore`; повторные нажатия блокируются, пока идёт загрузка.
+- Потеря фокуса экраном: `_CurrencyListPageState` теперь `with WidgetsBindingObserver`; в `didChangeAppLifecycleState` при `AppLifecycleState.paused` вызывается `_reloadData()` — список перезапрашивается **свежим запросом с `base: 'USD'`** (новый `Future` в `_currencyListFuture` через `setState`). Observer снимается в `dispose`.
+- Запрос вынесен в `_fetchPage()`; базовый код валюты зафиксирован константой `_baseCurrency = 'USD'` согласно конвенции из `docs/migration-v2.md` (дефолт `'EUR'` в модели не используется).
+
+**Локализация**: ключ `showMore` добавлен в `assets/l10n/locale_ru.arb` («Показать ещё») и `locale_en.arb` («Show more»), плюс синхронно в сгенерированные `lib/app/gen/l10n/app_localizations.dart`, `app_localizations_ru.dart`, `app_localizations_en.dart` (генератор gen-l10n здесь не запускается, файлы поддерживаются вручную).
+
+**`test/widget/currency_list_page_test.dart`**: тесты на отсутствие кнопки при `hasMore: false`, на её показ и догрузку следующей страницы при `hasMore: true`, и на то, что при перезагрузке запрос уходит с `base: 'USD'`.
+
+**`changelog/10053.bugfix.rst`** — запись об изменении (по правилам AGENTS.md).

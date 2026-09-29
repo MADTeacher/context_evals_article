@@ -1,0 +1,32 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T4__c1__4\.madharness-mini\traces\20260924-215303-8920d444.jsonl
+Готово! Все изменения внесены и проверены. Вот итог:
+
+## Что изменилось
+
+### 1. Domain layer — `lib/domain/repository/news_repository.dart`
+Добавлен новый метод интерфейса:
+```dart
+Stream<List<NewsModel>> loadCachedThenNetwork(NewsFeedFilter filter);
+```
+
+### 2. Data layer — `lib/data/repository_impl/news_repository_impl.dart`
+Реализация cache-then-network через `async*` стрим:
+1. **Мгновенно** отдаёт кэшированные данные из БД (первый `yield`)
+2. Параллельно запрашивает сеть и сохраняет результат в БД
+3. Эмитит обновлённый список (второй `yield`)
+
+### 3. UI layer — `lib/app/news_list/news_list_page.dart`
+- `FutureBuilder` → `StreamBuilder`
+- `_newsListFuture` → `_newsFeedStream` через новый метод репозитория
+
+### 4. Тесты
+- Перегенерированы моки (`build_runner`)
+- Обновлены `news_list_page_test.dart` и `home_container_test.dart` с моканием нового метода
+
+## Результат проверки
+
+| Команда | Статус |
+|---------|--------|
+| `flutter analyze` | ✅ 0 issues |
+| `flutter test` | ✅ 31/31 passed |

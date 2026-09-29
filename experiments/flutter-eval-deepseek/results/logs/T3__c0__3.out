@@ -1,0 +1,21 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T3__c0__3\.madharness-mini\traces\20260924-094120-aa8a570b.jsonl
+Готово. Кнопка «Обновить» добавлена в AppBar экрана новостей, лента перезагружается из сети в обход кэша.
+
+**Что изменено**
+
+- `lib/app/news_list/news_list_page.dart` — в `AppBar` добавлен `IconButton` с `Icons.refresh` и tooltip из локализации. Обработчик `_refreshData()` заново вызывает `_initData()` (тот же путь, что и при первой загрузке: `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — репозиторий при `forceRefresh` идёт в `RestDatasource` и перезаписывает кэш в БД) и через `setState` подменяет `_newsListFuture`, так что `FutureBuilder` перестраивает список. Анимация `ScaleTransition` перезапускается внутри `_initData()`.
+- `assets/l10n/locale_ru.arb` / `locale_en.arb` — новый ключ `refresh` («Обновить» / «Refresh»).
+- `lib/app/gen/l10n/*` — перегенерировано через `flutter gen-l10n` (в проекте `generate: true`, `l10n.yaml`).
+- `test/widget/news_list_page_test.dart` — добавлен тест «should reload news from network when refresh button tapped»: тап по иконке приводит к повторному вызову `loadNewsFeed` с `forceRefresh: true` (verify `called(2)` — один вызов при инициализации, второй по кнопке).
+
+**Замечание по тесту (важно)**
+
+Изначально мок `MockNewsRepository` создавался как `final` на уровне `group` и не сбрасывался, поэтому счётчик вызовов накапливался между тестами и проверки «падали» по неверной причине. Я сделал мок создаваемым в `setUp`, чтобы каждый тест работал с чистым моком. Это изменение только в тестовом файле.
+
+**Верификация**
+
+- `flutter analyze` — `No issues found!`
+- `flutter test` — `All tests passed!` (34 теста, включая новый)
+
+Отдельно: `flutter gen-l10n` выдаёт предупреждение, что параметр `synthetic-package` в `l10n.yaml` больше не действует (deprecation от Flutter 3.47). На результат не влияет; я его не трогал, так как это вне рамок задачи — скажите, если хотите, чтобы я его убрал.

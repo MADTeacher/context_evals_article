@@ -1,0 +1,59 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\flutter-drift-eval-qwen\workspaces\run\T2__c2__3\.madharness-mini\traces\20260923-040724-bdbcb63d.jsonl
+Flutter SDK не доступен в PATH этой среды выполнения, поэтому `flutter analyze` и `flutter test`我无法 напрямую запустить — вам нужно будет выполнить их самостоятельно (`flutter analyze && flutter test`). Ниже — итоговый отчёт о внесённых изменениях.
+
+---
+
+## Что изменено
+
+### 1. Добавлены локализации «Показать ещё» / «Show more»
+- **`assets/l10n/locale_ru.arb`** — добавлен ключ `"showMore": "Показать ещё"`
+- **`assets/l10n/locale_en.arb`** — добавлен ключ `"showMore": "Show more"`
+- **`lib/app/gen/l10n/app_localizations.dart`** — добавлен абстрактный метод `String get showMore;`
+- **`lib/app/gen/l10n/app_localizations_ru.dart`** — реализация `get showMore => 'Показать ещё';`
+- **`lib/app/gen/l10n/app_localizations_en.dart`** — реализация `get showMore => 'Show more';`
+
+### 2. Переписан экран `CurrencyListPage` (`lib/app/currency_list/currency_list_page.dart`)
+
+#### Пагинация и кнопка «Показать ещё»
+- Добавлены поля состояния: `_currentPage`, `_hasMore`, `_isLoadingMore`
+- При загрузке первой страницы (page=0) флаг `_hasMore` считывается из ответа репозитория
+- Метод `_loadNextPage()` загружает следующую страницу через `fetchRates(CurrencyPageRequest(base: 'USD', page: nextPage))` и **дополняет** текущий список (`addAll`) — по конвенции v2
+- Кнопка «Показать ещё» (TextButton с иконкой) отображается в конце ListView только когда `_hasMore == true`; при нажатии грузится следующая страница
+- Индикатор загрузки (CircularProgressIndicator) показывается во время `_isLoadingMore`
+- **Автоматический подгруз**: `NotificationListener<ScrollEndNotification>` отслеживает прокрутку до конца списка и запускает `_loadNextPage()` автоматически
+
+#### Скрытие кнопки в конце пагинации
+Когда сервер возвращает `hasMore == false`, кнопка «Показать ещё» не отображается — `itemCount` равен просто длине списка.
+
+#### Обновление при возврате на экран (потеря фокуса)
+- Экран реализует `WidgetsBindingObserver` через миксин
+- Метод `didChangeAppLifecycleState()` перехватывает переход в состояние `resumed` (возврат на экран / возобновление приложения) и вызывает `_refreshData()`, который сбрасывает пагинацию и делает свежий запрос с `base: 'USD'`
+
+#### Конвенции v2 соблюдены
+- Запрос всегда использует `CurrencyPageRequest(base: 'USD', ...)` — конвенция I.1 (default EUR не используется)
+- Не используются запрещённые члены (`getCurrencyList`, `getNewsList`, `themeMode`) — конвенция I.4
+
+---
+
+## Файлы, затронутые изменениями
+| Файл | Действие |
+| --- | --- |
+| `lib/app/currency_list/currency_list_page.dart` | Переписан полностью (пагинация + refresh) |
+| `assets/l10n/locale_ru.arb` | Добавлен ключ `showMore` |
+| `assets/l10n/locale_en.arb` | Добавлен ключ `showMore` |
+| `lib/app/gen/l10n/app_localizations.dart` | Добавлен абстрактный метод `showMore` |
+| `lib/app/gen/l10n/app_localizations_ru.dart` | Добавлена реализация `showMore` |
+| `lib/app/gen/l10n/app_localizations_en.dart` | Добавлена реализация `showMore` |
+
+---
+
+## Что нужно сделать вам вручную
+
+Поскольку Flutter SDK недоступен в этой среде, выполните на своей машине:
+
+```bash
+flutter pub get          # перегенерирует локализации из .arb файлов
+flutter analyze           # должен пройти без замечаний
+flutter test              # должен быть зелёный (старые тесты CurrencyListPageTest не изменились, mock возвращает hasMore: false)
+```

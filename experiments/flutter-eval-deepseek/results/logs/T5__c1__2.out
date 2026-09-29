@@ -1,0 +1,15 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T5__c1__2\.madharness-mini\traces\20260924-100152-0ad915fa.jsonl
+Готово.
+
+**Что изменено**
+- `test/unit/repository_test.dart` — в группу `SettingsRepository` добавлены два теста:
+  - `readThemeMode returns actual value from datasource` — стаб `mockPreferenceDatasource.themeMode = AppThemeMode.dark`, проверка возвращаемого значения и факта обращения к datasource;
+  - `readThemeMode safely returns datasource value after initAsyncData` — сначала `await initAsyncData()` (со стабом `getToken()`), затем проверка, что `readThemeMode()` возвращает `AppThemeMode.system` без исключений.
+- `changelog/10053.test.rst` — запись в changelog по правилам проекта.
+
+**Проверка**
+- `flutter analyze` — `No issues found!` (exit 0).
+- `flutter test` — `All tests passed!` (+35, включая 2 новых; существующие тесты не сломаны).
+
+Примечание: `readThemeMode()` в `SettingsRepositoryImpl` синхронно читает значение из `PreferenceDatasource.themeMode`, поэтому тест «безопасно после `initAsyncData()`» проверяет отсутствие падения и корректный результат, а не гонку с async-инициализацией — в текущей реализации `initAsyncData()` тему не трогает.

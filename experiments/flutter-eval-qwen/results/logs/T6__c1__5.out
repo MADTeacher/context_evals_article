@@ -1,0 +1,22 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-qwen\workspaces\run\T6__c1__5\.madharness-mini\traces\20260925-004705-e02b686d.jsonl
+Готово. Вот что было сделано и проверено:
+
+## Что изменилось
+
+### `lib/app/profile/profile_page.dart`
+- Добавлен импорт `dart:async`.
+- `_themeModeNotifier` теперь создаётся в `initState()` вместо поля-инициализатора, чтобы гарантировать доступ к репозиторию через `context.read()`.
+- Добавлена подписка на `_settingsRepository.themeModeStream.listen((mode) { _themeModeNotifier.value = mode; })`, так что UI автоматически обновляется при смене темы из любого места.
+- Начальное значение читается синхронно через `_settingsRepository.readThemeMode()` — без изменений.
+- В `dispose()` подписка корректно отменяется через `unawaited(_themeModeSubscription.cancel())`.
+
+### `test/widget/home_container_test.dart`
+- Добавлен stub: `when(mockSettingsRepository.themeModeStream).thenAnswer((_) => Stream.value(AppThemeMode.system));`, чтобы Mockito не падал на MissingStubError.
+
+## Результаты проверок
+
+| Команда | Результат |
+|---------|-----------|
+| `flutter analyze` | ✅ No issues found! |
+| `flutter test` | ✅ 33/33 passed |

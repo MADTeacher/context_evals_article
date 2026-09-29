@@ -1,0 +1,16 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T5__c0__4\.madharness-mini\traces\20260924-000450-258eeedc.jsonl
+Done. Added three tests to `test/unit/repository_test.dart` in the existing `SettingsRepository` group:
+
+- `readThemeMode returns actual value after initAsyncData` — stubs `mockPreferenceDatasource.themeMode`, calls `initAsyncData()`, then asserts `readThemeMode()` returns the actual value (`AppThemeMode.dark`) and that the datasource getter was read once.
+- `readThemeMode reads the updated value after setThemeMode` — verifies `readThemeMode()` reflects a change made via `setThemeMode()` (light → system).
+- `readThemeMode is safe only after initAsyncData` — asserts the call happens after `initAsyncData()` and returns normally (`returnsNormally`), matching the project convention in `docs/migration-v2.md` §3 that `readThemeMode()` is only valid post-Splash initialization.
+
+No production code was modified; the tests use the existing `MockPreferenceDatasource` and the non-deprecated `readThemeMode()` API.
+
+Verification:
+- `flutter analyze` → `No issues found!`
+- `flutter test test/unit/repository_test.dart` → 18 passed (15 pre-existing + 3 new)
+- `flutter test` (full suite) → 36 passed, no failures
+
+One note: the tests assert the documented contract (call after `initAsyncData()`), but `SettingsRepositoryImpl.readThemeMode()` itself delegates straight to the datasource and has no runtime guard, so a pre-init call would not throw. I did not change that behavior since you only asked for tests; tell me if you'd like an explicit guard added.

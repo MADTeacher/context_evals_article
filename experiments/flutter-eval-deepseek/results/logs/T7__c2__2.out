@@ -1,0 +1,20 @@
+
+Trace: C:\Users\MADTeacher\Documents\GitHub\context_article_repo\experiments\flutter-eval-deepseek\workspaces\run\T7__c2__2\.madharness-mini\traces\20260924-101902-e97edd7f.jsonl
+Готово. Кнопка «Обновить всё» добавлена на HomePage.
+
+**Что изменено**
+
+- `lib/app/home.dart` — на `Scaffold` главного экрана добавлена `FloatingActionButton.extended` с подписью `loc.refreshAll`. Обработчик `_refreshAll()` запускает **оба запроса параллельно** через `Future.wait`:
+  - курс: `fetchRates(const CurrencyPageRequest(base: 'USD', page: 0, pageSize: 20))` — база `'USD'`, а не дефолтная `'EUR'` (I.1);
+  - лента: `loadNewsFeed(const NewsFeedFilter(forceRefresh: true))` — сеть + запись в кэш (I.2).
+  - Кнопка блокируется на время запроса (`_isRefreshingAll`) и сбрасывает состояние только при `mounted`. Deprecated-члены не используются (I.4).
+- `assets/l10n/locale_ru.arb` / `locale_en.arb` — ключ `refreshAll` («Обновить всё» / «Refresh all»); перегенерён `flutter gen-l10n`, обновлены `lib/app/gen/l10n/*`.
+- `test/widget/home_container_test.dart` — новый тест: тап по кнопке приводит ровно к одному сетевому вызову каждого репозитория, проверены `base == 'USD'` и `forceRefresh == true`.
+- `changelog/10053.feature.rst` — фрагмент changelog (I.5).
+
+**Проверка**
+
+- `flutter analyze` → `No issues found!`
+- `flutter test` → `All tests passed!` (34 теста, включая новый).
+
+Замечание: я использовал `FloatingActionButton`, а не кнопку в `AppBar`. Если по дизайну кнопка должна быть в шапке — скажите, перенесу (это правка только `home.dart` плюс, при необходимости, тест).
